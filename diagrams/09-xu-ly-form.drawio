@@ -1,0 +1,72 @@
+<mxfile host="app.diagrams.net" agent="Cursor">
+  <diagram id="contact-state" name="Xu ly form admin">
+    <mxGraphModel dx="900" dy="500" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="950" pageHeight="560" math="0" shadow="0">
+      <root>
+        <mxCell id="0" /><mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=20;fontStyle=1;fontColor=#1F4E79;" value="(5) XỬ LÝ FORM LIÊN HỆ — TRẠNG THÁI (ADMIN)" vertex="1">
+          <mxGeometry x="120" y="12" width="710" height="28" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-frame" parent="1" style="rounded=1;fillColor=#FAFAFA;strokeColor=#666666;strokeWidth=2;" value="" vertex="1">
+          <mxGeometry x="60" y="48" width="830" height="68" as="geometry" />
+        </mxCell>
+        <mxCell id="lg1" parent="1" style="rounded=0;fillColor=#FFF4CF;strokeColor=#B06613;fontSize=15;align=center;" value="Mới" vertex="1">
+          <mxGeometry x="90" y="62" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="lg2" parent="1" style="rounded=0;fillColor=#D5E8D4;strokeColor=#82B366;fontSize=15;align=center;" value="Hoàn tất" vertex="1">
+          <mxGeometry x="210" y="62" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="lg3" parent="1" style="rounded=0;fillColor=#F8CECC;strokeColor=#B85450;fontSize=15;align=center;" value="Spam" vertex="1">
+          <mxGeometry x="330" y="62" width="100" height="40" as="geometry" />
+        </mxCell>
+        <mxCell id="new" parent="1" style="rounded=1;fillColor=#FFF4CF;strokeColor=#B06613;fontStyle=1;fontSize=17;align=center;" value="NEW&#xa;(Mới)" vertex="1">
+          <mxGeometry x="80" y="180" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="prog" parent="1" style="rounded=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontStyle=1;fontSize=16;align=center;" value="IN_PROGRESS&#xa;(Đang xử lý)" vertex="1">
+          <mxGeometry x="300" y="180" width="170" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="done" parent="1" style="rounded=1;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;fontSize=17;align=center;" value="DONE&#xa;(Hoàn tất)" vertex="1">
+          <mxGeometry x="560" y="145" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="spam" parent="1" style="rounded=1;fillColor=#F8CECC;strokeColor=#B85450;fontStyle=1;fontSize=17;align=center;" value="SPAM" vertex="1">
+          <mxGeometry x="560" y="285" width="150" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="end-ok" parent="1" style="ellipse;fillColor=#D5E8D4;strokeColor=#82B366;fontStyle=1;fontSize=15;align=center;" value="KẾT THÚC&#xa;(đã xử lý)" vertex="1">
+          <mxGeometry x="770" y="145" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="end-spam" parent="1" style="ellipse;fillColor=#F8CECC;strokeColor=#B85450;fontStyle=1;fontSize=15;align=center;" value="KẾT THÚC&#xa;(loại bỏ)" vertex="1">
+          <mxGeometry x="770" y="285" width="140" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="new" target="prog" style="endArrow=block;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1l" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=12;" value="Admin bắt đầu" vertex="1"><mxGeometry x="205" y="154" width="110" height="22" as="geometry" /></mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="prog" target="done" style="endArrow=block;strokeColor=#82B366;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="done" target="end-ok" style="endArrow=block;strokeColor=#82B366;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="new" target="spam" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;endArrow=block;strokeColor=#B85450;html=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.5;entryY=1;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="150" y="390" />
+              <mxPoint x="635" y="390" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e4l" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=11;" value="Đánh dấu spam" vertex="1"><mxGeometry x="320" y="365" width="120" height="22" as="geometry" /></mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="prog" target="spam" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;endArrow=block;strokeColor=#B85450;html=1;strokeWidth=2;exitX=0.5;exitY=1;entryX=0.2;entryY=0;">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="385" y="270" />
+              <mxPoint x="590" y="270" />
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e6" edge="1" parent="1" source="spam" target="end-spam" style="endArrow=block;strokeColor=#B85450;html=1;strokeWidth=2;">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

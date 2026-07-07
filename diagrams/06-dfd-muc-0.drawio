@@ -1,0 +1,62 @@
+<mxfile host="Electron" agent="Cursor">
+  <diagram id="dfd0" name="DFD muc 0">
+    <mxGraphModel dx="1414" dy="841" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="500" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=center;fontSize=22;fontStyle=1;fontColor=#1F4E79;" value="DFD MỨC 0 — LUỒNG DỮ LIỆU TỔNG QUAN" vertex="1">
+          <mxGeometry height="36" width="700" x="150" y="15" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-frame" parent="1" style="rounded=1;fillColor=#FAFAFA;strokeColor=#666666;strokeWidth=2;" value="" vertex="1">
+          <mxGeometry height="70" width="840" x="80" y="55" as="geometry" />
+        </mxCell>
+        <mxCell id="legend-title" parent="1" style="text;html=1;strokeColor=none;fillColor=none;align=left;fontSize=15;fontStyle=1;" value="CHÚ THÍCH: Hình tròn = thực thể ngoài · Hình chữ nhật bo = hệ thống · Kho = lưu trữ" vertex="1">
+          <mxGeometry height="36" width="800" x="100" y="72" as="geometry" />
+        </mxCell>
+        <mxCell id="k" parent="1" style="ellipse;fillColor=#F5F5F5;strokeColor=#666666;fontSize=17;align=center;" value="Khách hàng" vertex="1">
+          <mxGeometry height="60" width="140" x="80" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="nv" parent="1" style="ellipse;fillColor=#F5F5F5;strokeColor=#666666;fontSize=17;align=center;" value="Nhân viên" vertex="1">
+          <mxGeometry height="60" width="140" x="80" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="p0" parent="1" style="rounded=1;fillColor=#DAE8FC;strokeColor=#6C8EBF;fontStyle=1;fontSize=18;align=center;" value="Hệ thống Website PA2" vertex="1">
+          <mxGeometry height="100" width="260" x="350" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="db" parent="1" style="shape=cylinder3;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=16;align=center;" value="PostgreSQL" vertex="1">
+          <mxGeometry height="70" width="160" x="720" y="170" as="geometry" />
+        </mxCell>
+        <mxCell id="cdn" parent="1" style="ellipse;shape=cloud;fillColor=#E1D5E7;strokeColor=#9673A6;fontSize=15;align=center;" value="Cloudinary" vertex="1">
+          <mxGeometry height="70" width="160" x="720" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="mail" parent="1" style="rounded=1;fillColor=#F5F5F5;strokeColor=#666666;dashed=1;fontSize=16;align=center;" value="Gmail SMTP" vertex="1">
+          <mxGeometry height="50" width="160" x="720" y="350" as="geometry" />
+        </mxCell>
+        <mxCell id="e1" edge="1" parent="1" source="k" style="endArrow=block;html=1;strokeWidth=2;" target="p0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e1l" connectable="0" parent="e1" style="edgeLabel;html=1;fontSize=13;" value="Xem / Form" vertex="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint x="-13" y="-30" as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e2" edge="1" parent="1" source="nv" style="endArrow=block;html=1;strokeWidth=2;" target="p0">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e2l" connectable="0" parent="e2" style="edgeLabel;html=1;fontSize=13;" value="CMS" vertex="1">
+          <mxGeometry relative="1" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e3" edge="1" parent="1" source="p0" style="endArrow=block;strokeColor=#9673A6;html=1;strokeWidth=2;" target="db">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e4" edge="1" parent="1" source="p0" style="endArrow=block;strokeColor=#9673A6;html=1;strokeWidth=2;entryX=0.07;entryY=0.4;entryDx=0;entryDy=0;entryPerimeter=0;" target="cdn">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="e5" edge="1" parent="1" source="p0" style="endArrow=block;dashed=1;html=1;strokeWidth=2;" target="mail">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
