@@ -143,13 +143,13 @@ Sửa `src/data/navigation.ts` + `site-header.tsx`:
 - Route `du-an` thêm `loading.tsx` khi chuyển sang fetch API.
 
 **A11y checklist:**
-- [ ] Mọi trang đúng 1 `<h1>` (kiểm tra lại trang chủ sau khi banner nhận H1 thật thay vì `h2` hiện tại trong slider).
-- [ ] Skip-link "Bỏ qua điều hướng" trước header (chưa có).
-- [ ] Focus-visible toàn cục (mục 7).
-- [ ] Contrast: chữ `text-white/75` trên nền `#c99248` (CTA section du-an) ~3.2:1 — **dưới chuẩn AA 4.5:1**, tăng lên `text-white` hoặc đậm nền.
-- [ ] Carousel: keyboard ←/→, `inert` slide ẩn, pause khi focus.
-- [ ] Form: `aria-invalid`, `aria-describedby`, banner `role="status"/"alert"`.
-- [ ] Touch target ≥ 44×44: dots slider, icon social footer.
+- [x] Mọi trang đúng 1 `<h1>` — trang chủ dùng h1 trong banner (2026-07-08).
+- [x] Skip-link "Bỏ qua điều hướng" trước header + `<main id="main-content">` trong SiteShell.
+- [x] Focus-visible toàn cục (outline vàng, globals.css).
+- [x] Contrast: `text-white/75` trên `#c99248` → `text-white` (5 chỗ: du-an, du-an/[slug], gioi-thieu, lien-he, home-contact-cta).
+- [x] Carousel: keyboard ←/→, `inert` slide ẩn, pause khi focus.
+- [x] Form: `aria-invalid`, `aria-describedby`, banner `role="status"/"alert"`.
+- [ ] Touch target ≥ 44×44: dots slider ✅; icon social footer — chưa rà.
 
 ## 9. Thứ tự triển khai đề xuất
 
@@ -157,4 +157,4 @@ Sửa `src/data/navigation.ts` + `site-header.tsx`:
 2. ~~**H1+H2 Hero/trang chủ**~~ ✅ Xong 2026-07-08 — banner 75svh + CTA kép + h1, autoplay 7s pause hover/focus/tab ẩn/reduced-motion, swipe mobile, arrows mobile, dots 44px, a11y carousel đầy đủ; HomeHero → HomeIntroStrip (4 cột năng lực); FeaturedProjects dời lên ngay sau banner.
 3. ~~**H5 Breadcrumb**~~ ✅ Xong 2026-07-08 — `src/components/ui/breadcrumb.tsx` (JSON-LD BreadcrumbList, aria-current, thu gọn "…" mobile); đã áp cho `du-an/[slug]`, `tin-tuc/[slug]`, 3 trang con Nhân sự. Route `[hang-muc]` khi tạo chỉ cần thêm 1 cấp item.
 4. ~~**H4 Navigation**~~ ✅ Xong 2026-07-08 — dropdown chia nhóm heading (NavItem.group), nhãn "Tuyển dụng & Nhân sự", search "Tìm tin tức...", delay đóng 150ms + chevron + aria-haspopup/expanded + Escape, mobile toggle expand với link cha thành item đầu (overviewLabel).
-5. **H6 Filter + mục 7, 8** — rải trong Sprint 1–2 khi nối API.
+5. ~~**H6 Filter + mục 7, 8**~~ ✅ Phần lớn xong 2026-07-08 — filter `scroll={false}` + đếm số lượng + icon check; focus-visible toàn cục; skip-link; sửa 5 chỗ contrast. **Còn lại chờ nối API Sprint 1–2**: `loading.tsx` + `ProjectCardSkeleton`, `_count` từ API thay đếm client, rà touch target icon footer.
