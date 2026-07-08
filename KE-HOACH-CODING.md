@@ -26,7 +26,7 @@
 - [x] Viết schema Prisma theo ERD 12 bảng (mục 2.2.1): `users, projects, project_items, project_gallery, news_categories, news_posts, pages, banners, contact_submissions, media_assets, site_settings, refresh_tokens`. **(chờ input câu 1)** nếu cấu trúc dự án thay đổi — schema hiện tại dùng field song ngữ dạng JSON `{vi, en}` nên có thể sửa nội dung sau mà không đổi cấu trúc bảng.
 - [x] Định nghĩa chuẩn response `{success, data, message}` / `{success:false, error:{code,message,details}}` làm middleware/interceptor dùng chung (mục 2.3) — `src/common/interceptors/response.interceptor.ts` + `src/common/filters/http-exception.filter.ts`.
 - [x] Viết đặc tả API (OpenAPI/Swagger) — tự sinh tại `/api/docs` từ decorator trong controller (auth, users, projects, news, pages, banners, contact, media); cần rà lại field tên/kiểu dữ liệu cùng FE trước khi tách nhánh làm song song.
-- [ ] Đối chiếu `src/types/content.ts` (frontend hiện tại) với schema Prisma sắp tạo — sửa type FE nếu tên field lệch, tránh phải đổi lại sau khi nối API thật.
+- [x] Đối chiếu `src/types/content.ts` (frontend) với schema Prisma — tên field khớp toàn bộ (schema thiết kế theo content.ts). Khác biệt có chủ đích, xử lý ở `src/lib/api/mappers.ts`: (1) field song ngữ backend là `{vi, en?}` → mapper lấy `vi`; (2) `ProjectStatus` backend là enum `DA_BAN_GIAO`… → mapper đổi về kebab-case; (3) `NewsPost.category` backend là quan hệ `{slug, name}` → mapper lấy `name.vi`. Đã bổ sung `ProjectItem` (content.ts) + `ProjectItemDto`, `ProjectGalleryImageDto` (lib/api/types.ts) + `mapProjectItem` cho route `du-an/[slug]/[hang-muc]` sắp làm.
 - [x] Dựng `.env.example` cho backend (DATABASE_URL, JWT_*, CLOUDINARY_*, SMTP_*). **(chờ input câu 9, 11, 12)** để điền giá trị thật ở môi trường staging. Frontend chưa cần `.env.example` (chưa gọi API thật).
 - [x] Setup CI tối thiểu: lint + build tự động khi mở PR ở cả 2 repo (`.github/workflows/ci.yml`); auto-deploy staging khi merge `main` còn chờ chọn nhà cung cấp hosting (câu 11).
 
@@ -82,7 +82,7 @@
 - [x] Khởi tạo repo backend + schema Prisma nháp (có thể chỉnh sau khi có input) — `thien-duc-website-backend/`.
 - [x] Viết đặc tả API/OpenAPI — Swagger tự sinh tại `/api/docs`.
 - [ ] Dựng khung Admin CMS (UI, chưa cần nội dung thật).
-- [ ] Viết lớp `src/lib/api/*` cho frontend với dữ liệu mock giống schema dự kiến.
+- [x] Viết lớp `src/lib/api/*` cho frontend với dữ liệu mock giống schema dự kiến — client (bật/tắt qua `NEXT_PUBLIC_API_URL`) + DTO types + mock từ `src/data/*` + mapper về type UI; còn việc thay import trong component (Sprint 1).
 - [x] Setup CI/CD tối thiểu (lint + build) cho cả 2 repo, `.env.example` cho backend. Còn thiếu: cấu trúc `[locale]` routing.
 
 ## Việc bắt buộc phải có input công ty trước khi code có ý nghĩa
