@@ -6,8 +6,8 @@
 ## 0. Tóm tắt điểm nghẽn → hạng mục sửa
 
 | # | Điểm nghẽn (file liên quan) | Mức độ | Hạng mục |
-|---|---|---|---|
-| PN-1 | Hero kép chiếm ~1.7 màn hình, autoplay 4s không pause (`home-banner-slider.tsx`, `home-hero.tsx`) | Cao | H1, H2 |
+|---|---                          |---     |---       |
+| PN-1| Hero kép chiếm ~1.7 màn hình, autoplay 4s không pause (`home-banner-slider.tsx`, `home-hero.tsx`) | Cao | H1, H2 |
 | PN-2 | Form liên hệ mở `mailto`, mất lead (`contact-form.tsx`) | **Nghiêm trọng** | H3 |
 | PN-3 | Menu 7 mục, dropdown trộn logic, search gây hiểu lầm (`navigation.ts`, `site-header.tsx`) | Trung bình | H4 |
 | PN-4 | Không có breadcrumb trang chi tiết (`du-an/[slug]/page.tsx`, `tin-tuc/[slug]/page.tsx`) | Trung bình | H5 |
@@ -153,7 +153,7 @@ Sửa `src/data/navigation.ts` + `site-header.tsx`:
 
 ## 9. Thứ tự triển khai đề xuất
 
-1. **H3 Contact Form + API** (chặn rò lead — backend đã sẵn sàng) — 0.5–1 ngày.
+1. ~~**H3 Contact Form + API**~~ ✅ Xong 2026-07-08 — form gọi `POST /api/contact` (mailto đã bỏ), validate on-blur, đủ trạng thái submitting/success/error/429, honeypot; backend cho `email` optional (migration `contact_email_optional`). Mock mode khi chưa đặt `NEXT_PUBLIC_API_URL`.
 2. **H1+H2 Hero/trang chủ** — 1–1.5 ngày.
 3. **H5 Breadcrumb** (làm trước khi tạo route `[hang-muc]` Sprint 1) — 0.5 ngày.
 4. **H4 Navigation** — 0.5 ngày.
