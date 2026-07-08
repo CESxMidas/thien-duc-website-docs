@@ -156,5 +156,5 @@ Sửa `src/data/navigation.ts` + `site-header.tsx`:
 1. ~~**H3 Contact Form + API**~~ ✅ Xong 2026-07-08 — form gọi `POST /api/contact` (mailto đã bỏ), validate on-blur, đủ trạng thái submitting/success/error/429, honeypot; backend cho `email` optional (migration `contact_email_optional`). Mock mode khi chưa đặt `NEXT_PUBLIC_API_URL`.
 2. ~~**H1+H2 Hero/trang chủ**~~ ✅ Xong 2026-07-08 — banner 75svh + CTA kép + h1, autoplay 7s pause hover/focus/tab ẩn/reduced-motion, swipe mobile, arrows mobile, dots 44px, a11y carousel đầy đủ; HomeHero → HomeIntroStrip (4 cột năng lực); FeaturedProjects dời lên ngay sau banner.
 3. ~~**H5 Breadcrumb**~~ ✅ Xong 2026-07-08 — `src/components/ui/breadcrumb.tsx` (JSON-LD BreadcrumbList, aria-current, thu gọn "…" mobile); đã áp cho `du-an/[slug]`, `tin-tuc/[slug]`, 3 trang con Nhân sự. Route `[hang-muc]` khi tạo chỉ cần thêm 1 cấp item.
-4. **H4 Navigation** — 0.5 ngày.
+4. ~~**H4 Navigation**~~ ✅ Xong 2026-07-08 — dropdown chia nhóm heading (NavItem.group), nhãn "Tuyển dụng & Nhân sự", search "Tìm tin tức...", delay đóng 150ms + chevron + aria-haspopup/expanded + Escape, mobile toggle expand với link cha thành item đầu (overviewLabel).
 5. **H6 Filter + mục 7, 8** — rải trong Sprint 1–2 khi nối API.
