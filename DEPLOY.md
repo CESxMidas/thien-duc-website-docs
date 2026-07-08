@@ -26,7 +26,7 @@ Repo đã có sẵn `render.yaml` (Blueprint) — Render tự dựng cả web se
    - Kiểm tra: mở `…/api` → trả về "Hello World!"; mở `…/api/docs` → Swagger.
 
 **Các biến môi trường** (`render.yaml` đã set sẵn, chỉ cần chỉnh khi có dữ liệu thật):
-- `DATABASE_URL` — Render tự nối từ Poststgres. ✅ không cần làm gì.
+- `DATABASE_URL` — Render tự nối từ Postgres. ✅ không cần làm gì.
 - `JWT_ACCESS_SECRET` — Render tự sinh ngẫu nhiên. ✅
 - `CORS_ORIGIN` — **quay lại sửa** thành domain Vercel thật sau bước 2 (mặc định `https://thien-duc-website-frontend.vercel.app`).
 - `CLOUDINARY_*`, `SMTP_*` — để trống tới khi công ty cung cấp (câu 9, 12 trong `CAU-HOI-CAN-XAC-NHAN.md`).
@@ -70,6 +70,15 @@ Sau khi có domain Vercel chính thức:
 - [ ] Không có lỗi CORS trong Console trình duyệt khi gửi form.
 - [ ] `NEXT_PUBLIC_SITE_URL` đúng → breadcrumb JSON-LD sinh URL chuẩn.
 - [ ] (Khi có) domain thật → cấu hình ở Vercel (Domains) + cập nhật `CORS_ORIGIN`, `NEXT_PUBLIC_SITE_URL`.
+
+## 5. Xử lý sự cố thường gặp
+
+- **Gửi form báo thành công nhưng DB "trống"** — thường không phải lỗi, mà do:
+  - Xem sai **tên bảng**: Prisma map model `ContactSubmission` → bảng SQL là `contact_submissions` (chữ thường, số nhiều). Query: `SELECT * FROM contact_submissions ORDER BY created_at DESC;`
+  - Frontend đang chạy **mock**: chưa đặt `NEXT_PUBLIC_API_URL` hoặc đặt rồi mà **chưa Redeploy** Vercel (biến `NEXT_PUBLIC_*` nướng vào lúc build). Kiểm tra: F12 → Network → gửi form → phải thấy request POST tới `…/api/contact` trả `201`.
+- **Kết nối DB từ máy local (pgAdmin / Prisma Studio)** — phải dùng **External Database URL** của Render (có đuôi `.singapore-postgres.render.com`), KHÔNG dùng Internal URL (host cụt, chỉ chạy trong mạng Render → lỗi `P1001`). pgAdmin: đặt **SSL mode = Require** ở tab Parameters.
+- **Form thỉnh thoảng đỏ / "Failed to fetch" / timeout** — backend Render free **ngủ sau 15 phút**; request đầu tiên đợi ~30–50s trong khi FE hủy ở 10s. Cách xử lý: mở `…/api` cho backend thức trước, hoặc ping định kỳ bằng UptimeRobot, hoặc nâng plan.
+- **Giờ hiển thị lệch 7 tiếng** — DB lưu **UTC** (đúng chuẩn). Hiển thị giờ VN (UTC+7) bằng `formatDateTime` trong `src/lib/format.ts` (frontend), hoặc trong SQL: `created_at + interval '7 hour'`.
 
 ## Ghi chú
 

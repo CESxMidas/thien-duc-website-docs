@@ -4,13 +4,17 @@
 >
 > Thư mục `docs/` nằm ở cấp workspace, dùng chung cho `thien-duc-website-frontend` và `thien-duc-website-backend`.
 
-## Hiện trạng (cập nhật 2026-07-07)
+## Hiện trạng (cập nhật 2026-07-08)
 
-- Backend `thien-duc-website-backend/` đã chạy được end-to-end ở local: NestJS 11 + Prisma 7 + PostgreSQL 17 (Docker, port **5433** — vì máy dev có Postgres Windows chiếm 5432).
-- Migration `init` (12 bảng) đã áp vào DB; đã test thật `GET /api/projects`, `POST /api/contact` (lưu DB OK); Swagger tại `http://localhost:3001/api/docs`.
-- Lệnh chạy: `docker compose up -d` → `npm run start:dev`. Xem dữ liệu: `npx prisma studio`.
+- **Đã deploy production** (xem `DEPLOY.md`): Frontend (Next.js) → **Vercel**, Backend (NestJS + Prisma) + PostgreSQL → **Render** (`render.yaml` Blueprint). Luồng gửi form liên hệ đã chạy thật end-to-end trên production (POST `/api/contact` trả `201`, bản ghi lưu vào bảng `contact_submissions` OK).
+- Backend `thien-duc-website-backend/` chạy được cả local lẫn production: NestJS 11 + Prisma 7 + PostgreSQL 17 (local dùng Docker, port **5433** — vì máy dev có Postgres Windows chiếm 5432).
+- Migration `init` (12 bảng) đã áp vào DB; đã test thật `GET /api/projects`, `POST /api/contact` (lưu DB OK); Swagger tại `http://localhost:3001/api/docs` (local) và `…onrender.com/api/docs` (production).
+- Lệnh chạy local: `docker compose up -d` → `npm run start:dev`. Xem dữ liệu: `npx prisma studio` (local) hoặc trỏ `DATABASE_URL` vào External URL của Render.
 - `tsc --noEmit` + `eslint` sạch (0 lỗi, 0 warning). CI lint+build đã có ở cả 2 repo.
 - Câu trả lời nội dung thật (dự án, giới thiệu, pháp lý...) đã có cho câu 1–4, 6–8 — xem `CAU-HOI-CAN-XAC-NHAN.md`; có thể bắt đầu seed dữ liệu thật ở Sprint 1.
+
+> ⚠️ Render free tier: backend **ngủ sau 15 phút** không có request (request đầu tiên chậm ~30–50s, có thể làm form timeout ở FE — timeout FE đang đặt 10s). Cân nhắc UptimeRobot ping định kỳ hoặc nâng plan khi go-live. Postgres free hết hạn sau 90 ngày.
+> ⚠️ Thời gian (`created_at`…) lưu **UTC**; hiển thị phải quy đổi giờ VN (UTC+7) bằng `formatDateTime` trong `src/lib/format.ts` (frontend).
 
 ## Quy ước
 
@@ -27,8 +31,8 @@
 - [x] Định nghĩa chuẩn response `{success, data, message}` / `{success:false, error:{code,message,details}}` làm middleware/interceptor dùng chung (mục 2.3) — `src/common/interceptors/response.interceptor.ts` + `src/common/filters/http-exception.filter.ts`.
 - [x] Viết đặc tả API (OpenAPI/Swagger) — tự sinh tại `/api/docs` từ decorator trong controller (auth, users, projects, news, pages, banners, contact, media); cần rà lại field tên/kiểu dữ liệu cùng FE trước khi tách nhánh làm song song.
 - [x] Đối chiếu `src/types/content.ts` (frontend) với schema Prisma — tên field khớp toàn bộ (schema thiết kế theo content.ts). Khác biệt có chủ đích, xử lý ở `src/lib/api/mappers.ts`: (1) field song ngữ backend là `{vi, en?}` → mapper lấy `vi`; (2) `ProjectStatus` backend là enum `DA_BAN_GIAO`… → mapper đổi về kebab-case; (3) `NewsPost.category` backend là quan hệ `{slug, name}` → mapper lấy `name.vi`. Đã bổ sung `ProjectItem` (content.ts) + `ProjectItemDto`, `ProjectGalleryImageDto` (lib/api/types.ts) + `mapProjectItem` cho route `du-an/[slug]/[hang-muc]` sắp làm.
-- [x] Dựng `.env.example` cho backend (DATABASE_URL, JWT_*, CLOUDINARY_*, SMTP_*). **(chờ input câu 9, 11, 12)** để điền giá trị thật ở môi trường staging. Frontend chưa cần `.env.example` (chưa gọi API thật).
-- [x] Setup CI tối thiểu: lint + build tự động khi mở PR ở cả 2 repo (`.github/workflows/ci.yml`); auto-deploy staging khi merge `main` còn chờ chọn nhà cung cấp hosting (câu 11).
+- [x] Dựng `.env.example` cho backend (DATABASE_URL, JWT_*, CLOUDINARY_*, SMTP_*) **và frontend** (`NEXT_PUBLIC_API_URL`, `NEXT_PUBLIC_SITE_URL`). CLOUDINARY_*/SMTP_* vẫn **(chờ input câu 9, 12)** để điền giá trị thật.
+- [x] Setup CI tối thiểu: lint + build tự động khi mở PR ở cả 2 repo (`.github/workflows/ci.yml`). **Hosting đã chốt (câu 11): Vercel (FE) + Render (BE + Postgres)** — auto-deploy khi push `main` (`render.yaml` + Vercel Git integration).
 
 ## Sprint 1 — Tuần 2–3: Auth + CRUD dự án
 
@@ -51,9 +55,9 @@
 
 - [ ] Khởi tạo project Admin CMS riêng (Vite + React), layout Dashboard (ED-02): số form mới, bài chờ duyệt, lối tắt tạo dự án/tin.
 - [ ] Màn hình duyệt nội dung cho Admin: chấp nhận/trả lại bài-dự án-banner (KB-06).
-- [ ] `contact` module: `POST /contact` lưu `contact_submissions` + gửi email thông báo, giới hạn 5 request/IP/giờ (YC-09, mục 2.2).
-- [ ] Sửa `src/components/sections/contact-form.tsx`: bỏ hành vi mở `mailto` hiện tại (xác nhận trong `src/data/contact.ts`), gọi API `POST /contact`, hiển thị trạng thái gửi thành công/lỗi.
-- [ ] Màn hình quản lý lead cho Admin/Super Admin: đổi trạng thái Mới → Đang xử lý → Hoàn thành, ghi chú nội bộ (KB-08).
+- [~] `contact` module: `POST /contact` lưu `contact_submissions` **đã xong** + giới hạn 5 request/IP/giờ **đã xong** (`@Throttle`); **còn thiếu** gửi email thông báo (TODO trong `contact.service.ts`, chờ SMTP thật — câu 9) (YC-09, mục 2.2).
+- [x] Sửa `src/components/sections/contact-form.tsx`: đã bỏ `mailto`, gọi API `POST /contact` qua `src/lib/api/contact.ts` (có honeypot chống bot, validate phía client, xử lý lỗi rate-limit/network, timeout 10s), hiển thị trạng thái gửi thành công/lỗi. Khi chưa đặt `NEXT_PUBLIC_API_URL` thì tự chạy chế độ mock.
+- [ ] Màn hình quản lý lead cho Admin/Super Admin: đổi trạng thái Mới → Đang xử lý → Hoàn thành, ghi chú nội bộ (KB-08). Backend đã có `GET /contact`, `GET /contact/:id`, `PATCH /contact/:id` (guard ADMIN/SUPER_ADMIN) — chỉ còn dựng UI. Hiển thị thời gian dùng `formatDateTime` (giờ VN).
 - [ ] Cấu hình email thật thay Yahoo tạm. **(chờ input câu 9)**
 
 ## Sprint 4 — Tuần 8–9: Song ngữ, tìm kiếm, SEO, nối API

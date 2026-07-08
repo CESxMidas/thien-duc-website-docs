@@ -44,7 +44,7 @@ Tầm nhìn: Trở thành thương hiệu đầu tư và xây dựng bất độ
 
 9. **Email domain chính thức**: có `info@thienduc.vn` (hay domain khác) chưa, hay tạm thời vẫn dùng `dautuxaydungthienduc@yahoo.com`? Nếu chưa có, ai là người mua/setup Google Workspace hoặc dịch vụ email tương đương?
 10. **Domain website**: `thienduc.vn` (hoặc domain mới) đã sở hữu chưa, ai đang quản lý DNS? Có cần trỏ song song với `thienduccons.vn` cũ trong giai đoạn chuyển tiếp không?
-11. **Nhà cung cấp hosting backend**: đã có quyết định dùng Render/Railway/VPS Việt Nam chưa, hay cần đề xuất và duyệt ngân sách?
+11. ✅ **Nhà cung cấp hosting backend** — đã chốt: **Render** (backend + PostgreSQL, region Singapore) qua `render.yaml` Blueprint; **Frontend** trên **Vercel**. Hiện chạy gói **free** (backend ngủ sau 15 phút, Postgres hết hạn 90 ngày) — cần duyệt nâng plan trước khi go-live thật (xem câu 13 ngân sách).
 12. **Cloudinary**: đã có tài khoản/plan trả phí chưa, hay dùng free tier trong giai đoạn đầu? Giới hạn dung lượng ảnh/video dự kiến?
 13. **Ngân sách vận hành hàng tháng**: công ty chấp nhận mức nào (báo cáo ước tính PA2 ~400k–1.5 triệu/tháng) để chọn gói dịch vụ phù hợp?
 
