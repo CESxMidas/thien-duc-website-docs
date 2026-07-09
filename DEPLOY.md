@@ -29,9 +29,12 @@ Repo đã có sẵn `render.yaml` (Blueprint) — Render tự dựng cả web se
 - `DATABASE_URL` — Render tự nối từ Postgres. ✅ không cần làm gì.
 - `JWT_ACCESS_SECRET` — Render tự sinh ngẫu nhiên. ✅
 - `CORS_ORIGIN` — **quay lại sửa** thành domain Vercel thật sau bước 2 (mặc định `https://thien-duc-website-frontend.vercel.app`).
-- `CLOUDINARY_*`, `SMTP_*` — để trống tới khi công ty cung cấp (câu 9, 12 trong `CAU-HOI-CAN-XAC-NHAN.md`).
+- `CLOUDINARY_CLOUD_NAME` = `thienduc` (công khai — nằm trong URL ảnh). `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` để `sync: false`, **nhập tay** ở Render Dashboard → service backend → Environment. Lấy tại Cloudinary Dashboard → API Keys, chọn role **Master Admin** (role *Media Library User* không gọi được Admin API nên lệnh xóa ảnh sẽ thất bại). Secret chỉ nằm ở backend — không bao giờ đặt tiền tố `NEXT_PUBLIC_` hay `VITE_`.
+- `SMTP_*` — để trống tới khi công ty cung cấp (câu 9 trong `CAU-HOI-CAN-XAC-NHAN.md`).
 
 > ⚠️ Free tier: web service ngủ sau 15 phút không request (request đầu tiên chậm ~30s); Postgres free hết hạn sau 90 ngày. Nâng plan khi go-live thật.
+
+> ⚠️ **Nối DB từ ngoài Render bắt buộc có `?sslmode=require` trong `DATABASE_URL`.** `PrismaService` dùng adapter `@prisma/adapter-pg` (node-postgres), mà node-postgres mặc định **không** bật SSL → Render đóng kết nối và mọi route chạm DB trả `500` kèm thông báo đánh lạc hướng `User was denied access on the database`. Prisma CLI (`studio`, `db execute`, `migrate`) có engine riêng tự bật SSL nên vẫn chạy bình thường — **đừng lấy CLI làm bằng chứng rằng DB ổn**. Backend chạy trên Render dùng Internal URL nên không gặp lỗi này; chỉ `.env` máy dev (trỏ External URL) mới cần.
 
 ---
 
