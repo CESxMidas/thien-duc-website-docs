@@ -35,8 +35,8 @@
 - [x] Setup CI tối thiểu: lint + build tự động khi mở PR ở cả 2 repo (`.github/workflows/ci.yml`). **Hosting đã chốt (câu 11): Vercel (FE) + Render (BE + Postgres)** — auto-deploy khi push `main` (`render.yaml` + Vercel Git integration).
 
 ## Sprint 1 — Tuần 2–3: Auth + CRUD dự án
-- [ ] `auth` module: đăng nhập email/password, JWT access + refresh token, khóa tạm tài khoản sau 5 lần sai (ED-01).
-- [ ] `users` module: CRUD tài khoản, gán vai trò Editor/Admin/Super Admin (KB-10). **(chờ input câu 18 nếu cần thêm vai trò)**
+- [x] `auth` module: đăng nhập email/password, JWT access + refresh token, khóa tạm tài khoản sau 5 lần sai (ED-01). Access 15 phút + refresh 30 ngày (lưu SHA-256 hash, xoay vòng khi refresh); khóa 15 phút sau 5 lần sai → trả **423 Locked**; thêm `GET /auth/me`; 14 unit test ở `src/auth/auth.service.spec.ts`. Phía Admin CMS: `apiFetch` tự làm mới token khi 401, khôi phục phiên khi tải lại trang, map lỗi sang toast tiếng Việt.
+- [x] `users` module: CRUD tài khoản, gán vai trò Editor/Admin/Super Admin (KB-10). **(chờ input câu 18 nếu cần thêm vai trò)** Backend: email trùng trả 409; khóa/mở khóa qua `isActive`; đặt lại mật khẩu; chặn tự đổi vai trò, tự khóa, tự xóa và chặn hạ quyền/khóa Super Admin cuối cùng. Bảo mật: khóa tài khoản / đổi vai trò / đổi mật khẩu đều **thu hồi toàn bộ refresh token**, và `/auth/refresh` từ chối tài khoản đã bị vô hiệu hóa (trước đây người bị khóa vẫn gia hạn phiên vô hạn). 18 unit test ở `src/users/users.service.spec.ts`. Admin CMS: trang Tài khoản đã nối API thật (thêm/sửa/khóa/mở khóa, xác nhận trước khi khóa).
 - [ ] `projects` module: CRUD dự án + `project_items` (hạng mục con) + `project_gallery`, trạng thái nháp/chờ duyệt/đã đăng (ED-03).
 - [ ] Migrate dữ liệu mẫu từ `src/data/projects.ts` (179 dòng) vào DB làm dữ liệu seed/test — **câu 1–2 đã có trả lời** (5 dự án giữ nguyên + chi tiết vị trí/quy mô/pháp lý/tiến độ từng dự án trong `CAU-HOI-CAN-XAC-NHAN.md`), có thể seed dữ liệu thật luôn; chỉ còn thiếu ảnh thật.
 - [ ] Frontend: tạo route còn thiếu `src/app/du-an/[slug]/[hang-muc]/page.tsx` (hiện `Chưa có` theo báo cáo mục 1.1.4), dùng cùng cấu trúc với `du-an/[slug]` hiện có.
@@ -52,7 +52,8 @@
 
 ## Sprint 3 — Tuần 6–7: CMS Admin + Form liên hệ + Email
 
-- [x] Khởi tạo project Admin CMS riêng (Vite + React), layout Dashboard (ED-02): số form mới, bài chờ duyệt, lối tắt tạo dự án/tin — **khung UI đã xong** (`thien-duc-website-admin/`, dữ liệu mock). Còn lại ở Sprint này: nối API thật (auth + CRUD) thay mock.
+- [x] Khởi tạo project Admin CMS riêng (Vite + React), layout Dashboard (ED-02): số form mới, bài chờ duyệt, lối tắt tạo dự án/tin — **khung UI đã xong** (`thien-duc-website-admin/`, dữ liệu mock). Còn lại ở Sprint này: nối API thật (CRUD) thay mock.
+- [~] **Module đăng nhập Admin đã nối API thật** (`POST /auth/login`, sonner toast): `AuthContext` decode JWT → user, token lưu localStorage/sessionStorage theo "Ghi nhớ đăng nhập", `ProtectedRoute` + phân quyền + trang `/403`, xử lý 401 (hết phiên → về login) / 403 / lỗi mạng bằng toast, đăng xuất thu hồi refresh token. **Chặn cuối:** DB chưa có tài khoản nào → cần seed admin đầu tiên (backend) mới test đăng nhập thật được.
 - [ ] Màn hình duyệt nội dung cho Admin: chấp nhận/trả lại bài-dự án-banner (KB-06).
 - [~] `contact` module: `POST /contact` lưu `contact_submissions` **đã xong** + giới hạn 5 request/IP/giờ **đã xong** (`@Throttle`); **còn thiếu** gửi email thông báo (TODO trong `contact.service.ts`, chờ SMTP thật — câu 9) (YC-09, mục 2.2).
 - [x] Sửa `src/components/sections/contact-form.tsx`: đã bỏ `mailto`, gọi API `POST /contact` qua `src/lib/api/contact.ts` (có honeypot chống bot, validate phía client, xử lý lỗi rate-limit/network, timeout 10s), hiển thị trạng thái gửi thành công/lỗi. Khi chưa đặt `NEXT_PUBLIC_API_URL` thì tự chạy chế độ mock.
