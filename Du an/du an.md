@@ -1,0 +1,2 @@
+Phía Admin CMS trang Dự án vẫn chạy mock data. Cần nối API /projects/admin thật và dựng modal chi tiết có tab Thông tin / Hình ảnh / Hạng mục — đúng chỗ xử lý ảnh và hạng mục mà bạn hỏi ở câu trước. Lưu ý khi làm: ProjectStatus trong admin/src/types/index.ts đang khai báo sai (SAP_MO_BAN, DANG_MO_BAN) so với enum thật của backend (chỉ có DA_BAN_GIAO, DANG_THI_CONG, CHUAN_BI_KHOI_CONG), phải sửa lại cho khớp.
+có 4 dự án thôi fancy-tower nằm trong hưng phú
