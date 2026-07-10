@@ -1,17 +1,26 @@
 # Kế hoạch công việc phần Coding — Website Thiên Đức (PA2)
 
-> Dựa trên `Báo cáo phương án kỹ thuật website Thiên Đức.docx` (cùng thư mục) + hiện trạng mã nguồn kiểm tra ngày 2026-07-14. File này chỉ liệt kê **việc code cụ thể**, tách riêng khỏi các câu hỏi cần công ty trả lời (xem `CAU-HOI-CAN-XAC-NHAN.md`).
+> Dựa trên `Báo cáo phương án kỹ thuật website Thiên Đức.docx` (cùng thư mục) + hiện trạng mã nguồn kiểm tra ngày 2026-07-10. File này chỉ liệt kê **việc code cụ thể**, tách riêng khỏi các câu hỏi cần công ty trả lời (xem `CAU-HOI-CAN-XAC-NHAN.md`).
 >
-> Thư mục `docs/` nằm ở cấp workspace, dùng chung cho `thien-duc-website-frontend` và `thien-duc-website-backend`.
+> Thư mục `docs/` nằm ở cấp workspace, dùng chung cho `thien-duc-website-frontend`, `thien-duc-website-admin` và `thien-duc-website-backend`. Quy ước code chung cho cả 3: `../AGENTS.md` (gốc workspace).
 
-## Hiện trạng (cập nhật 2026-07-08)
+## Hiện trạng (cập nhật 2026-07-10)
 
 - **Đã deploy production** (xem `DEPLOY.md`): Frontend (Next.js) → **Vercel**, Backend (NestJS + Prisma) + PostgreSQL → **Render** (`render.yaml` Blueprint). Luồng gửi form liên hệ đã chạy thật end-to-end trên production (POST `/api/contact` trả `201`, bản ghi lưu vào bảng `contact_submissions` OK).
 - Backend `thien-duc-website-backend/` chạy được cả local lẫn production: NestJS 11 + Prisma 7 + PostgreSQL 17 (local dùng Docker, port **5433** — vì máy dev có Postgres Windows chiếm 5432).
 - Migration `init` (12 bảng) đã áp vào DB; đã test thật `GET /api/projects`, `POST /api/contact` (lưu DB OK); Swagger tại `http://localhost:3001/api/docs` (local) và `…onrender.com/api/docs` (production).
 - Lệnh chạy local: `docker compose up -d` → `npm run start:dev`. Xem dữ liệu: `npx prisma studio` (local) hoặc trỏ `DATABASE_URL` vào External URL của Render.
+- **Admin CMS đã nối API thật 100%** — mọi trang (Tổng quan, Dự án, Tin tức, Trang nội dung, Banner, Liên hệ, Thư viện ảnh, Tài khoản) dùng `apiFetch` + TanStack Query; thư mục `src/data/` (mock) đã xóa.
 - `tsc --noEmit` + `eslint` sạch (0 lỗi, 0 warning). CI lint+build đã có ở cả 2 repo.
 - Câu trả lời nội dung thật (dự án, giới thiệu, pháp lý...) đã có cho câu 1–4, 6–8 — xem `CAU-HOI-CAN-XAC-NHAN.md`; có thể bắt đầu seed dữ liệu thật ở Sprint 1.
+
+### Việc nên làm trước ở phiên tiếp theo
+
+1. **Áp migration full-text lên DB**: `docker compose up -d` → `npx prisma migrate deploy` → kiểm tra `GET /api/search?q=Hưng Phú` trả kết quả và `EXPLAIN` cho thấy dùng index GIN chứ không seq scan. Sprint 4 viết xong nhưng chưa chạy được vì Docker Desktop tắt.
+2. **Seed trang nội dung**: `GET /pages/gioi-thieu` và `/pages/lien-he` chưa có bản ghi nào trong DB, nên frontend đang chạy nhánh fallback tĩnh. Cần seed (hoặc nhập qua Admin CMS) để vòng đời "admin sửa → web hiện" chạy thật.
+3. **Cron ngoài cho ED-08**: Render free tier ngủ sau 15 phút nên `@Cron` nội bộ không đủ. Đặt UptimeRobot/cron-job.org gọi `POST /api/news/publish-scheduled` (cần token ADMIN).
+4. **Bản dịch tiếng Anh cho nội dung CMS**: hạ tầng đã đọc `.en` và fallback `.vi`; hiện mọi field `.en` trong DB còn trống nên trang `/en/...` hiển thị nội dung tiếng Việt. **(chờ câu 19)**
+5. **Gửi email form liên hệ** vẫn là TODO trong `contact.service.ts` — chờ SMTP thật (câu 9).
 
 > ⚠️ Render free tier: backend **ngủ sau 15 phút** không có request (request đầu tiên chậm ~30–50s, có thể làm form timeout ở FE — timeout FE đang đặt 10s). Cân nhắc UptimeRobot ping định kỳ hoặc nâng plan khi go-live. Postgres free hết hạn sau 90 ngày.
 > ⚠️ Thời gian (`created_at`…) lưu **UTC**; hiển thị phải quy đổi giờ VN (UTC+7) bằng `formatDateTime` trong `src/lib/format.ts` (frontend).
@@ -54,15 +63,15 @@
 - [x] `pages` module: CRUD nội dung trang tĩnh (ED-07). **Vá lỗ bảo mật** giống `news`: `GET /pages` và `GET /pages/:slug` công khai trước đây trả cả trang `DRAFT`. Thêm `GET /pages/admin` + `GET /pages/admin/:slug`, slug trùng trả `409`.
 - [x] `banners` module: CRUD banner trang chủ, thứ tự hiển thị (ED-06). Thêm `GET /banners/admin` (kèm banner đã tắt — trước đây admin không có cách nào xem), `PATCH /banners/reorder` (bắt gửi đủ danh sách id, chặn trùng lặp, ghi `order` trong transaction), và chốt thứ tự `order, createdAt` để banner không nhảy chỗ khi `order` trùng nhau.
 - [x] Đã tạo tài khoản `SUPER_ADMIN` đầu tiên bằng `npm run prisma:seed` — gỡ chặn cuối của Sprint 1/3 (đăng nhập Admin CMS thật).
-- [ ] **Admin CMS**: nối API thật cho Tin tức, Banner, Trang nội dung, Thư viện ảnh (hiện vẫn mock).
+- [x] **Admin CMS**: nối API thật cho Tin tức, Banner, Trang nội dung, Thư viện ảnh — xong, không còn `mockAsync` trong `queries.ts`. Banner sắp xếp lên/xuống qua `useReorderBanners` (`PATCH /banners/reorder`); Thư viện ảnh upload + xóa (`useUploadMedia`/`useDeleteMedia`); Tin tức có luồng nháp → gửi duyệt → đăng (`useUpdateNewsStatus`) + CRUD chuyên mục.
 
 > 🐛 **Lỗi có sẵn đã sửa trong sprint này**: `.env` local thiếu `?sslmode=require` nên `PrismaService` (adapter `@prisma/adapter-pg`) không nối được Render — **mọi** route chạm DB trả `500`, kể cả `/api/projects` của Sprint 1. Prisma CLI vẫn chạy được vì dùng engine riêng, khiến lỗi rất dễ bị bỏ qua. Xem `DEPLOY.md`.
 
 ## Sprint 3 — Tuần 6–7: CMS Admin + Form liên hệ + Email
 
-- [~] Khởi tạo project Admin CMS riêng (Vite + React), layout Dashboard (ED-02): số form mới, bài chờ duyệt, lối tắt tạo dự án/tin — **khung UI đã xong** (`thien-duc-website-admin/`). Đã nối API thật: **Tài khoản** (Sprint 1) và **Dự án** (modal 3 tab, duyệt nội dung). Còn mock: Tin tức, Trang nội dung, Banner, Liên hệ, Thư viện ảnh, và số liệu trang Tổng quan.
-- [~] **Module đăng nhập Admin đã nối API thật** (`POST /auth/login`, sonner toast): `AuthContext` decode JWT → user, token lưu localStorage/sessionStorage theo "Ghi nhớ đăng nhập", `ProtectedRoute` + phân quyền + trang `/403`, xử lý 401 (hết phiên → về login) / 403 / lỗi mạng bằng toast, đăng xuất thu hồi refresh token. **Chặn cuối:** DB chưa có tài khoản nào → cần seed admin đầu tiên (backend) mới test đăng nhập thật được.
-- [~] Màn hình duyệt nội dung cho Admin: chấp nhận/trả lại bài-dự án-banner (KB-06). **Dự án đã xong** (tab Thông tin trong modal chi tiết: Gửi duyệt / Duyệt & đăng / Trả về nháp, chỉ ADMIN trở lên). Còn tin tức và banner — chờ Sprint 2.
+- [x] Khởi tạo project Admin CMS riêng (Vite + React), layout Dashboard (ED-02): số form mới, bài chờ duyệt, lối tắt tạo dự án/tin — xong (`thien-duc-website-admin/`). **Toàn bộ 8 trang đã nối API thật**; số liệu trang Tổng quan suy ra từ `useLeads`/`useNews`/`useProjects` chứ không còn số cứng.
+- [x] **Module đăng nhập Admin đã nối API thật** (`POST /auth/login`, sonner toast): `AuthContext` decode JWT → user, token lưu localStorage/sessionStorage theo "Ghi nhớ đăng nhập", `ProtectedRoute` + phân quyền + trang `/403`, xử lý 401 (hết phiên → về login) / 403 / lỗi mạng bằng toast, đăng xuất thu hồi refresh token. Đã gỡ chặn: tài khoản `SUPER_ADMIN` đầu tiên tạo bằng `npm run prisma:seed`.
+- [x] Màn hình duyệt nội dung cho Admin: chấp nhận/trả lại bài-dự án-banner (KB-06). **Dự án** (tab Thông tin trong modal chi tiết: Gửi duyệt / Duyệt & đăng / Trả về nháp, chỉ ADMIN trở lên), **Tin tức** (`useUpdateNewsStatus`) và **Trang nội dung** (`useUpdatePageStatus`) đều đã có. Banner không theo luồng duyệt mà bật/tắt hiển thị + sắp thứ tự.
 - [~] `contact` module: `POST /contact` lưu `contact_submissions` **đã xong** + giới hạn 5 request/IP/giờ **đã xong** (`@Throttle`); **còn thiếu** gửi email thông báo (TODO trong `contact.service.ts`, chờ SMTP thật — câu 9) (YC-09, mục 2.2).
 - [x] Sửa `src/components/sections/contact-form.tsx`: đã bỏ `mailto`, gọi API `POST /contact` qua `src/lib/api/contact.ts` (có honeypot chống bot, validate phía client, xử lý lỗi rate-limit/network, timeout 10s), hiển thị trạng thái gửi thành công/lỗi. Khi chưa đặt `NEXT_PUBLIC_API_URL` thì tự chạy chế độ mock.
 - [x] Màn hình quản lý lead cho Admin/Super Admin: đổi trạng thái Mới → Đang xử lý → Hoàn thành, ghi chú nội bộ (KB-08). `ContactPage` đã bỏ mock, nối `GET /contact` thật; `LeadDetailDialog` cho đổi trạng thái + ghi chú nội bộ, nút Lưu chỉ bật khi có thay đổi, số điện thoại/email là link `tel:`/`mailto:`, bảng gắn nhãn "Có ghi chú nội bộ". Thời gian hiển thị bằng `formatDateTime` (giờ VN). **Sửa backend**: `UpdateContactSubmissionDto.status` trước đây **bắt buộc** nên chỉ lưu ghi chú cũng bị `400` — nay optional, đúng ngữ nghĩa `PATCH`.
@@ -70,12 +79,18 @@
 
 ## Sprint 4 — Tuần 8–9: Song ngữ, tìm kiếm, SEO, nối API
 
-- [ ] Thêm cấu trúc `[locale]` routing (`/vi/...`, `/en/...`) thay redirect placeholder hiện tại trong `next.config.ts` (chỉ có `/vi → /`).
-- [ ] Nội dung song ngữ lưu JSONB theo thiết kế DB (mục 2.2.1) — cần bản dịch tiếng Anh cho giới thiệu, dự án tiêu biểu, liên hệ. **(chờ input câu 19 về mức độ ưu tiên)**
-- [ ] Nối `src/lib/search.ts` với API tìm kiếm full-text (thay lọc phía client hiện tại) — dự án + tin tức theo từ khóa (YC-10).
-- [ ] SEO: metadata động theo từng trang/dự án/bài tin, sinh `sitemap.xml` + `robots.txt` tự động, Open Graph tags (YC-12).
-- [ ] Đặt lịch đăng bài tự động (ED-08) — cron job hoặc queue kiểm tra `scheduled_at`.
-- [ ] Hoàn tất nối toàn bộ trang frontend còn lại với API thật, loại bỏ import trực tiếp từ `src/data/*` (giữ lại làm fallback/demo nếu cần).
+- [x] Cấu trúc `[locale]` routing. **Tiếng Việt không tiền tố** (`/du-an` giữ nguyên URL production), **tiếng Anh có tiền tố** (`/en/du-an`); `/vi/...` redirect 308 về bản không tiền tố để chỉ có một URL chính tắc. Toàn bộ `src/app/*` đã chuyển vào `src/app/[locale]/`. **Next.js 16 đổi `middleware.ts` → `proxy.ts`** — logic rewrite/redirect nằm ở `src/proxy.ts`, `next.config.ts` không còn `redirects()`. Lõi i18n: `src/lib/i18n/config.ts` (`localizePath`, `splitLocale`), `get-dictionary.ts` + `dictionaries/{vi,en}.json`. `SiteShell` nhận `locale`, nạp dictionary ở server rồi truyền xuống header/footer nên hai file dịch không vào bundle client. Có `LanguageSwitcher` (cố ý không dùng `useSearchParams` — hook đó nằm trong shell dùng chung sẽ ép mọi trang tĩnh rơi vào render động).
+- [~] Nội dung song ngữ JSONB: **hạ tầng xong, chưa có bản dịch thật**. `mappers.ts` nhận `locale`, đọc `.en` và **tự fallback về `.vi`** khi thiếu (chuỗi `en` rỗng cũng coi như thiếu). Chuỗi giao diện tĩnh đã dịch trong `dictionaries/en.json`; nhãn nav/footer đánh khóa theo `href` để không phải sửa `data/navigation.ts` / `data/footer.ts`. **Nội dung CMS tiếng Anh do biên tập viên nhập qua Admin**, không tự chế. **(vẫn chờ input câu 19)**
+- [x] Tìm kiếm full-text (YC-10). **Backend trước đây chưa có module search** — đã thêm `src/search/` (`GET /search?q=&type=all|projects|news&limit=`), xếp hạng bằng `ts_rank`. Migration `20260710120000_add_fulltext_search` tạo hai hàm `IMMUTABLE` (`project_search_document`, `news_search_document`) + index GIN trên đúng lời gọi hàm đó — gói biểu thức vào hàm để index và câu truy vấn không bao giờ lệch nhau. Dùng ts config `simple` (Postgres không có config tiếng Việt; `english` sẽ cắt gốc từ sai). Frontend: `src/lib/api/search.ts` gọi API thật; **`matchesSearchQuery` (lọc phía client) đã bị gỡ khỏi `src/lib/search.ts`**. `/tin-tuc?q=` và `/du-an?q=` nay tìm phía server.
+- [x] SEO (YC-12): `src/lib/seo.ts` gom canonical + hreflang + Open Graph + Twitter Card. Mọi trang tĩnh đã có `generateMetadata`. Thêm `src/app/sitemap.ts` (mỗi URL khai báo một lần theo bản `vi` kèm `alternates` hreflang + `x-default`) và `src/app/robots.ts`. **5 trang còn là khung placeholder** (`tuyen-dung`, `cong-ty-thanh-vien`, `so-do-to-chuc-cong-ty`, `dao-tao`, `chinh-sach-nhan-su` — chờ câu 5) bị gắn `noindex` và loại khỏi sitemap; xem `placeholderPaths` trong `seo.ts`, gỡ slug khỏi mảng đó khi có nội dung thật.
+- [x] Đặt lịch đăng bài tự động (ED-08) — `@nestjs/schedule` + `src/news/news-scheduler.service.ts`, chạy mỗi 5 phút. Idempotent nhờ **một câu UPDATE nguyên tử** có điều kiện `status <> 'PUBLISHED'`: chạy lại không đăng trùng, hai instance cũng không tranh nhau (Postgres khóa hàng). Lỗi được log và bỏ qua để cron không chết. Thêm `POST /news/publish-scheduled` (ADMIN+) để cron ngoài gọi — **cron nội bộ không chạy khi Render free tier ngủ**, nên cần UptimeRobot/cron-job.org gọi route này.
+- [x] Nối nốt frontend với API thật. `home-banner-slider.tsx` nay nhận dữ liệu từ `getBanners()` qua wrapper server `home-banner-section.tsx` (carousel vẫn là client component). `gioi-thieu` + `lien-he` đọc `GET /pages/:slug` qua `src/lib/api/pages.ts`, **fallback về `data/about.ts` / `data/contact.ts` khi CMS chưa có bản ghi** — chỉ phần chữ (tiêu đề + đoạn văn) thuộc CMS, các khối có bố cục riêng (giá trị cốt lõi, quy trình liên hệ, bản đồ) vẫn là UI tĩnh. `data/home.ts`, `data/navigation.ts`, `data/footer.ts` giữ nguyên như yêu cầu.
+
+> 🐛 **Lỗi có sẵn đã sửa trong sprint này**:
+> 1. **Lộ dự án `DRAFT`**: `GET /projects/:slug`, `/:slug/gallery`, `/:slug/:itemSlug` là route công khai nhưng `findBySlug` không lọc `contentStatus` — đoán đúng slug là đọc được dự án nháp. Đã thêm `publishedOnly` (giống `news`/`pages`) và thêm `GET /projects/admin/:slug` + `/admin/:slug/gallery` cho Admin CMS (đã trỏ `admin/src/lib/api/projects.ts` sang route mới).
+> 2. **Không tạo được trang nội dung từ CMS**: `CreatePageDto.content` khai `@IsObject()`, nhưng class-validator **loại mảng ra khỏi "object"** — Admin gửi `Bilingual[]` luôn nhận `400`. Đã đổi sang `TranslatedTextDto[]`, cùng quy ước với `NewsPost.content`.
+
+> ⚠️ **Chưa kiểm chứng trên DB thật**: Docker Desktop không chạy lúc làm sprint này, nên migration full-text, `GET /search` và cron ED-08 mới chỉ qua `tsc` + `nest build` + unit test, **chưa chạy `prisma migrate deploy` và chưa test truy vấn thật**. Việc đầu tiên ở phiên sau: `docker compose up -d` → `npx prisma migrate deploy` → gọi thử `/api/search?q=Hưng Phú`.
 
 ## UAT + Go-live — Tuần 10
 
@@ -93,7 +108,7 @@
 
 - [x] Khởi tạo repo backend + schema Prisma nháp (có thể chỉnh sau khi có input) — `thien-duc-website-backend/`.
 - [x] Viết đặc tả API/OpenAPI — Swagger tự sinh tại `/api/docs`.
-- [x] Dựng khung Admin CMS (UI, chưa cần nội dung thật) — `thien-duc-website-admin/`. **Công nghệ đúng mục 2.5 báo cáo**: Vite + React 19 + TS, **shadcn/ui** + Tailwind v4, **TanStack Query** (`src/lib/api/queries.ts`), **React Hook Form + Zod** (form đăng nhập + `ProjectFormDialog`). Có: đăng nhập giả lập + route bảo vệ, layout Dashboard (sidebar + topbar), trang Tổng quan (form mới / nội dung chờ duyệt / lối tắt tạo dự án-tin — ED-02), các trang danh sách Dự án / Tin tức / Trang nội dung / Banner / Liên hệ (lead, lọc trạng thái) / Thư viện ảnh / Tài khoản. Dữ liệu là **mock**, `apiFetch` + `queryFn` sẵn sàng nối backend qua `VITE_API_URL`. `npm run build` + `lint` sạch.
+- [x] Dựng khung Admin CMS (UI, chưa cần nội dung thật) — `thien-duc-website-admin/`. **Công nghệ đúng mục 2.5 báo cáo**: Vite + React 19 + TS, **shadcn/ui** + Tailwind v4, **TanStack Query** (`src/lib/api/queries.ts`), **React Hook Form + Zod** (form đăng nhập + `ProjectFormDialog`). Có: đăng nhập giả lập + route bảo vệ, layout Dashboard (sidebar + topbar), trang Tổng quan (form mới / nội dung chờ duyệt / lối tắt tạo dự án-tin — ED-02), các trang danh sách Dự án / Tin tức / Trang nội dung / Banner / Liên hệ (lead, lọc trạng thái) / Thư viện ảnh / Tài khoản. Dữ liệu **đã nối API thật toàn bộ** qua `VITE_API_URL` (mock đã gỡ). `npm run build` + `lint` sạch.
 - [x] Viết lớp `src/lib/api/*` cho frontend với dữ liệu mock giống schema dự kiến — client (bật/tắt qua `NEXT_PUBLIC_API_URL`) + DTO types + mock từ `src/data/*` + mapper về type UI; còn việc thay import trong component (Sprint 1).
 - [x] Setup CI/CD tối thiểu (lint + build) cho cả 2 repo, `.env.example` cho backend. Còn thiếu: cấu trúc `[locale]` routing.
 

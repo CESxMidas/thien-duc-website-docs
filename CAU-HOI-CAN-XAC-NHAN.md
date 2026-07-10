@@ -41,15 +41,12 @@ Tầm nhìn: Trở thành thương hiệu đầu tư và xây dựng bất độ
 8. ✅ **Thông tin pháp lý chính xác**: tên pháp nhân đầy đủ, mã số thuế (MST), địa chỉ trụ sở, các chi nhánh (nếu có), hotline chính thức. Thông tin pháp lý chính xác và cập nhật nhất của Công ty TNHH Đầu tư Xây dựng Thương mại Thiên Đức tính đến năm 2026 cụ thể như sau:🏢 Thông Tin Pháp Lý Doanh NghiệpTên chính thức: CÔNG TY TNHH ĐẦU TƯ XÂY DỰNG THƯƠNG MẠI THIÊN ĐỨC.Mã số thuế / Mã doanh nghiệp: 0309910290.Ngày cấp ĐKKD: 02/04/2010 (Hoạt động từ 05/04/2010).Cơ quan quản lý: Cục Thuế Thành phố Hồ Chí Minh.Loại hình: Công ty TNHH hai thành viên trở lên.Ngành nghề chính: Xây dựng nhà các loại (Mã 4100).
 
 ## 2. Hạ tầng & tài khoản dịch vụ
-
 9. **Email domain chính thức**: có `info@thienduc.vn` (hay domain khác) chưa, hay tạm thời vẫn dùng `dautuxaydungthienduc@yahoo.com`? Nếu chưa có, ai là người mua/setup Google Workspace hoặc dịch vụ email tương đương?
 10. **Domain website**: `thienduc.vn` (hoặc domain mới) đã sở hữu chưa, ai đang quản lý DNS? Có cần trỏ song song với `thienduccons.vn` cũ trong giai đoạn chuyển tiếp không?
 11. ✅ **Nhà cung cấp hosting backend** — đã chốt: **Render** (backend + PostgreSQL, region Singapore) qua `render.yaml` Blueprint; **Frontend** trên **Vercel**. Hiện chạy gói **free** (backend ngủ sau 15 phút, Postgres hết hạn 90 ngày) — cần duyệt nâng plan trước khi go-live thật (xem câu 13 ngân sách).
 12. **Cloudinary**: đã có tài khoản/plan trả phí chưa, hay dùng free tier trong giai đoạn đầu? Giới hạn dung lượng ảnh/video dự kiến?
 13. **Ngân sách vận hành hàng tháng**: công ty chấp nhận mức nào (báo cáo ước tính PA2 ~400k–1.5 triệu/tháng) để chọn gói dịch vụ phù hợp?
-
 ## 3. Nhân lực & quy trình nội bộ
-
 14. **Ai phụ trách backend (NestJS/Prisma)**: cùng đội hiện tại hay cần tuyển/thuê ngoài? Ảnh hưởng đến việc tách repo backend ngay từ Sprint 0.
 15. **Ai đóng vai trò Admin/Super Admin** trong CMS để duyệt nội dung — cần xác nhận người thật (tên, email) để tạo tài khoản test khi UAT.
 16. **Quy trình duyệt nội dung nội bộ hiện tại**: ai là người duyệt bài trước khi đăng (thực tế ngoài đời), để thiết kế đúng luồng "Nháp → Chờ duyệt → Đã xuất bản" trong CMS khớp với quy trình thật của công ty.
@@ -58,7 +55,9 @@ Tầm nhìn: Trở thành thương hiệu đầu tư và xây dựng bất độ
 ## 4. Quyết định kỹ thuật cần công ty/đội dự án đồng thuận
 
 18. **Phân quyền chi tiết**: xác nhận đúng 3 cấp Editor/Admin/Super Admin và quyền hạn cụ thể từng cấp (báo cáo mục 1.2.3) có đủ chưa, hay cần thêm vai trò khác (ví dụ: Marketing chỉ xem báo cáo form liên hệ)?
+CHỈ CẦN 3 CẤP SUPER ADMIN, ADMIN, EDITOR. THAM KHẢO PHẦN 1.2.2 1.2.3
 19. **Ưu tiên ngôn ngữ**: song ngữ Việt/Anh có bắt buộc ngay ở bản go-live đầu tiên, hay có thể làm sau (báo cáo xếp Sprint 4, có thể lùi nếu nội dung tiếng Anh chưa sẵn sàng)?
+BẮT BUỘC PHẢI CÓ song ngữ Việt/Anh
 20. **Tiêu chí go-live cuối cùng**: công ty xác nhận dùng đúng checklist ở mục 3.3 báo cáo (14/14 route, LCP ≤2.5s, Lighthouse SEO ≥90...) làm tiêu chí nghiệm thu chính thức, hay có điều chỉnh?
 
 ---
