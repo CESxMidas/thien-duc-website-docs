@@ -130,6 +130,31 @@
 
 > 📌 Seed đã sửa nhưng **chưa chạy lại trên production**. Cần `npm run prisma:seed:projects` với `DATABASE_URL` trỏ Render (có chốt `SEED_CONFIRM_PRODUCTION=yes`) thì nội dung mới lên web thật.
 
+## Tinh chỉnh UI/UX phần dự án (2026-07-11)
+
+Rà lại trải nghiệm trên bản deploy (dùng skill `frontend-design` + `ui-ux-pro-max`), giữ nguyên bảng màu thương hiệu. `lint` + `next build` sạch, cả 8 trang dự án + hạng mục prerender OK.
+
+- [x] **Hai panel "Thông tin nhanh / Tổng quan dự án" cân chiều cao**: mô tả + đoạn giới thiệu bản đồ nay `line-clamp` (6 / 3 dòng) để cột phải không cao vống hơn cột trái. **Bỏ dải địa chỉ + nút "Xem trên Google Maps"** trong panel Tổng quan vì khối bản đồ `ProjectLocationMap` ngay dưới đã có đủ địa chỉ và nút chỉ đường — trước đây trùng lặp và làm lệch chiều cao.
+- [x] **Gộp hạng mục thành một showcase tự chạy** — mới `components/sections/project-items-carousel.tsx`. Trước đây hạng mục hiện **hai lần** (lưới thẻ tĩnh + khối `gallerySections` cùng tên Fancy Tower) gây trùng lặp; nay chỉ còn một carousel tự chuyển slide (ảnh + thông tin từng hạng mục, dẫn tới trang chi tiết), có thanh tiến trình, chấm điều hướng, mũi tên, tạm dừng khi hover, tôn trọng `prefers-reduced-motion`. Thứ tự khối ảnh trang dự án: có `items` → carousel; không → `gallerySections`; không → `gallery` phẳng.
+- [x] **Dự án không có hạng mục (La Bonita, Silver Sea, Bảy Hiền)**: slider ảnh nay chạy tự động và **bỏ tiêu đề khối "Thư viện ảnh …" + đầu thẻ "Thư viện / {tên}"** (phần khoanh đỏ trong ảnh phản hồi) — tên dự án đã ở tiêu đề trang. Thêm prop `hideHeader` cho `ProjectGallerySections`.
+- [x] **Trang hạng mục dựng lại bố cục hai cột cân bằng** (`du-an/[slug]/[hang-muc]`): cột trái `ProjectItemGallery` mới (ảnh đại diện lớn + list ảnh con chạy slide ngay dưới, bấm chọn hoặc tự chuyển); cột phải **gộp** Thông tin nhanh + Tổng quan hạng mục vào một panel duy nhất, đặt ngang và cùng chiều cao với cột ảnh. Hạng mục không có ảnh → panel thông tin chiếm trọn chiều ngang.
+- Hạng mục nhiều ảnh vẫn chạy slide như cũ (yêu cầu giữ nguyên).
+
+> 📌 Chỉ mới `lint` + `build`, **chưa chạy thật trên trình duyệt**. Nên mở dev (`npm run dev`) rà nhanh: carousel hạng mục Hưng Phú, slider ảnh phẳng Bảy Hiền/La Bonita, và bố cục hai cột trang Fancy Tower trên cả desktop lẫn mobile trước khi chốt.
+
+### Đợt 2 — Đồng nhất bố cục mọi dự án (2026-07-11)
+
+Phản hồi: bố cục giữa các dự án chưa đồng nhất, lấy **Khu đô thị Hưng Phú làm chuẩn**. `lint` + `next build` sạch, prerender OK.
+
+- [x] **Bản đồ cho mọi dự án**: Hưng Phú giữ bản đồ minh hoạ vẽ tay (`ProjectLocationMap`); La Bonita / Silver Sea / Bảy Hiền nay **nhúng Google Maps** (`ProjectMapEmbed`, `output=embed`, không cần API key) — địa chỉ suy từ quickFact "Địa chỉ" hoặc "tên + địa danh". **Có bản đồ thì ẩn ảnh hero trùng ở trên**, ảnh dự án chuyển vào cạnh bản đồ (đồng bộ cách Hưng Phú làm). Không suy được địa chỉ thì không render (không để khối trống). *Chốt hướng: chủ dự án chọn nhúng Google Maps thay vì chờ ảnh map vẽ tay.*
+- [x] **Cân hai panel Thông tin nhanh / Tổng quan**: cột trái (lưới thông số) dùng `flex-1 auto-rows-fr` + ô căn giữa để **giãn đều lấp hết chiều cao**, bỏ khoảng trống thừa ở đáy (phần khoanh đỏ trong ảnh phản hồi). Cột phải `line-clamp` mô tả (6/3 dòng) để không cao vống hơn cột trái.
+- [x] **Thư viện ảnh dự án không hạng mục** (`ProjectPhotoStrip`): xếp ảnh thành **hàng tối đa 3 ảnh, tự trượt** (scroll-snap) khi > 3 ảnh; ít ảnh thì hiện lưới tĩnh gọn. Là khối song song với carousel hạng mục để bố cục các dự án đồng nhất.
+- [x] **Footer bớt khoảng trống dư thừa**: gom dải "Liên hệ" (điện thoại/email/trụ sở) full-width thưa thớt thành **một cột trong hàng trên** cạnh 3 cột điều hướng — hàng trên lấp đầy, hết khoảng trống ngang. Thêm nhãn `footer.contact` song ngữ (VI "Liên hệ" / EN "Contact").
+
+> ⚠️ **Cần ảnh thật để thấy slide**: kho ảnh hiện chỉ có **1–2 ảnh/dự án** (La Bonita 2, Silver Sea 2, Bảy Hiền 1) nên `ProjectPhotoStrip` đang hiện hàng tĩnh, chưa trượt. Có ≥ 4 ảnh (upload qua Admin → tab Hình ảnh) là tự chạy slide. Cùng với việc bổ sung ảnh đại diện cho hạng mục Hưng Phú Mall / Khu nhà ở thấp tầng — xem mục Admin bên dưới.
+
+> 🔧 **Admin còn thiếu ô cho hạng mục**: form hạng mục (`ProjectItemsTab`) mới nhập được tên/slug/mô tả ngắn/trạng thái/ảnh đại diện; **chưa có ô mô tả chi tiết (`description`), giá trị nổi bật (`highlights`), thông số (`quickFacts`)** dù backend + FE đều hỗ trợ. Thư viện ảnh con của hạng mục thì đã nhập được qua tab Hình ảnh (chọn "Thuộc hạng mục"). Nên bổ sung 3 ô này để trang hạng mục hiện đầy đủ như thiết kế.
+
 ## UAT + Go-live — Tuần 10
 
 - [ ] Chạy checklist nghiệm thu go-live đầy đủ (xem mục 3.3 báo cáo / mục 4 file kế hoạch tổng — `ke-hoach-thien-duc.md`).
