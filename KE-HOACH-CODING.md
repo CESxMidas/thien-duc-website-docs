@@ -16,8 +16,8 @@
 
 ### Việc nên làm trước ở phiên tiếp theo
 
-1. **Áp migration full-text lên DB**: `docker compose up -d` → `npx prisma migrate deploy` → kiểm tra `GET /api/search?q=Hưng Phú` trả kết quả và `EXPLAIN` cho thấy dùng index GIN chứ không seq scan. Sprint 4 viết xong nhưng chưa chạy được vì Docker Desktop tắt.
-2. **Seed trang nội dung**: `GET /pages/gioi-thieu` và `/pages/lien-he` chưa có bản ghi nào trong DB, nên frontend đang chạy nhánh fallback tĩnh. Cần seed (hoặc nhập qua Admin CMS) để vòng đời "admin sửa → web hiện" chạy thật.
+1. **Áp migration full-text lên production (Render)**: đã kiểm chứng trên DB local. Lưu ý `.env` dev đang trỏ vào Render — chạy `prisma migrate deploy` phải là hành động có chủ ý.
+2. **Seed trang nội dung**: `GET /pages/gioi-thieu` và `/pages/lien-he` chưa có bản ghi nào trong DB, nên frontend đang chạy nhánh fallback tĩnh. Cần seed (hoặc nhập qua Admin CMS bằng `PageFormDialog` mới) để vòng đời "admin sửa → web hiện" chạy thật.
 3. **Cron ngoài cho ED-08**: Render free tier ngủ sau 15 phút nên `@Cron` nội bộ không đủ. Đặt UptimeRobot/cron-job.org gọi `POST /api/news/publish-scheduled` (cần token ADMIN).
 4. **Nhập bản dịch tiếng Anh cho nội dung CMS** — **chặn go-live** (câu 19: song ngữ bắt buộc). Công cụ đã sẵn: mở Admin CMS, mỗi field có nút VI/EN, chấm vàng = chưa dịch. Cần dịch: 4 dự án + hạng mục, 1 bài tin, banner, trang `gioi-thieu` / `lien-he`. Trang nội dung có cột "Đã dịch / Chưa dịch" để rà.
 5. **Bấm tay kiểm thử Admin CMS**: `BannerFormDialog`, `PageFormDialog` và `BilingualField` mới viết chỉ qua `tsc` + `build`, chưa chạy thật (cần backend + DB + đăng nhập).
@@ -94,7 +94,41 @@
 > 2. **Không tạo được trang nội dung từ CMS**: `CreatePageDto.content` khai `@IsObject()`, nhưng class-validator **loại mảng ra khỏi "object"** — Admin gửi `Bilingual[]` luôn nhận `400`. Đã đổi sang `TranslatedTextDto[]`, cùng quy ước với `NewsPost.content`.
 > 3. **Sửa hạng mục dự án làm mất bản dịch tiếng Anh**: `ProjectItemsTab` gửi `title: { vi }`, mà `PATCH` ghi đè nguyên field JSON — `en` đã nhập bị xóa âm thầm. Nay gửi lại cả hai ngôn ngữ.
 
-> ⚠️ **Chưa kiểm chứng trên DB thật**: Docker Desktop không chạy lúc làm sprint này, nên migration full-text, `GET /search` và cron ED-08 mới chỉ qua `tsc` + `nest build` + unit test, **chưa chạy `prisma migrate deploy` và chưa test truy vấn thật**. Việc đầu tiên ở phiên sau: `docker compose up -d` → `npx prisma migrate deploy` → gọi thử `/api/search?q=Hưng Phú`.
+> ✅ **Đã kiểm chứng trên DB local** (2026-07-10, Postgres 17 qua Docker port 5433):
+> - Migration `20260710120000_add_fulltext_search` áp thành công; hai hàm `IMMUTABLE` và hai index GIN tồn tại đúng.
+> - `EXPLAIN` cho thấy truy vấn dùng **`Bitmap Index Scan on projects_search_idx`**, không seq scan → mẹo gói biểu thức vào hàm `IMMUTABLE` hoạt động đúng ý đồ.
+> - `GET /api/search` chạy thật: `Hưng Phú` → dự án + 1 tin, `Vũng Tàu` → Silver Sea Tower, `sổ hồng` → 2 dự án. `q` 1 ký tự → `400`, `limit=51` → `400`, từ khóa vô nghĩa → mảng rỗng.
+> - ED-08: bài `DRAFT` quá hạn `scheduled_at` → `POST /news/publish-scheduled` lượt 1 đăng 1 bài, **lượt 2 đăng 0 bài**, hai lượt **song song cũng 0** → idempotent, không đăng trùng. `published_at` lấy đúng `scheduled_at` chứ không phải `NOW()`. Không token → `401`.
+>
+> ⚠️ **Chưa chạy trên production**: `.env` của máy dev trỏ `DATABASE_URL` vào **Render (production)**. Các lệnh trên đều chạy với `DATABASE_URL` override sang localhost. Trước go-live phải `prisma migrate deploy` lên Render một cách có chủ ý.
+
+> 🔎 **Hạn chế đã biết của tìm kiếm**: dùng ts config `simple` nên **không bỏ dấu** — gõ `hung phu` (không dấu) không ra `Hưng Phú`. Người Việt gõ không dấu rất phổ biến. Cách xử lý: bật extension `unaccent` và bọc thêm `unaccent()` trong hai hàm `*_search_document` (cần migration mới + `CREATE EXTENSION unaccent`, xác nhận Render cho phép). Chưa làm trong sprint này.
+
+## Nội dung thật từ các câu đã xác nhận (2026-07-10)
+
+- [x] **Câu 2 — số liệu 4 dự án**: `data/projects.ts` đã thay nội dung tạm bằng số liệu thật (vị trí, diện tích, số tầng, số căn, tiến độ). Đổi tiêu đề "Dự án Vũng Tàu" → **Silver Sea Tower**, "Dự án Bảy Hiền" → **Bảy Hiền Tower**; **slug giữ nguyên** (`du-an-vung-tau`, `du-an-bay-hien`) để không hỏng liên kết đã phát ra ngoài.
+  > ⚠️ **Đã lược bỏ có chủ đích**: câu trả lời gốc mô tả La Bonita "dính phốt lừa đảo… chủ mưu lãnh án chung thân", Bảy Hiền Tower "sai phạm xây dựng vượt tầng… chưa được cấp sổ hồng". Đây là ghi chú nội bộ, **không đăng lên website công khai của chính công ty**. Nội dung công bố chỉ giữ vị trí, quy mô, tiến độ. Trạng thái pháp lý chỉ nêu khi thuận lợi và đã xác nhận (Hưng Phú, Silver Sea Tower có sổ hồng lâu dài). Cần công ty duyệt lại phần này trước go-live.
+  > ⚠️ Khối số liệu **Cần Thơ 43,44 ha** trong câu 2 là lỗi sao chép (công ty xác nhận) — đã xóa khỏi `CAU-HOI-CAN-XAC-NHAN.md`. Khu đô thị Hưng Phú = Bến Tre, 11,25 ha.
+- [x] **Câu 6 — công ty thành viên**: `data/member-companies.ts` + trang `cong-ty-thanh-vien` dựng nội dung thật (người đại diện Trần Hữu Nghị + 3 pháp nhân). **Đã gỡ khỏi `placeholderPaths`** → bỏ `noindex`, đưa vào sitemap. Công ty chưa cung cấp MST/địa chỉ/ngành nghề từng đơn vị nên trang chỉ nêu tên, kèm lối liên hệ để hỏi thêm.
+- [x] **Câu 7 — giới thiệu công ty**: `data/about.ts` bổ sung `aboutTimeline` (2010 · 2014-2018 CapitaLand · 2018-nay), `aboutStats` (16+ năm, 3 đại dự án, 1.152 căn Vista Verde, 11,25 ha Hưng Phú) và `aboutPortfolio` (Vista Verde, Feliz en Vista, Hưng Phú, Fancy Tower). Trang `gioi-thieu` render thêm 3 khối tương ứng.
+- [x] **Câu 8 — thông tin pháp lý**: `legalInfo` trong `config/site.ts` (MST `0309910290`, tên pháp nhân đầy đủ, cơ quan quản lý) hiển thị ở dải chân trang.
+- [~] **Câu 4 — tuyển dụng**: `data/careers.ts` + trang `tuyen-dung` đã dựng khung đầy đủ (giá trị, danh sách vị trí, quy trình 3 bước, nộp hồ sơ qua email). `openPositions` **cố ý để rỗng** — chưa có vị trí thật, trang hiện trạng thái "chưa có vị trí đang tuyển" và vẫn `noindex`. Đổ dữ liệu vào mảng đó là trang tự hiện.
+- [ ] **Câu 5 — chính sách nhân sự / đào tạo**: vẫn chờ nội dung. Hai trang `dao-tao`, `chinh-sach-nhan-su` và `so-do-to-chuc-cong-ty` giữ `noindex`.
+
+## Kho ảnh + giao diện dự án tiêu biểu (2026-07-10)
+
+- [x] **Kho ảnh `thien-duc-website-resources/`**: 30 ảnh hiện có đã đưa vào `images/`, kèm `README.md` (quy ước đặt tên, bảng kiểm kê, danh sách ảnh còn thiếu, danh sách ảnh cần nén). Script `npm run sync:images` ở frontend đồng bộ một chiều kho → `public/images/`, so sánh bằng **hash nội dung** (dùng `mtime` sẽ chép lại mỗi lượt vì bản đích luôn mới hơn).
+  > ⚠️ **Không tự lấy ảnh từ Internet**: Vista Verde, Feliz en Vista, Hưng Phú Mall chưa có ảnh. Ảnh của CapitaLand và các trang bất động sản thuộc bản quyền bên thứ ba — công ty phải cung cấp.
+- [x] **Bỏ dạng bảng ở khối "Dự án tiêu biểu"** (trang Giới thiệu) → thẻ, cùng ngôn ngữ thị giác với trang chủ (`components/sections/about-portfolio.tsx`). Bảng 5 cột buộc khách hàng đọc ngang để ghép "Vai trò" với "Quy mô", và phải cuộn ngang trên điện thoại. Hai dự án CapitaLand không có ảnh → render **tấm chữ nêu quan hệ đối tác** thay vì mượn ảnh dự án khác (mượn ảnh là nói dối bằng hình).
+- [x] **Slider ảnh cho mọi dự án**: `ProjectGallerySections` (đã có autoplay, thanh tiến trình, chấm điều hướng, tôn trọng `prefers-reduced-motion`) trước đây chỉ dùng khi dự án có `gallerySections`. Nay dự án chỉ có `gallery` phẳng (La Bonita, Silver Sea Tower) và trang hạng mục cũng dùng chung slider này thay vì lưới ảnh tĩnh. Thêm prop `sectionLabel` + tự ẩn đánh số khi chỉ có một khối.
+
+> 🐛 **Lỗi dữ liệu đã sửa** (thấy trên bản deploy Vercel):
+> 1. `location` trong seed lưu **địa chỉ đầy đủ** → thẻ dự án trang chủ hiện `SỐ 9 PHẠM PHÚ THỨ, PHƯỜNG 11, QUẬN TÂN BÌNH, TP.HCM` viết hoa giãn chữ, tràn hai dòng. Nay `location` là địa danh ngắn (`Tân Bình, TP.HCM`), địa chỉ đầy đủ chuyển vào `quickFacts`.
+> 2. **Bảy Hiền Tower gắn nhãn `DANG_THI_CONG`** trong khi khối căn hộ đã bàn giao, hơn 150 hộ dân đang ở (câu 2) → đổi thành `DA_BAN_GIAO`.
+> 3. Seed để câu **"Chưa được cấp sổ hồng"** trong mục *Điểm nổi bật* của trang công khai, và mô tả nhắc "UBND TP.HCM xem xét gỡ vướng". Đã thay bằng nội dung trung tính về vị trí và tiện ích ngoại khu.
+> 4. Mock frontend chỉ để **một** ảnh trong `gallery` (ảnh bìa nằm riêng ở `image`) nên slider chỉ có 1 ảnh và ẩn hết điều hướng, trong khi seed backend để cả hai. Đã đồng bộ mock theo seed.
+
+> 📌 Seed đã sửa nhưng **chưa chạy lại trên production**. Cần `npm run prisma:seed:projects` với `DATABASE_URL` trỏ Render (có chốt `SEED_CONFIRM_PRODUCTION=yes`) thì nội dung mới lên web thật.
 
 ## UAT + Go-live — Tuần 10
 
