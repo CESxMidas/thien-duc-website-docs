@@ -54,10 +54,12 @@ Tầm nhìn: Trở thành thương hiệu đầu tư và xây dựng bất độ
 
 ## 4. Quyết định kỹ thuật cần công ty/đội dự án đồng thuận
 
-18. **Phân quyền chi tiết**: xác nhận đúng 3 cấp Editor/Admin/Super Admin và quyền hạn cụ thể từng cấp (báo cáo mục 1.2.3) có đủ chưa, hay cần thêm vai trò khác (ví dụ: Marketing chỉ xem báo cáo form liên hệ)?
+18. ✅ **Phân quyền chi tiết**: xác nhận đúng 3 cấp Editor/Admin/Super Admin và quyền hạn cụ thể từng cấp (báo cáo mục 1.2.3) có đủ chưa, hay cần thêm vai trò khác (ví dụ: Marketing chỉ xem báo cáo form liên hệ)?
 CHỈ CẦN 3 CẤP SUPER ADMIN, ADMIN, EDITOR. THAM KHẢO PHẦN 1.2.2 1.2.3
-19. **Ưu tiên ngôn ngữ**: song ngữ Việt/Anh có bắt buộc ngay ở bản go-live đầu tiên, hay có thể làm sau (báo cáo xếp Sprint 4, có thể lùi nếu nội dung tiếng Anh chưa sẵn sàng)?
+> *Không phải sửa code*: enum `Role` trong `prisma/schema.prisma` đã đúng 3 cấp này.
+19. ✅ **Ưu tiên ngôn ngữ**: song ngữ Việt/Anh có bắt buộc ngay ở bản go-live đầu tiên, hay có thể làm sau (báo cáo xếp Sprint 4, có thể lùi nếu nội dung tiếng Anh chưa sẵn sàng)?
 BẮT BUỘC PHẢI CÓ song ngữ Việt/Anh
+> *Đã làm*: Sprint 4 dựng `[locale]` routing và bổ sung ô nhập tiếng Anh cho mọi field song ngữ trong Admin CMS. **Còn lại là việc nhập nội dung** — mọi field `.en` trong DB hiện vẫn trống nên trang `/en/...` đang lùi về tiếng Việt. Đây là hạng mục chặn go-live.
 20. **Tiêu chí go-live cuối cùng**: công ty xác nhận dùng đúng checklist ở mục 3.3 báo cáo (14/14 route, LCP ≤2.5s, Lighthouse SEO ≥90...) làm tiêu chí nghiệm thu chính thức, hay có điều chỉnh?
 
 ---
