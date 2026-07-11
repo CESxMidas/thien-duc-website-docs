@@ -155,6 +155,44 @@ Phản hồi: bố cục giữa các dự án chưa đồng nhất, lấy **Khu 
 
 > 🔧 **Admin còn thiếu ô cho hạng mục**: form hạng mục (`ProjectItemsTab`) mới nhập được tên/slug/mô tả ngắn/trạng thái/ảnh đại diện; **chưa có ô mô tả chi tiết (`description`), giá trị nổi bật (`highlights`), thông số (`quickFacts`)** dù backend + FE đều hỗ trợ. Thư viện ảnh con của hạng mục thì đã nhập được qua tab Hình ảnh (chọn "Thuộc hạng mục"). Nên bổ sung 3 ô này để trang hạng mục hiện đầy đủ như thiết kế.
 
+### Đợt 3 — Cơ cấu lại nội dung trang chủ ↔ giới thiệu, chống trùng lặp (2026-07-11)
+
+Phản hồi: nội dung lặp giữa trang chủ và trang Giới thiệu; cần tối ưu UI/UX + SEO trước khi go-live. `lint` + `tsc --noEmit` sạch.
+
+- [x] **Bỏ "Dự án tiêu biểu" ở trang Giới thiệu** — trang chủ đã có khối `HomeFeaturedProjects` (lấy dự án chủ đầu tư từ API), nên khối tĩnh trùng ở `/gioi-thieu` là dư thừa. Đã xoá `about-portfolio.tsx` + dữ liệu `aboutPortfolio`/`PortfolioProject`.
+- [x] **"Lĩnh vực hoạt động" gom về một nơi (trang Giới thiệu)** — bỏ khối `HomeCapabilities` ở trang chủ; nội dung ngành nghề chỉ còn ở `/gioi-thieu` (dùng `aboutFields = businessFields`). Đã xoá `home-capabilities.tsx` + export `homeCapabilities`.
+- [x] **Section mới "Dự án hợp tác" ở trang chủ** (`home-cooperation.tsx`): slider một hàng ngang (scroll-snap, tự chạy, tôn trọng `prefers-reduced-motion`, tạm dừng khi hover/focus, có mũi tên + chấm chỉ báo). Chứa dự án đồng phát triển cùng CapitaLand (Vista Verde, Feliz en Vista) — trước đây nằm lẫn trong "Dự án tiêu biểu" của trang Giới thiệu. Đây là tín hiệu uy tín (đối tác quốc tế) không trùng với trang nào khác. Ảnh do đối tác giữ bản quyền nên thẻ dùng nền thương hiệu + thông tin, không mượn ảnh. Dữ liệu tĩnh (`homeCooperation` trong `data/home.ts`), **không cần đổi backend**.
+- Bố cục trang chủ sau chỉnh: Banner → Dự án tiêu biểu → Dải giới thiệu (thế mạnh) → **Dự án hợp tác** → Tin tức mới → CTA liên hệ.
+- Thêm utility `.no-scrollbar` trong `globals.css` cho track slider.
+
+### Đợt 3b — Dự án hợp tác quản lý từ CMS (2026-07-11)
+
+Yêu cầu: sau này thêm dự án hợp tác mới phải làm được từ Admin, không sửa code.
+Đã dựng CRUD xuyên suốt 3 project. `build`/`lint`/`tsc` sạch ở cả 3 (backend
+build + admin build pass; frontend `tsc --noEmit` + `eslint` sạch — frontend
+`next build` cần backend chạy để prerender như thường lệ).
+
+- [x] **Backend**: model `CooperationProject` (bảng `cooperation_projects`, mọi
+  field chữ song ngữ `{vi,en?}` + `contentStatus` + `order`), module
+  `cooperation` (controller/service/dto). Route công khai `GET /cooperation`
+  **chỉ trả `PUBLISHED`**; route admin `GET /cooperation/admin`, POST, PATCH
+  `:id`, PATCH `reorder`, PATCH `:id/status` (ADMIN), DELETE (ADMIN).
+- [x] **Admin CMS**: trang "Dự án hợp tác" (`/du-an-hop-tac`) — DataTable + kéo
+  thứ tự bằng mũi tên, badge trạng thái bấm để đăng/ẩn, form RHF+Zod
+  (`CooperationFormDialog`) với `BilingualField`. Thêm mục sidebar (icon
+  Handshake) đặt ngay sau "Dự án".
+- [x] **Frontend**: `getCooperationProjects()` (`lib/api/cooperation.ts`) — gọi
+  `/cooperation`, fallback mock tĩnh `homeCooperation` khi chưa bật API.
+  `HomeCooperation` tách thành server (fetch) + `CooperationSlider` (client).
+
+> ⚠️ **Phải áp migration trước/khi deploy**: `prisma/migrations/20260711120000_add_cooperation_projects`
+> đã tạo sẵn nhưng **chưa áp** (`.env` dev trỏ Render/production, không tự chạy
+> `migrate dev`). Trên production chạy `prisma migrate deploy` có chủ ý; local
+> bật Docker (port 5433) rồi `migrate deploy` hoặc `migrate dev`. Cho tới khi áp,
+> `GET /cooperation` sẽ 500 (bảng chưa tồn tại) → nếu bật API, section trang chủ
+> hỏng. Có seed sẵn 2 dự án CapitaLand: `npm run prisma:seed:cooperation`
+> (production cần `SEED_CONFIRM_PRODUCTION=yes`).
+
 ## UAT + Go-live — Tuần 10
 
 - [ ] Chạy checklist nghiệm thu go-live đầy đủ (xem mục 3.3 báo cáo / mục 4 file kế hoạch tổng — `ke-hoach-thien-duc.md`).
