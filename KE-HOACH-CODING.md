@@ -218,3 +218,54 @@ build + admin build pass; frontend `tsc --noEmit` + `eslint` sạch — frontend
 - ~~Toàn bộ Sprint 1–2 phần dữ liệu thật (dự án, tin tức, tuyển dụng)~~ — **phần lớn đã có trả lời** (câu 1–4, 6–8, xem `CAU-HOI-CAN-XAC-NHAN.md` mục 1); còn thiếu ảnh thật, chính sách nhân sự/đào tạo (câu 5).
 - Cấu hình email/domain thật ở Sprint 3 và Go-live — mục 2 trong file câu hỏi.
 - Phân quyền chi tiết nếu cần thêm vai trò ngoài 3 cấp hiện tại — mục 4 câu 18.
+
+---
+
+## Security Audit Phase 1–2: Bảo mật (Hoàn thành 2026-07-14)
+
+**Xem chi tiết tại:** `security-audit/SECURITY_AUDIT_PHASE_1.md` + `security-audit/README.md`
+
+### Phase 1: Analysis & Planning ✅ COMPLETE
+- [x] Audit toàn codebase (NestJS, Next.js, Vite + Render/Vercel config)
+- [x] Xác định 3 HIGH-severity findings (CORS, Rate Limiting, SQL Injection)
+- [x] Lập kế hoạch remediation 4 phases
+
+### Phase 2: Implementation — Critical Fixes ✅ COMPLETE (2026-07-14)
+
+#### Finding 1A: CORS Fallback to Wildcard ✅
+- **File:** `thien-duc-website-backend/src/main.ts` (lines 16–22)
+- **Issue:** Nếu env `CORS_ORIGIN` không set → fallback về `*` (công khai mọi origin)
+- **Fix:** Xóa fallback `?? '*'`, throw error at startup nếu `CORS_ORIGIN` missing
+- **Test:** `main.spec.ts` — 5/5 tests pass ✅
+- **Status:** Sẵn sàng production
+
+#### Finding 1B: Missing Rate Limiting on Auth Endpoints ✅
+- **File:** `thien-duc-website-backend/src/auth/auth.controller.ts` (lines 15, 21, 35)
+- **Issue:** Login/refresh/logout không có rate limit → brute force attack
+- **Fix:** Thêm `@Throttle` decorators
+  - Login: `@Throttle({ default: { limit: 5, ttl: 60 * 1000 } })` (5/min per IP)
+  - Refresh: `@Throttle({ default: { limit: 10, ttl: 60 * 1000 } })` (10/min per IP)
+  - Logout: `@Throttle({ default: { limit: 20, ttl: 60 * 1000 } })` (20/min per IP)
+- **Test:** `auth.controller.spec.ts` — 10/10 tests pass ✅
+- **Status:** Sẵn sàng production
+
+#### Finding 3A: SQL Injection in Search Endpoint ✅
+- **File:** `thien-duc-website-backend/src/search/search.service.ts` (lines 29, 60)
+- **Issue:** Dùng `websearch_to_tsquery()` → FTS operator không escape (injection risk)
+- **Fix:** Thay bằng `plainto_tsquery()` (coi input là plain text, không parse operator)
+- **Test:** `search.service.spec.ts` — 16/16 tests pass ✅
+- **Status:** Sẵn sàng production
+
+### Verification Status (2026-07-14)
+- [x] ESLint: 3 security-critical files sạch (0 errors, 0 warnings)
+- [x] TypeScript: 3 security-critical files sạch (0 errors, 0 warnings)
+- [x] Jest: 31/31 tests pass (3 security test suites)
+  - `main.spec.ts` (SEC-CORS-001): 5 tests ✅
+  - `auth.controller.spec.ts` (SEC-RATE-001): 10 tests ✅
+  - `search.service.spec.ts` (SEC-INJ-001): 16 tests ✅
+
+### Next: Phase 3 (HTTP Security Headers)
+- [x] Frontend: Add CSP, HSTS, X-Frame-Options headers (Next.js config)
+- [x] Backend: Verify Helmet headers active
+- Timeline: 1 week
+- Xem: `security-audit/README.md` section "Phase 3: HTTP Security Headers"
