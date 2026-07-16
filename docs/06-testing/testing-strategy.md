@@ -21,6 +21,7 @@ npm run test:e2e                            # cần Postgres sống + admin đã
 
 # Frontend
 npm run lint && npx tsc --noEmit && npm test
+npm run build   # không cần API: thiếu NEXT_PUBLIC_API_URL → bỏ prerender /[locale] + sitemap tĩnh
 
 # Admin
 npm run lint && npm run build
@@ -40,8 +41,15 @@ Yêu cầu môi trường (CI tự dựng — xem job `e2e` trong `backend/.gith
   giả, test đăng nhập bằng đúng cặp này).
 - `JWT_ACCESS_SECRET` bất kỳ. SMTP/Cloudinary/Sentry bỏ trống — no-op an toàn.
 
-Máy dev không có Postgres/Docker thì dựa vào CI để chạy e2e (giống hạn chế
-prerender đã ghi ở →5).
+Máy dev không có Postgres/Docker thì dựa vào CI để chạy e2e.
+
+## `next build` không cần API sống
+
+`NEXT_PUBLIC_API_URL` không đặt (CI, máy dev offline) → `isApiConfigured`
+(`lib/api/client.ts`) tắt prerender: `generateStaticParams` của `[locale]`
+layout + 3 trang chi tiết trả rỗng, sitemap chỉ gồm route tĩnh. Trang render
+on-demand lúc chạy (ISR `revalidate 60` sẵn có). Production (Vercel, env đã
+đặt) giữ nguyên full SSG — đây là fix cho hạn chế prerender từng ghi ở →5.
 
 ## Nguyên tắc
 

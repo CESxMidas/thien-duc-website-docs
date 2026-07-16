@@ -418,6 +418,7 @@ Thứ tự: H5 → H8 (H5 nên có sớm để đo được chất lượng sau 
     - **Quyết định phạm vi:** không dựng e2e xuyên 3 app (đăng nhập admin UI → thấy ở FE) — cần chạy đồng thời FE+admin+BE trong CI, quá nặng so với giá trị thêm; smoke API-level phủ cùng bề mặt regression.
     - **Kiểm chứng:** admin `lint` + `build` pass; FE `lint` + `tsc --noEmit` sạch, `npm test` 5 suite / 36 test pass; backend `lint` (chỉ còn warning có sẵn) + `build` + unit 8 suite / 77 test pass. **e2e chạy xác nhận trên CI sau khi push** (máy dev không có Postgres/Docker — hạn chế có sẵn, giống →5).
     - **Docs:** `06-testing/testing-strategy.md` từ khung → nội dung thật (ma trận test/CI + cách chạy).
+    - **Fix bổ sung (CI build FE đỏ lần chạy đầu):** `next build` không có `NEXT_PUBLIC_API_URL` nổ `Failed to parse URL from /news|/projects|/pages/*` — prerender gọi `fetch` URL tương đối (chế độ mock cũ README nhắc đã bị gỡ, `src/data/projects|news.ts` không còn). Fix: `isApiConfigured` (`lib/api/client.ts`); thiếu API → `generateStaticParams` của `[locale]` layout + 3 trang chi tiết trả rỗng (bỏ prerender, render on-demand + ISR 60s sẵn có), sitemap chỉ gồm route tĩnh. Env đã đặt (Vercel) → full SSG như cũ, không hardcode URL production. Kiểm chứng cả 2 chế độ build local: không env (4 trang tĩnh gốc, pass) + có env (SSG đầy đủ đúng slug thật, pass).
 
 ### 3. Optional — Nâng cao
 
