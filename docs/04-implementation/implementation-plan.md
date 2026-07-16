@@ -394,10 +394,16 @@ Thứ tự: H5 → H8 (H5 nên có sớm để đo được chất lượng sau 
   - **Lý do:** CSP hiện chỉ giám sát, chưa chặn. Siết lại để phòng thủ XSS thật sự.
   - **Gợi ý:** Theo dõi report một thời gian → chuyển sang `Content-Security-Policy`; thay `unsafe-inline`/`unsafe-eval` bằng nonce/hash của Next.js. Làm **sau** H5 để bắt được vi phạm qua monitoring.
 
-- [ ] **(→ 7) JSON-LD structured data giàu hơn** — *Hạng mục: Performance & SEO*
+- [x] **(→ 7) JSON-LD structured data giàu hơn** — *Hạng mục: Performance & SEO* ✅ 2026-07-16
   - **Khu vực:** `frontend/src/lib/seo.ts` + layout/trang liên quan (mới chỉ có `BreadcrumbList` ở `frontend/src/components/ui/breadcrumb.tsx`).
   - **Lý do:** Bỏ phí rich-result cho thương hiệu bất động sản → mất cơ hội hiển thị nổi bật trên Google.
   - **Gợi ý:** Thêm `Organization`/`LocalBusiness` (toàn site), `Article` (tin tức), cân nhắc `RealEstateListing`/`Product` cho dự án.
+  - **Đã hoàn thành:**
+    - **`Organization` toàn site** (nhúng ở `[locale]/layout.tsx`, có `@id` để schema khác tham chiếu): toàn bộ field lấy từ `config/site.ts` — legalName, taxID, foundingDate (2010-04-05, đổi từ `operatingSince`), email, telephone, address (PostalAddress tách từ chuỗi địa chỉ sẵn có), logo thật (`/images/brand/logo-thien-duc.png`). **Không bịa dữ liệu nào.**
+    - **`NewsArticle`** ở `tin-tuc/[slug]`: headline/description/image/datePublished từ API; `author` = Person khi bài ghi tác giả, ngược lại trỏ Organization qua `@id`; `publisher` trỏ Organization; `inLanguage` theo locale; `dateModified` cố ý bỏ (API public chưa trả `updatedAt`).
+    - **Builder + component:** `buildOrganizationJsonLd()` / `buildNewsArticleJsonLd()` trong `lib/seo.ts`; component `ui/json-ld.tsx` dùng chung. `BreadcrumbList` hiện có giữ nguyên.
+    - **Cố ý KHÔNG làm:** `RealEstateListing`/`Product` cho dự án (portfolio đã bàn giao, không có giá/offer — gắn schema rao bán là khai man; xem lại nếu công ty mở bán); `LocalBusiness` (thiếu `openingHours`/`geo`); `sameAs` (repo chưa có URL mạng xã hội chính thức — bổ sung khi công ty cung cấp).
+    - **Kiểm chứng:** FE `lint` + `tsc` sạch; bundle riêng `seo.ts` (esbuild) chạy in JSON thật — Organization + NewsArticle (cả hai nhánh author, cả hai locale) đúng cấu trúc, URL localize đúng (`/tin-tuc/…` vs `/en/tin-tuc/…`). Google Rich Results Test bản URL cần chạy sau khi deploy (production dùng `NEXT_PUBLIC_SITE_URL` thật thay `localhost`).
 
 - [ ] **(→ 8) CI cho admin + test FE/e2e** — *Hạng mục: Process & deliverables*
   - **Khu vực:** `admin/` (chưa có `.github/workflows`), FE (chưa có component test), script `test:e2e` backend chưa dựng.
