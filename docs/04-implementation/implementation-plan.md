@@ -405,10 +405,19 @@ Thứ tự: H5 → H8 (H5 nên có sớm để đo được chất lượng sau 
     - **Cố ý KHÔNG làm:** `RealEstateListing`/`Product` cho dự án (portfolio đã bàn giao, không có giá/offer — gắn schema rao bán là khai man; xem lại nếu công ty mở bán); `LocalBusiness` (thiếu `openingHours`/`geo`); `sameAs` (repo chưa có URL mạng xã hội chính thức — bổ sung khi công ty cung cấp).
     - **Kiểm chứng:** FE `lint` + `tsc` sạch; bundle riêng `seo.ts` (esbuild) chạy in JSON thật — Organization + NewsArticle (cả hai nhánh author, cả hai locale) đúng cấu trúc, URL localize đúng (`/tin-tuc/…` vs `/en/tin-tuc/…`). Google Rich Results Test bản URL cần chạy sau khi deploy (production dùng `NEXT_PUBLIC_SITE_URL` thật thay `localhost`).
 
-- [ ] **(→ 8) CI cho admin + test FE/e2e** — *Hạng mục: Process & deliverables*
+- [x] **(→ 8) CI cho admin + test FE/e2e** — *Hạng mục: Process & deliverables* ✅ 2026-07-16
   - **Khu vực:** `admin/` (chưa có `.github/workflows`), FE (chưa có component test), script `test:e2e` backend chưa dựng.
   - **Lý do:** Regression tự động còn nhẹ; admin không được CI gate.
   - **Gợi ý:** Thêm `ci.yml` cho admin (lint + `tsc -b` + build); thêm vài test component FE trọng yếu + một e2e smoke (đăng nhập admin → tạo nháp → thấy ở FE).
+  - **Đã hoàn thành:**
+    - **Admin CI:** thêm `.github/workflows/ci.yml` (Node 22, `npm ci` → `lint` → `build`; script `build` = `tsc -b && vite build` nên typecheck đã nằm trong build). Không thêm dependency mới.
+    - **FE test setup:** `jest.config.mjs` dùng transformer `next/jest` (jest/ts-jest đã có sẵn trong devDependencies) + `jest.setup.ts` nạp `@testing-library/jest-dom`; script `"test": "jest"`; CI thêm bước `npm test` giữa lint và build. Dev deps mới: `jest-environment-jsdom`, `@testing-library/react`, `@testing-library/dom`, `@testing-library/jest-dom`. Lưu ý: SWC của `next/jest` chỉ resolve `@/*` trong import — `jest.mock("@/...")` cần `moduleNameMapper` tường minh (đã khai trong `jest.config.mjs`).
+    - **FE test (5 suite / 36 test):** `lib/seo.test.ts` (builder JSON-LD →7: Organization/NewsArticle 2 nhánh author + 2 locale, alternates/hreflang, noIndex); `lib/i18n/config.test.ts` (localizePath/splitLocale — bất biến "vi không tiền tố, en có /en"); `ui/breadcrumb.test.tsx` (JSON-LD BreadcrumbList, aria-current, thu gọn mobile); `sections/contact-form.test.tsx` (trần maxLength khớp →3, validate client, honeypot không gọi API, luồng thành công + rate-limit — API mock hoàn toàn); **viết lại `next.config.spec.ts`**: bản cũ so sánh chuỗi hardcode với chính nó (không import config thật, không bắt được regression) → bản mới import `next.config.ts` và assert header thật (phải cập nhật khi làm →6).
+    - **Backend e2e smoke:** viết lại `test/app.e2e-spec.ts` (bỏ boilerplate "Hello World!" đã sai từ lâu vì thiếu prefix `api`) thành luồng thật: `GET /api` sống → ghi không token bị 401 → login tài khoản seed → tạo nháp (DRAFT, publishedAt null) → nháp KHÔNG lộ ở route public (list + đoán slug → 404) → PATCH status PUBLISHED → hiện ở public kèm publishedAt → xóa dọn → payload vượt trần →3 bị 400. Bootstrap lặp đúng main.ts (prefix + ValidationPipe + interceptor + filter).
+    - **Backend CI job `e2e`:** service container `postgres:17` (credentials vứt đi khai ngay trong workflow — không phải secret), `prisma migrate deploy` → `prisma:seed` (ADMIN_EMAIL/PASSWORD giả) → `test:e2e`. SMTP/Cloudinary/Sentry không cấu hình — đều no-op an toàn theo thiết kế.
+    - **Quyết định phạm vi:** không dựng e2e xuyên 3 app (đăng nhập admin UI → thấy ở FE) — cần chạy đồng thời FE+admin+BE trong CI, quá nặng so với giá trị thêm; smoke API-level phủ cùng bề mặt regression.
+    - **Kiểm chứng:** admin `lint` + `build` pass; FE `lint` + `tsc --noEmit` sạch, `npm test` 5 suite / 36 test pass; backend `lint` (chỉ còn warning có sẵn) + `build` + unit 8 suite / 77 test pass. **e2e chạy xác nhận trên CI sau khi push** (máy dev không có Postgres/Docker — hạn chế có sẵn, giống →5).
+    - **Docs:** `06-testing/testing-strategy.md` từ khung → nội dung thật (ma trận test/CI + cách chạy).
 
 ### 3. Optional — Nâng cao
 
