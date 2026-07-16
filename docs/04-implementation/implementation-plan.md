@@ -439,9 +439,16 @@ Thứ tự: cân nhắc sau khi Critical + High-value xong.
 
 Thứ tự: có thể xen kẽ bất cứ lúc nào; Q11 nên làm sớm vì bổ trợ C4.
 
-- [ ] **(→ 11) Seed trang `gioi-thieu`/`lien-he`** — *Hạng mục: Content operations*
+- [x] **(→ 11) Seed trang `gioi-thieu`/`lien-he`** — *Hạng mục: Content operations* ✅ 2026-07-16 (phần repo)
   - **Khu vực:** Bảng `pages` (chưa có bản ghi → FE chạy fallback tĩnh); nhập qua `PageFormDialog` hoặc seed script.
-  - **Lý do:** Để vòng đời "admin sửa → web hiện" chạy thật, và có bản ghi để nhập bản dịch EN (bổ trợ C4).
+  - **Lý do:** Để vòng đời "admin sửa → web hiện" chạy thật, và có bản ghi để nhập bản dịch EN (bổ trợ C4 / →4 — **Q11 là tiền đề của →4**).
+  - **Đã hoàn thành (phần repo — 2026-07-16):**
+    - **`prisma/seed-pages.js`** + script `prisma:seed:pages`: 2 trang `gioi-thieu` (title + 4 đoạn) và `lien-he` (title + 1 đoạn), nội dung **nguyên văn** copy dự phòng đang chạy trên FE (`data/about.ts`/`contact.ts`, đã đối chiếu từng chuỗi) → seed xong trang public không đổi chữ nào, chỉ chuyển nguồn sang CMS. Status `PUBLISHED` (nội dung vốn đã công khai).
+    - **Idempotent + không đè bản admin sửa:** `ON CONFLICT (slug) DO NOTHING` — chỉ tạo khi chưa có, khác các seed upsert khác (trang nội dung là dữ liệu Admin CMS biên tập trực tiếp). Kèm guard `SEED_CONFIRM_PRODUCTION=yes` như các seed khác.
+    - **Tiếng Anh cố ý bỏ trống** — repo không có bản dịch EN chính thức cho copy này; →4 nhập qua Admin CMS (chấm vàng "chưa dịch" là chỉ dấu đúng).
+    - **Không đổi:** Prisma schema/migration, FE (đã CMS-aware sẵn với fallback), Admin (PageFormDialog đã hỗ trợ đủ slug/title/content song ngữ + đăng/nháp).
+    - **Kiểm chứng:** `node --check` pass; guard production hoạt động; backend lint/build/unit 8 suite / 77 test pass.
+  - **⚠️ Còn chờ chạy tay trên production:** `SEED_CONFIRM_PRODUCTION=yes npm run prisma:seed:pages` (DATABASE_URL Render) → kiểm `GET /api/pages/gioi-thieu|lien-he` trả 200 → trang `/gioi-thieu` + `/lien-he` (vi/en) hiển thị như cũ → sửa thử 1 đoạn trong Admin thấy web đổi sau ≤60s (ISR). Chạy xong mới bắt đầu →4.
 
 - [ ] **(→ 12) Bỏ cast `as unknown as Prisma.*Input`** — *Hạng mục: Architecture & engineering depth*
   - **Khu vực:** `backend/src/projects/projects.service.ts:103` (và các chỗ tương tự).
