@@ -13,7 +13,7 @@ component/lib FE + e2e smoke backend, cả 3 repo code đều có CI.
 | [testing-strategy.md](testing-strategy.md) | Ma trận test/CI + cách chạy | Đang dùng |
 | [test-cases.md](test-cases.md) | Danh sách case | Khung |
 | [acceptance-criteria.md](acceptance-criteria.md) | Tiêu chí nghiệm thu go-live | Khung |
-| [g4-measurement-baseline.md](g4-measurement-baseline.md) | Baseline đo production: Rich Results (✅) + Lighthouse local (✅ có caveat: 8/14 lượt hợp lệ, NO_FCP chập chờn) | Đang dùng |
+| [g4-measurement-baseline.md](g4-measurement-baseline.md) | Baseline đo production: Rich Results (✅) + Lighthouse (✅ sau fix NO_FCP/NO_LCP: 14/14 lượt hợp lệ) | Đang dùng |
 
 ## Tài liệu liên quan
 

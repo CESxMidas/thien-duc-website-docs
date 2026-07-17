@@ -1,6 +1,6 @@
 # G4 — Baseline đo lường production (Rich Results + PageSpeed)
 
-> **Trạng thái:** Đang dùng (G4-a ✅; G4-b ✅ đã đo bằng Lighthouse local — CÓ CAVEAT, xem mục G4-b)
+> **Trạng thái:** Đang dùng (G4-a ✅; G4-b ✅ baseline + ✅ đo lại sau fix NO_FCP/NO_LCP — 14/14 lượt hợp lệ, xem "Lần đo 3")
 > **Nhóm:** 06 — Testing
 > **Ngày đo:** 2026-07-17 (G4-a: chủ dự án; G4-b: Lighthouse CLI local) · **Môi trường:** production (Vercel FE + Render BE)
 > **Base URL:** `https://thien-duc-website-frontend.vercel.app`
@@ -151,6 +151,63 @@ không `dateModified` cho bài viết.
 - **Giả thuyết phụ:** Lighthouse + `--headless=new` trên Windows vốn có tiếng
   chập chờn → góp phần vào tính intermittent; nhưng PSI (môi trường Google)
   cũng fail nên không thể là toàn bộ nguyên nhân.
+- → **Cập nhật cùng ngày:** giả thuyết chính đã được **xác nhận qua can thiệp**
+  — xem "Lần đo 3" bên dưới.
+
+## Lần đo 3 — SAU FIX NO_FCP/NO_LCP ✅ 2026-07-17 (cùng config với baseline)
+
+**Nguyên nhân gốc — nay coi như XÁC NHẬN (qua can thiệp):** toàn bộ trang
+(gồm cả header/footer, vì `SiteShell` nằm trong page) được bọc trong wrapper
+`.page-transition` với animation vào trang bắt đầu ở `opacity: 0` → first paint
+vô hình; đoạn tăng opacity chạy trên compositor có thể không sinh paint record
+mới → Chrome không ghi nhận FCP (hoặc phần tử paint lần đầu lúc vô hình → bị
+loại khỏi ứng viên LCP). Race theo thời điểm frame → giải thích tính chập chờn.
+
+**Fix đã deploy (frontend, 2 file — đã qua lint/tsc/test 36 pass/build local):**
+
+- `frontend/src/components/motion/motion-root.tsx`: **không** gắn class
+  `page-transition` ở lần tải trang đầu (cờ module-scope, chỉ set trong effect
+  → không hydration mismatch); **điều hướng client-side sau đó vẫn fade như
+  cũ** (template remount mỗi lần điều hướng nên instance mới đọc cờ = true).
+- `frontend/src/app/globals.css`: thêm block `prefers-reduced-motion: reduce`
+  vô hiệu `.page-transition`, `.banner-copy-in`, `.hero-fade-up`,
+  `.reveal-section`, `.reveal-from-left/right`, `.stagger-sides > *`
+  (opacity 1, transform none, animation none) — vá luôn lỗ hổng a11y: trước đó
+  reduced-motion không phủ các animation vào trang/reveal.
+
+**Kết quả đo lại (LH 12.8.2, headless Chrome, warm-up, 7 URL × M/D):**
+
+- ✅ **0 × NO_FCP** (baseline: 4) · ✅ **0 × NO_LCP** (baseline: 2) ·
+  ✅ **14/14 lượt có điểm hợp lệ** (baseline: 8/14). **Không điểm nào giảm.**
+
+| # | URL | TB | Perf | Δ so baseline | A11y | BP | SEO | FCP | LCP | TBT | CLS | SI |
+|---|-----|----|------|---------------|------|----|-----|-----|-----|-----|-----|-----|
+| 1 | / | M | 83 | +6 | 96 | 96 | 100 | 1.7s | 4.3s | 84ms | 0.000 | 3.5s |
+| 1 | / | D | 98 | = | 96 | 96 | 100 | 640ms | 1.1s | 8ms | 0.000 | 1.1s |
+| 2 | /gioi-thieu | M | 91 | +1 | 96 | 96 | 100 | 1.3s | 3.3s | 78ms | 0.000 | 3.1s |
+| 2 | /gioi-thieu | D | 99 | ✨ (baseline NO_FCP) | 96 | 96 | 100 | 402ms | 757ms | 19ms | 0.000 | 919ms |
+| 3 | /en/gioi-thieu | M | 92 | +1 | 96 | 96 | 100 | 1.3s | 3.3s | 74ms | 0.000 | 1.8s |
+| 3 | /en/gioi-thieu | D | 99 | ✨ (baseline NO_FCP) | 96 | 96 | 100 | 618ms | 894ms | 0ms | 0.000 | 905ms |
+| 4 | /du-an/khu-do-thi-hung-phu | M | 89 | +10 | 93 | 96 | 100 | 1.2s | 3.2s | 211ms | 0.000 | 2.6s |
+| 4 | /du-an/khu-do-thi-hung-phu | D | 100 | = | 96 | 96 | 100 | 373ms | 724ms | 8ms | 0.000 | 793ms |
+| 5 | /en/du-an/khu-do-thi-hung-phu | M | 83 | ✨ (baseline NO_LCP) | 93 | 96 | 100 | 1.4s | 3.6s | 317ms | 0.000 | 2.4s |
+| 5 | /en/du-an/khu-do-thi-hung-phu | D | 99 | ✨ (baseline NO_LCP) | 96 | 96 | 100 | 424ms | 763ms | 2ms | 0.000 | 859ms |
+| 6 | /tin-tuc/le-khoi-cong-… | M | 90 | ✨ (baseline NO_FCP) | 96 | 96 | 100 | 1.1s | 3.4s | 151ms | 0.000 | 1.5s |
+| 6 | /tin-tuc/le-khoi-cong-… | D | 99 | +1 | 96 | 96 | 100 | 390ms | 770ms | 0ms | 0.000 | 772ms |
+| 7 | /en/tin-tuc/le-khoi-cong-… | M | 81 | ✨ (baseline NO_FCP) | 96 | 96 | 100 | 1.4s | 3.8s | 290ms | 0.000 | 3.2s |
+| 7 | /en/tin-tuc/le-khoi-cong-… | D | 99 | +1 | 96 | 96 | 100 | 337ms | 821ms | 16ms | 0.000 | 897ms |
+
+- LCP element ổn định trên mọi trang (hero `<h1>`/`<p>`; trang chủ = `<img>`
+  banner) — kể cả `/en/du-an/...` trước đây NO_LCP.
+- Điểm cộng ngoài dự kiến: Speed Index trang chủ mobile **10.0s → 3.5s** (vệt
+  fade từng kéo SI); du-an VI mobile Perf **79 → 89**.
+- Ghi chú kỹ thuật lần chạy: vài lượt in lỗi `EPERM` khi chrome-launcher dọn
+  thư mục temp trên Windows — xảy ra **sau khi** report đã ghi xong, không ảnh
+  hưởng dữ liệu (đã kiểm từng JSON: 14/14 hợp lệ, `runtimeError: OK`).
+- Raw JSON (baseline + sau fix) vẫn chỉ ở thư mục tạm local, **không commit**.
+- **Đề nghị kiểm chứng bổ sung (chưa làm):** chạy lại PSI web
+  (pagespeed.web.dev) — công cụ fail đầu tiên — để xác nhận môi trường Google
+  cũng chấm được sau fix.
 
 ## Phân loại kết quả (đo ≠ sửa)
 
@@ -163,14 +220,14 @@ không `dateModified` cho bài viết.
 - Console chỉ có 1 thông báo CSP report-only lành tính (đã dự kiến, thuộc →6).
 - CrUX chưa có field data (traffic chưa đủ) — trạng thái baseline dự kiến.
 
-### Đề xuất fix code (tách task riêng — KHÔNG làm trong G4, chưa bắt đầu cái nào)
+### Đề xuất fix code (tách task riêng — KHÔNG làm trong G4)
 
-| # | Phát hiện | Trang | Đề xuất | Ưu tiên |
-|---|-----------|-------|---------|---------|
-| 1 | NO_FCP chập chờn dưới Lighthouse/PSI (4/14 lượt) + NO_LCP cố định ở trang dự án EN (2/2 lượt) — **giả thuyết animation/initial-paint, CHƯA xác nhận** | Nhiều trang (NO_FCP); `/en/du-an/khu-do-thi-hung-phu` (NO_LCP) | Điều tra: soi CSS animation/opacity ban đầu, thử Lighthouse với reduced-motion; chỉ fix sau khi xác nhận nguyên nhân | **Trung bình-cao** (công cụ đo của Google không chấm điểm ổn định được site — ảnh hưởng đo lường/SEO tooling; người dùng thật chưa thấy ảnh hưởng) |
-| 2 | Trang chủ mobile: Perf 77, LCP 4.0s, Speed Index 10.0s (ảnh banner + nghi vệt fade) | `/` (Mobile) | Tối ưu ảnh banner LCP (kích thước/priority/preload), xem lại fade-in | Thấp-trung bình |
-| 3 | Trang dự án VI mobile: TBT 368ms | `/du-an/khu-do-thi-hung-phu` (Mobile) | Theo dõi; xem lại nếu tăng thêm sau các thay đổi JS | Thấp (chỉ theo dõi) |
-| 4 | Cảnh báo image path / image URL trong structured data (không nghiêm trọng, từ G4-a) | (theo báo cáo RRT — cần chạy lại tool để chốt URL nào, field nào: `Organization.logo` hay `NewsArticle.image`) | Xác định field ảnh bị cảnh báo → dùng URL tuyệt đối/kích thước đạt khuyến nghị của Google | Thấp (không chặn rich result) |
+| # | Phát hiện | Trang | Đề xuất | Trạng thái / Ưu tiên |
+|---|-----------|-------|---------|----------------------|
+| 1 | NO_FCP chập chờn dưới Lighthouse/PSI + NO_LCP ở trang dự án EN — nguyên nhân: wrapper `.page-transition` opacity-0 lúc tải trang | Nhiều trang | Điều tra → fix `motion-root.tsx` + reduced-motion hardening `globals.css` | ✅ **ĐÃ FIX & XÁC NHẬN** 2026-07-17 (Lần đo 3: 14/14 hợp lệ, 0 NO_FCP/NO_LCP) |
+| 2 | Trang chủ mobile: Perf 83, LCP 4.3s (ảnh banner); SI đã hết bất thường (10.0s → 3.5s sau fix #1) | `/` (Mobile) | Tối ưu ảnh banner LCP (kích thước/priority/preload) | ⏳ Mở — Thấp-trung bình |
+| 3 | Trang dự án mobile: TBT 211–317ms (VI/EN, số sau fix) | `/du-an/khu-do-thi-hung-phu` + bản EN (Mobile) | Theo dõi; xem lại nếu tăng thêm sau các thay đổi JS | ⏳ Mở — Thấp (chỉ theo dõi) |
+| 4 | Cảnh báo image path / image URL trong structured data (không nghiêm trọng, từ G4-a) | (theo báo cáo RRT — cần chạy lại tool để chốt URL nào, field nào: `Organization.logo` hay `NewsArticle.image`) | Xác định field ảnh bị cảnh báo → dùng URL tuyệt đối/kích thước đạt khuyến nghị của Google | ⏳ Mở — Thấp (không chặn rich result) |
 
 ## Tài liệu liên quan
 
