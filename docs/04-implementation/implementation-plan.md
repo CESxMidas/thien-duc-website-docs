@@ -398,9 +398,16 @@ Thứ tự: làm tuần tự C1 → C4 (C1 và C2 chặn go-live thật sự).
     - Tên pháp lý đăng ký, mã số thuế + cơ quan thuế, địa chỉ trụ sở — dữ liệu pháp lý/định danh, không dịch.
     - Nhãn chuyển ngôn ngữ **"Tiếng Việt"** — đúng UX (gọi tên ngôn ngữ đích bằng chính ngôn ngữ đó).
     - **Metadata JSON-LD `Organization.name` + OpenGraph `siteName`** vẫn dùng brand/config gốc (structured data, không phải heading hiển thị; `seo.test.ts` khẳng định giá trị này) — cố ý giữ.
-  - **⚠️ Còn lại — lý do →4 vẫn CHƯA đánh dấu hoàn thành (đều là giới hạn CMS/data-model, không phải UI tĩnh):**
+  - **✅ EN-FULL (Group 2) — 7 route audited: HOÀN TẤT (2026-07-18).** Nhánh "nội dung tiếng Anh" cho **bảy route audited** (`/en`, `/en/gioi-thieu`, `/en/lien-he`, `/en/du-an`, `/en/du-an/khu-do-thi-hung-phu`, `/en/tin-tuc`, `/en/tin-tuc/le-khoi-cong-fancy-tower-khu-do-thi-hung-phu`) đã đóng: **0 chuỗi tiếng Việt hiển thị**, VI giữ nguyên, không `[object Object]`, nhãn bản đồ hiện tiếng Anh. Chi tiết + backlog ngoài phạm vi: [closure note 2026-07-18](../08-audits-and-reports/current/2026-07-18-en-full-group2-closure.md). Loạt C khép lại đúng "mục #2 Còn lại" bên dưới (data-model field chưa song ngữ):
+    - **C1/C2** — data-model + backfill song ngữ cho project `location`/`category` và news `category.name` (`{vi, en?}`).
+    - **C3** — project `quickFacts` song ngữ (label + value) + backfill.
+    - **C4** — hiển thị byline tác giả tin theo locale (brand "Thiên Đức" → "Thien Duc" trên `/en`), không đổi schema.
+    - **C5a** — `mapLocation` prose (`heading`/`description`/`address`) song ngữ + backfill.
+    - **C5b** — 27 nhãn overlay `mapLocation.labels[].text` song ngữ + backfill bằng **script** (`prisma/backfill-map-labels.js`), không có editor Admin cho nhãn.
+    - **Bất biến (cả loạt C):** VI giữ **byte-identical**; không `[object Object]` (mapper lùi an toàn về `vi`); dùng cột **JSONB** sẵn có nên **không phát sinh Prisma migration** cho C3/C5a/C5b; C5b do script/seed quản lý (xem [database-migrations.md](../07-deployment/database-migrations.md#seed-dữ-liệu)).
+  - **⚠️ Còn lại — lý do →4 (toàn site) vẫn CHƯA đánh dấu hoàn thành:**
     1. **3 dự án còn lại chưa dịch** — giao cho nhân sự nội dung nội bộ nhập tiếp qua Admin CMS (hạng mục **content-owner nội bộ**, không phải lỗi/task code; theo dõi đến khi nội bộ xác nhận xong).
-    2. **Một số field CMS chưa song ngữ trong data model hiện tại** — follow-up code/data-model riêng (mở rộng field `{vi, en?}`), không xử lý được bằng nhập liệu: project `quickFacts`, project `category`/`location`, nhãn chú thích bản đồ (`mapLocation`), và các field CMS chưa bilingual khác.
+    2. ~~**Một số field CMS chưa song ngữ trong data model hiện tại** — project `quickFacts`, `category`/`location`, nhãn `mapLocation`…~~ **✅ ĐÃ GIẢI QUYẾT (2026-07-18)** qua loạt C ở trên. *Lưu ý phạm vi:* mới đóng cho **7 route audited** — các trang `/en` ngoài phạm vi vẫn còn tiếng Việt (`/en/cong-ty-thanh-vien`, `/en/dao-tao`, `/en/so-do-to-chuc-cong-ty`, `/en/tuyen-dung`, `/en/chinh-sach-nhan-su`) và field hạng mục `[hang-muc]` (`description`/`highlights`/`quickFacts` của item) — **KHÔNG suy ra tiếng Anh toàn site đã xong**; xem closure note.
 
 ### 2. High-value — Củng cố định giá $10,000+
 

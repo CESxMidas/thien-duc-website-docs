@@ -34,10 +34,22 @@ Các script seed idempotent (an toàn chạy lại), một số có chốt `SEED
 - `npm run prisma:seed:projects` — 4 dự án (Hưng Phú, La Bonita, Silver Sea Tower, Bảy Hiền Tower).
 - `npm run prisma:seed:news` — 3 chuyên mục + 1 bài tin thật.
 
+## Backfill nhãn bản đồ song ngữ (EN-FULL-C5b)
+
+Chuyển `map_location.labels[].text` của dự án Hưng Phú từ chuỗi tiếng Việt sang `{ vi, en }` (giữ nguyên VI + toạ độ/kiểu). Cột `map_location` là **JSONB** nên **không cần Prisma migration**.
+
+- Script: `thien-duc-website-backend/prisma/backfill-map-labels.js` — **idempotent** (chạy lại an toàn, bỏ qua nhãn đã có `en`).
+- **Dry-run trước (chỉ đọc, không ghi):** `npm run prisma:backfill:map-labels -- --dry-run`.
+- **Áp thật lên production:** cần chốt `SEED_CONFIRM_PRODUCTION=yes` — vd. `SEED_CONFIRM_PRODUCTION=yes npm run prisma:backfill:map-labels`.
+- Nhãn bản đồ **do script/seed quản lý — không có editor nhãn trong Admin**.
+
+> **Môi trường mới:** `prisma/seed-projects.js` hiện vẫn giữ prose/nhãn tiếng Việt thuần (không sửa để tránh ghi đè bản backfill EN thủ công ở loạt EN-FULL-C). Env mới có thể cần chạy lại các backfill loạt C — xem [closure note 2026-07-18](../08-audits-and-reports/current/2026-07-18-en-full-group2-closure.md).
+
 > Chi tiết trạng thái từng module và các lỗi migration đã xử lý: xem [implementation-plan.md](../04-implementation/implementation-plan.md).
 
 ---
 
 ## Document history
 
+- **2026-07-18** — Thêm mục "Backfill nhãn bản đồ song ngữ (EN-FULL-C5b)" — script `backfill-map-labels.js`, dry-run + chốt production.
 - **2026-07-16** — Tách từ `DEPLOY.md` + gom các ghi chú migration/seed rải rác trong `KE-HOACH-CODING.md` khi tái cấu trúc tài liệu.
