@@ -2,7 +2,7 @@
 
 > **Trạng thái:** Đang dùng (tài liệu sống — cập nhật theo sprint)
 > **Nhóm:** 04 — Implementation
-> **Cập nhật:** 2026-07-16
+> **Cập nhật:** 2026-07-17
 > **Nguồn (di chuyển từ):** `KE-HOACH-CODING.md` (thư mục gốc, trước tái cấu trúc)
 > **Tài liệu liên quan:** [open-questions](../01-requirements/open-questions.md) · [deployment-guide](../07-deployment/deployment-guide.md) · [security](../05-security/README.md) · [audit-baseline](../08-audits-and-reports/current/2026-07-16-audit-baseline.md)
 
@@ -368,15 +368,29 @@ Thứ tự: làm tuần tự C1 → C4 (C1 và C2 chặn go-live thật sự).
     - **Không đổi:** Prisma schema (cột `text` giữ nguyên, không migration), business logic, task →4+.
     - **Test:** `create-contact-submission.dto.spec.ts` (9 test) — payload hợp lệ pass, đúng-bằng-trần pass (email 200 ký tự dựng đúng cấu trúc vì `@IsEmail` giới hạn local-part ≤ 64), từng field vượt trần 1 ký tự fail, message 100KB fail (kịch bản DoS finding #9), MinLength cũ vẫn giữ. Full suite backend: **8 suites / 77 test pass**; FE `lint` + `tsc` sạch.
 
-- [ ] **(→ 4) Nhập bản dịch tiếng Anh còn thiếu** — *Hạng mục: Content operations* 🔶 một phần (2/nhiều mục — 2026-07-16)
-  - **Khu vực:** Nội dung CMS (4 dự án + hạng mục, bài tin, banner, trang `gioi-thieu`/`lien-he`) — nhập qua Admin CMS (`BilingualField`, chấm vàng = chưa dịch).
+- [ ] **(→ 4) Nhập bản dịch tiếng Anh còn thiếu** — *Hạng mục: Content operations* 🔶 gần xong phần CMS (batch 1–4 hoàn tất — 2026-07-17); **không đánh dấu hoàn thành** vì còn 3 mục theo dõi bên dưới
+  - **Khu vực:** Nội dung CMS (dự án + hạng mục, bài tin, banner, dự án hợp tác, trang `gioi-thieu`/`lien-he`) — nhập qua Admin CMS (`BilingualField`, chấm vàng = chưa dịch).
   - **Lý do:** Song ngữ bắt buộc là điều kiện go-live (câu 19). Đây là việc nhập liệu, không phải code.
   - **Gợi ý:** Làm song song với C1–C3 (không phụ thuộc code). Seed trang nội dung trước (xem Q11 ở Quick wins) để có bản ghi mà dịch.
-  - **Đã xong (2026-07-16) — 2 trang nội dung seed từ Q11, nhập tay qua Admin CMS:**
-    - `gioi-thieu`: title + 4 đoạn nội dung đã có bản EN; `lien-he`: title + 1 đoạn đã có bản EN. Bản dịch bám sát nguồn tiếng Việt, không thêm dữ kiện ngoài nguồn; **tiếng Việt không đổi một chữ**.
+  - **Nguyên tắc chung cả 4 batch:** bản dịch bám sát nguồn tiếng Việt trong CMS, không thêm dữ kiện ngoài nguồn; **tiếng Việt không đổi một chữ**; không sửa code — chỉ nhập liệu qua Admin CMS.
+  - **Batch 1 — Đã xong (2026-07-16) — 2 trang nội dung seed từ Q11:**
+    - `gioi-thieu`: title + 4 đoạn nội dung đã có bản EN; `lien-he`: title + 1 đoạn đã có bản EN.
     - **Kiểm chứng (chủ dự án):** Admin CMS hết chấm vàng "chưa dịch" ở cả 2 trang; `/en/gioi-thieu` + `/en/lien-he` hiện title/body tiếng Anh từ CMS; `/gioi-thieu` + `/lien-he` giữ nguyên tiếng Việt.
-    - **Ghi chú phạm vi:** copy UI tĩnh của FE trên route EN (timeline, giá trị cốt lõi, label form liên hệ…) nằm ngoài CMS — không thuộc 2 bản ghi này, theo dõi riêng (không tính vào →4 phần CMS hay coi là lỗi của lần nhập này).
-  - **Còn lại (→4 CHƯA xong):** 4 dự án + hạng mục, bài tin "Lễ khởi công Fancy Tower", banner trang chủ, dự án hợp tác — nhập tiếp qua Admin CMS theo cùng quy trình.
+    - Kèm trong batch này: dự án `khu-do-thi-hung-phu` + các hạng mục liên quan đã dịch EN qua Admin CMS.
+  - **Batch 2 — Đã xong (2026-07-16/17):**
+    - Bài tin `le-khoi-cong-fancy-tower-khu-do-thi-hung-phu`: title/summary/content đã có bản EN.
+    - Chuyên mục tin: `tin-du-an` → "Project news", `tin-cong-ty` → "Company news", `tin-thi-truong` → "Market news".
+  - **Batch 3 — Đã xong (2026-07-17) — banner trang chủ:**
+    - Banner CMS "Khu đô thị Hưng Phú" (bản ghi banner duy nhất trong CMS production): eyebrow/title/subtitle/ctaLabel đã có bản EN.
+    - **Lưu ý phát hiện khi rà:** 3 banner còn lại trên trang chủ là **fallback tĩnh trong `frontend/src/data/banners.ts`**, không phải bản ghi CMS — thuộc phần "UI tĩnh FE" bên dưới, không tính vào phần CMS của →4.
+  - **Batch 4 — Đã xong (2026-07-17) — dự án hợp tác:**
+    - `Feliz en Vista`: name/location/role/partner/scale/status đã có bản EN.
+    - **Lưu ý:** CMS production hiện chỉ có Feliz en Vista (Vista Verde không có trong DB production dù có trong `seed-cooperation.js`).
+    - **Kiểm chứng batch 2–4 (chủ dự án):** nhập qua Admin CMS, chấm vàng "chưa dịch" đã hết ở các bản ghi liên quan; tiếng Việt không bị sửa.
+  - **⚠️ Còn lại — lý do →4 chỉ là "gần xong", KHÔNG phải hoàn thành:**
+    1. **3 dự án còn lại chưa dịch** — giao cho nhân sự nội dung nội bộ nhập tiếp qua Admin CMS (hạng mục **content-owner nội bộ**, không phải lỗi/task code; theo dõi đến khi nội bộ xác nhận xong).
+    2. **Copy UI tĩnh của FE trên route EN** (timeline, giá trị cốt lõi, label form liên hệ, 3 banner tĩnh trong `data/banners.ts`…) nằm ngoài CMS — follow-up i18n riêng phía frontend.
+    3. **Một số field dự án chưa song ngữ trong data model hiện tại** — follow-up code/data-model riêng (mở rộng field `{vi, en?}`), không xử lý được bằng nhập liệu.
 
 ### 2. High-value — Củng cố định giá $10,000+
 
