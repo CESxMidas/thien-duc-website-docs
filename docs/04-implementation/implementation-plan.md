@@ -368,7 +368,7 @@ Thứ tự: làm tuần tự C1 → C4 (C1 và C2 chặn go-live thật sự).
     - **Không đổi:** Prisma schema (cột `text` giữ nguyên, không migration), business logic, task →4+.
     - **Test:** `create-contact-submission.dto.spec.ts` (9 test) — payload hợp lệ pass, đúng-bằng-trần pass (email 200 ký tự dựng đúng cấu trúc vì `@IsEmail` giới hạn local-part ≤ 64), từng field vượt trần 1 ký tự fail, message 100KB fail (kịch bản DoS finding #9), MinLength cũ vẫn giữ. Full suite backend: **8 suites / 77 test pass**; FE `lint` + `tsc` sạch.
 
-- [ ] **(→ 4) Nhập bản dịch tiếng Anh còn thiếu** — *Hạng mục: Content operations* 🔶 gần xong phần CMS (batch 1–4 hoàn tất — 2026-07-17); **không đánh dấu hoàn thành** vì còn 3 mục theo dõi bên dưới
+- [ ] **(→ 4) Nhập bản dịch tiếng Anh còn thiếu** — *Hạng mục: Content operations* 🔶 CMS batch 1–4 + i18n UI tĩnh frontend đã xong (2026-07-17); **không đánh dấu hoàn thành** vì còn 2 giới hạn CMS/data-model theo dõi bên dưới. *(Lưu ý: "CMS batch 1–4" = các lô nhập liệu Admin CMS; "i18n-B1–B4" = các lô dịch UI tĩnh bằng code — hai chuỗi khác nhau.)*
   - **Khu vực:** Nội dung CMS (dự án + hạng mục, bài tin, banner, dự án hợp tác, trang `gioi-thieu`/`lien-he`) — nhập qua Admin CMS (`BilingualField`, chấm vàng = chưa dịch).
   - **Lý do:** Song ngữ bắt buộc là điều kiện go-live (câu 19). Đây là việc nhập liệu, không phải code.
   - **Gợi ý:** Làm song song với C1–C3 (không phụ thuộc code). Seed trang nội dung trước (xem Q11 ở Quick wins) để có bản ghi mà dịch.
@@ -387,10 +387,20 @@ Thứ tự: làm tuần tự C1 → C4 (C1 và C2 chặn go-live thật sự).
     - `Feliz en Vista`: name/location/role/partner/scale/status đã có bản EN.
     - **Lưu ý:** CMS production hiện chỉ có Feliz en Vista (Vista Verde không có trong DB production dù có trong `seed-cooperation.js`).
     - **Kiểm chứng batch 2–4 (chủ dự án):** nhập qua Admin CMS, chấm vàng "chưa dịch" đã hết ở các bản ghi liên quan; tiếng Việt không bị sửa.
-  - **⚠️ Còn lại — lý do →4 chỉ là "gần xong", KHÔNG phải hoàn thành:**
+  - **✅ i18n UI tĩnh frontend — ĐÃ XONG (2026-07-17, deploy):** trước đây là "mục còn lại #2" của →4; nay đã hoàn tất bằng **code** (không phải nhập liệu CMS). Toàn bộ copy giao diện tĩnh trên route EN đã chuyển sang dictionary song ngữ `frontend/src/lib/i18n/dictionaries/{vi,en}.json` theo đúng pattern có sẵn (`get-dictionary.ts`). Làm theo 4 lô + 1 follow-up nhỏ, mỗi lô đều: lint/tsc/test (36 pass)/build sạch, **đối chiếu VI byte-identical với production** (0 khác biệt), và kiểm EN không còn chuỗi tiếng Việt ngoài phần cố ý giữ.
+    - **i18n-B1** — nhãn nổi bật trang dự án + tin: trạng thái dự án + chip lọc, breadcrumb, eyebrow/tiêu đề khối, nhãn sidebar tin, "Xem chi tiết/Xem hạng mục".
+    - **i18n-B2** — shell dùng chung: footer (tagline/motto), section trang chủ (intro, hợp tác, contact CTA), nhãn a11y/alt/aria (logo, banner prev/next…).
+    - **i18n-B3** — form liên hệ: nhãn field, placeholder, option loại yêu cầu, note bảo mật, nút gửi, thông báo loading/success/error/validate (id `inquiryType` gửi backend giữ nguyên; test `contact-form.test.tsx` cập nhật, vẫn xanh).
+    - **i18n-B4** — copy tĩnh trang `/gioi-thieu` + `/lien-he`: hero fallback, timeline, giá trị cốt lõi (tầm nhìn/sứ mệnh), lĩnh vực ngành nghề, quy trình liên hệ, khối bản đồ. Xoá `data/about.ts`, `data/business-fields.ts` (đã dời hết vào dictionary); `data/contact.ts` chỉ còn `inquiryTypeIds`.
+    - **Follow-up nhỏ** — tên hiển thị công ty ở footer route EN: "Công ty Thiên Đức" → **"Thien Duc Company"** qua khóa `shared.companyName` (VI giữ nguyên).
+    - **Ghi chú 3 banner tĩnh trong `data/banners.ts`:** phần eyebrow/title/subtitle/ctaLabel của các banner này nằm trong copy UI tĩnh và đã thuộc phạm vi B-series (dictionary hoá qua các section trang chủ) — không còn là mục treo.
+  - **Cố ý GIỮ tiếng Việt (không phải thiếu sót):**
+    - Tên pháp lý đăng ký, mã số thuế + cơ quan thuế, địa chỉ trụ sở — dữ liệu pháp lý/định danh, không dịch.
+    - Nhãn chuyển ngôn ngữ **"Tiếng Việt"** — đúng UX (gọi tên ngôn ngữ đích bằng chính ngôn ngữ đó).
+    - **Metadata JSON-LD `Organization.name` + OpenGraph `siteName`** vẫn dùng brand/config gốc (structured data, không phải heading hiển thị; `seo.test.ts` khẳng định giá trị này) — cố ý giữ.
+  - **⚠️ Còn lại — lý do →4 vẫn CHƯA đánh dấu hoàn thành (đều là giới hạn CMS/data-model, không phải UI tĩnh):**
     1. **3 dự án còn lại chưa dịch** — giao cho nhân sự nội dung nội bộ nhập tiếp qua Admin CMS (hạng mục **content-owner nội bộ**, không phải lỗi/task code; theo dõi đến khi nội bộ xác nhận xong).
-    2. **Copy UI tĩnh của FE trên route EN** (timeline, giá trị cốt lõi, label form liên hệ, 3 banner tĩnh trong `data/banners.ts`…) nằm ngoài CMS — follow-up i18n riêng phía frontend.
-    3. **Một số field dự án chưa song ngữ trong data model hiện tại** — follow-up code/data-model riêng (mở rộng field `{vi, en?}`), không xử lý được bằng nhập liệu.
+    2. **Một số field CMS chưa song ngữ trong data model hiện tại** — follow-up code/data-model riêng (mở rộng field `{vi, en?}`), không xử lý được bằng nhập liệu: project `quickFacts`, project `category`/`location`, nhãn chú thích bản đồ (`mapLocation`), và các field CMS chưa bilingual khác.
 
 ### 2. High-value — Củng cố định giá $10,000+
 
