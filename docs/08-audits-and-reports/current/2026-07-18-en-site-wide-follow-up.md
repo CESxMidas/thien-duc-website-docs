@@ -49,16 +49,17 @@ Batch **EN-SITE-WIDE**, chia 3 lô nhỏ frontend-only:
 
 ## Backlog còn lại (theo dõi riêng — KHÔNG suy ra toàn site đã xong)
 
-a. **Route hạng mục `[hang-muc]`** — `/en/du-an/khu-do-thi-hung-phu/{fancy-tower, hung-phu-mall, khu-nha-o-thap-tang}` còn tiếng Việt cho item `description`/`highlights`/`quickFacts` (đã nêu trong closure 7-route, backlog (a)).
+a. ~~**Route hạng mục `[hang-muc]`** — `/en/du-an/khu-do-thi-hung-phu/{fancy-tower, hung-phu-mall, khu-nha-o-thap-tang}` còn tiếng Việt cho item `description`/`highlights`/`quickFacts` (đã nêu trong closure 7-route, backlog (a)).~~ **✅ ĐÃ GIẢI QUYẾT (2026-07-18)** qua EN-PROJECT-ITEMS-P1: backend backfill production 3 hạng mục / 14 field; re-scan 3 route EN sạch text hiển thị. Xem [EN-PROJECT-ITEMS-P1 note](2026-07-18-en-project-items-p1.md).
 b. **Nội dung `OpenPosition` tương lai** — nếu thêm vị trí tuyển dụng thật, các field nội dung (`title`/`department`/`responsibilities`…) hiện là `string` đơn ngữ; muốn hiện tiếng Anh cần mô hình dữ liệu song ngữ (quyết định data-model/nhập liệu, chưa cần khi `openPositions` rỗng). Nhãn khung đã locale-ready.
 c. **Khẳng định "tiếng Anh toàn site"** vẫn cần **full crawl / `next build` với backend sống** để xác nhận toàn bộ route (gồm các trang fetch CMS) — chưa thực hiện.
 d. **Việc hạ tầng thủ công** còn treo (không thuộc batch này) — xem implementation-plan (vd. seed/backfill production loạt C, monitoring DSN…).
 
 ## ⚠️ Cảnh báo
 
-**KHÔNG diễn giải đây là "tiếng Anh toàn site đã hoàn tất".** Kết luận "0 tiếng Việt hiển thị" chỉ áp dụng cho **5 route liệt kê ở trên**, cộng với 7 route trong closure trước. Backlog (a–d) theo dõi tách biệt.
+**KHÔNG diễn giải đây là "tiếng Anh toàn site đã hoàn tất".** Kết luận "0 tiếng Việt hiển thị" chỉ áp dụng cho **5 route liệt kê ở trên**, cộng với 7 route trong closure trước. Backlog theo dõi tách biệt; mục (a) đã đóng sau đó qua EN-PROJECT-ITEMS-P1.
 
 ## Tham chiếu
 
 - [EN-FULL Group 2 closure — 7 route](2026-07-18-en-full-group2-closure.md).
+- [EN-PROJECT-ITEMS-P1 — 3 route hạng mục Hưng Phú](2026-07-18-en-project-items-p1.md).
 - [implementation-plan.md — bullet EN-SITE-WIDE (F1–F3)](../../04-implementation/implementation-plan.md).

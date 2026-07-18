@@ -50,10 +50,10 @@
 - **Môi trường mới** có thể cần chạy lại các backfill loạt C nếu dữ liệu seed chưa được đồng bộ (hiện `prisma/seed-projects.js` vẫn còn prose/nhãn tiếng Việt thuần; không sửa trong đợt này để tránh ghi đè bản backfill EN thủ công).
 - Tham chiếu chính: [database-migrations.md](../../07-deployment/database-migrations.md#seed-dữ-liệu).
 
-## Backlog ngoài phạm vi (chưa xử lý — theo dõi riêng)
+## Backlog ngoài phạm vi (theo dõi riêng)
 
-a. **Route hạng mục `[hang-muc]`** — `/en/du-an/khu-do-thi-hung-phu/{fancy-tower, hung-phu-mall, khu-nha-o-thap-tang}` còn tiếng Việt cho item `description`/`highlights`/`quickFacts` (title/summary đã có EN; `quickFacts` đã *có khả năng* song ngữ nhờ C3 nhưng chưa nhập EN).
-b. **Các trang `/en` ngoài 7 route audited vẫn còn tiếng Việt hiển thị:**
+a. ~~**Route hạng mục `[hang-muc]`** — `/en/du-an/khu-do-thi-hung-phu/{fancy-tower, hung-phu-mall, khu-nha-o-thap-tang}` còn tiếng Việt cho item `description`/`highlights`/`quickFacts` (title/summary đã có EN; `quickFacts` đã *có khả năng* song ngữ nhờ C3 nhưng chưa nhập EN).~~ **✅ ĐÃ GIẢI QUYẾT (2026-07-18)** qua EN-PROJECT-ITEMS-P1: backend backfill production 3 hạng mục / 14 field; re-scan 3 route EN sạch text hiển thị. Xem [EN-PROJECT-ITEMS-P1 note](2026-07-18-en-project-items-p1.md).
+b. ~~**Các trang `/en` ngoài 7 route audited vẫn còn tiếng Việt hiển thị:**~~ **✅ ĐÃ GIẢI QUYẾT (2026-07-18)** qua EN-SITE-WIDE F1–F3.
    - `/en/cong-ty-thanh-vien`
    - `/en/dao-tao`
    - `/en/so-do-to-chuc-cong-ty`
@@ -64,9 +64,10 @@ d. **Tiếng Việt không hiển thị nhưng còn trong payload** — field it
 
 ## ⚠️ Cảnh báo
 
-**KHÔNG diễn giải đây là "tiếng Anh toàn site đã hoàn tất".** Kết luận "0 tiếng Việt hiển thị" chỉ áp dụng cho **7 route audited** liệt kê ở trên. Backlog EN toàn site (mục a–d) được theo dõi tách biệt.
+**KHÔNG diễn giải đây là "tiếng Anh toàn site đã hoàn tất".** Kết luận "0 tiếng Việt hiển thị" trong note này chỉ áp dụng cho **7 route audited** liệt kê ở trên. Các backlog ngoài phạm vi được theo dõi tách biệt; mục (a) đã đóng sau đó qua EN-PROJECT-ITEMS-P1.
 
 ## Tham chiếu
 
 - [implementation-plan.md — task →4](../../04-implementation/implementation-plan.md) (nhánh nội dung EN, loạt C).
 - [database-migrations.md — Seed dữ liệu](../../07-deployment/database-migrations.md#seed-dữ-liệu) (script backfill).
+- [EN-PROJECT-ITEMS-P1 — 3 route hạng mục Hưng Phú](2026-07-18-en-project-items-p1.md).

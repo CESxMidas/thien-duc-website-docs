@@ -13,6 +13,7 @@ Báo cáo & audit có ngày. `current/` = hiện hành; `archive/` = đã bị t
 | [current/2026-07-16-tai-cau-truc-tai-lieu.md](current/2026-07-16-tai-cau-truc-tai-lieu.md) | Báo cáo tái cấu trúc kho tài liệu | Đang dùng |
 | [current/2026-07-18-en-full-group2-closure.md](current/2026-07-18-en-full-group2-closure.md) | EN-FULL Group 2 — đóng tiếng Anh cho 7 route audited | Đang dùng |
 | [current/2026-07-18-en-site-wide-follow-up.md](current/2026-07-18-en-site-wide-follow-up.md) | EN-SITE-WIDE (F1–F3) — dọn tiếng Việt 5 route `/en` ngoài phạm vi 7-route | Đang dùng |
+| [current/2026-07-18-en-project-items-p1.md](current/2026-07-18-en-project-items-p1.md) | EN-PROJECT-ITEMS-P1 — backfill tiếng Anh cho 3 route hạng mục Hưng Phú | Đang dùng |
 | [archive/](archive/) | Báo cáo cũ/đã thay thế | Lưu trữ |
 
 ## Tài liệu liên quan
