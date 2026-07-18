@@ -1,7 +1,7 @@
 # 08 — Audits & Reports
 
 > **Trạng thái:** Đang dùng (index thư mục)
-> **Cập nhật:** 2026-07-16
+> **Cập nhật:** 2026-07-18
 
 Báo cáo & audit có ngày. `current/` = hiện hành; `archive/` = đã bị thay thế. Đặt tên `YYYY-MM-DD-*.md`.
 
@@ -11,6 +11,8 @@ Báo cáo & audit có ngày. `current/` = hiện hành; `archive/` = đã bị t
 |---|---|---|
 | [current/2026-07-16-audit-baseline.md](current/2026-07-16-audit-baseline.md) | Audit baseline mới nhất (60/100) | Đang dùng |
 | [current/2026-07-16-tai-cau-truc-tai-lieu.md](current/2026-07-16-tai-cau-truc-tai-lieu.md) | Báo cáo tái cấu trúc kho tài liệu | Đang dùng |
+| [current/2026-07-18-en-full-group2-closure.md](current/2026-07-18-en-full-group2-closure.md) | EN-FULL Group 2 — đóng tiếng Anh cho 7 route audited | Đang dùng |
+| [current/2026-07-18-en-site-wide-follow-up.md](current/2026-07-18-en-site-wide-follow-up.md) | EN-SITE-WIDE (F1–F3) — dọn tiếng Việt 5 route `/en` ngoài phạm vi 7-route | Đang dùng |
 | [archive/](archive/) | Báo cáo cũ/đã thay thế | Lưu trữ |
 
 ## Tài liệu liên quan
