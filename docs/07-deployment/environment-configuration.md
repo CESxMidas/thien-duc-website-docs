@@ -41,10 +41,13 @@ Thêm cho cả 3 scope (Production / Preview / Development):
 
 Cả 3 project (`backend`, `frontend`, `admin`) đều có `.env.example` liệt kê đầy đủ biến cần thiết — dùng làm mẫu khi dựng môi trường mới. Admin CMS dùng `VITE_API_URL` (mặc định `http://localhost:3001/api`) và `VITE_SENTRY_DSN` (tùy chọn, task →5 — DSN project Sentry riêng của admin, ingest-only nên không phải secret).
 
+> 📌 **Follow-up tách batch riêng (chưa làm trong G7-D1):** comment "mock mode" ở dòng đầu `frontend/.env.example` đã **lỗi thời** (frontend không có mock mode — xem [deployment-guide.md](deployment-guide.md) mục 5). `.env.example` là file code-adjacent nên **không sửa trong batch docs-only này**; cần một batch follow-up có duyệt riêng để dọn comment đó.
+
 ---
 
 ## Document history
 
 - **2026-07-19** — Batch G7-D1: ghi rõ `NEXT_PUBLIC_API_URL` bắt buộc và frontend
-  không có mock mode (xác nhận qua `client.ts`).
+  không có mock mode (xác nhận qua `client.ts`); thêm ghi chú follow-up "comment
+  mock mode ở `frontend/.env.example` đã lỗi thời — sửa ở batch riêng có duyệt".
 - **2026-07-16** — Tách từ `DEPLOY.md` (mục "Các biến môi trường", cảnh báo `sslmode`, bảng biến Vercel) khi tái cấu trúc tài liệu.
