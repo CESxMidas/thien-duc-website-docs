@@ -30,6 +30,7 @@
 6. **Gửi email form liên hệ** vẫn là TODO trong `contact.service.ts` — chờ SMTP thật (câu 9).
 
 > ⚠️ Render free tier: backend **ngủ sau 15 phút** không có request (request đầu tiên chậm ~30–50s, có thể làm form timeout ở FE — timeout FE đang đặt 10s). Cân nhắc UptimeRobot ping định kỳ hoặc nâng plan khi go-live. Postgres free hết hạn sau 90 ngày.
+> 🟠 **Go-live: BLOCKED / DEFERRED (2026-07-19, G7-M1).** Kiểm vận hành thủ công mức cao — hạ tầng còn Free / chưa xác nhận (backend + Postgres Free, backup/PITR + restore + monitoring chưa làm). Hoãn có chủ đích; nâng plan trả phí + monitoring **bắt buộc trước go-live cuối**. Chi tiết: [G7-M1 note](../08-audits-and-reports/current/2026-07-19-g7-m1-manual-ops-verification.md).
 > ⚠️ Thời gian (`created_at`…) lưu **UTC**; hiển thị phải quy đổi giờ VN (UTC+7) bằng `formatDateTime` trong `src/lib/format.ts` (frontend).
 
 ## Quy ước

@@ -22,6 +22,12 @@ xóa request data trước khi gửi (không lộ nội dung lead/token/cookie).
 Thiếu DSN → mọi SDK **tự tắt** (no-op), app chạy bình thường — cùng khuôn
 degrade với Cloudinary/SMTP.
 
+> 🟠 **Trạng thái vận hành (2026-07-19, G7-M1): CHƯA cấu hình/verify.** Code init
+> đã sẵn ở cả 3 app (repo), nhưng **chưa** tạo/verify 3 project Sentry, **chưa**
+> có test event / alert rule, và **chưa** dựng monitor UptimeRobot (BE-health /
+> FE-home) — các checklist thủ công dưới đây vẫn còn để trống. Xem
+> [G7-M1 verification note](../08-audits-and-reports/current/2026-07-19-g7-m1-manual-ops-verification.md).
+
 ## 1. Sentry — kiến trúc capture
 
 | App | SDK | Điểm capture | Biến env |
@@ -86,5 +92,8 @@ nhận thông báo phục hồi.
 
 ## Document history
 
+- **2026-07-19** — G7-M1 (docs-only): thêm ghi chú "CHƯA cấu hình/verify" cho
+  Sentry + UptimeRobot (code init đã có ở repo, phần dashboard thủ công chưa làm).
+  Liên kết audit note G7-M1.
 - **2026-07-16** — Task →5: tạo mới. Sentry errors-only cho 3 app + runbook
   UptimeRobot + checklist thủ công + ghi chú liên đới CSP (task →6).

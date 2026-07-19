@@ -157,6 +157,11 @@ tier riêng — có thể phải tạo instance mới). Khi đó:
 
 ## Nhật ký xác nhận (điền khi nâng plan)
 
+> 🟠 **G7-M1 (2026-07-19):** kiểm mức cao xác nhận Postgres **còn Free** — backup
+> daily / retention / PITR **chưa xác nhận**, restore test **chưa làm**. Bảng dưới
+> **cố ý để trống** cho tới khi có plan trả phí thật. Xem
+> [G7-M1 verification note](../08-audits-and-reports/current/2026-07-19-g7-m1-manual-ops-verification.md).
+
 | Ngày | Plan Postgres | Backup daily? | Retention | PITR? | RTO test | Người xác nhận |
 |---|---|---|---|---|---|---|
 | _(chưa điền)_ | | | | | | |
@@ -165,6 +170,9 @@ tier riêng — có thể phải tạo instance mới). Khi đó:
 
 ## Document history
 
+- **2026-07-19** — G7-M1 (docs-only): ghi chú trạng thái trên "Nhật ký xác nhận" —
+  Postgres còn Free, backup/PITR chưa xác nhận, restore test chưa làm; bảng để
+  trống tới khi có plan trả phí. Liên kết audit note G7-M1.
 - **2026-07-16** — Task →2: thay khung bằng runbook backup/restore đầy đủ (Render
   managed backup + `pg_dump`/`pg_restore` thủ công + đường di trú free→paid).
   Nguồn khoảng trống: Audit Baseline mục 7. Backup off-site tự động tách task sau

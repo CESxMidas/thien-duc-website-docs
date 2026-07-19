@@ -5,6 +5,14 @@
 > **Cập nhật:** 2026-07-19
 > **Tài liệu liên quan:** [environment-configuration.md](environment-configuration.md) · [database-migrations.md](database-migrations.md) · [rollback-plan.md](rollback-plan.md)
 
+> 🟠 **Go-live readiness: BLOCKED / DEFERRED (2026-07-19, G7-M1).** Kiểm vận hành
+> thủ công mức cao cho thấy hạ tầng **còn Free tier / chưa xác nhận đầy đủ**:
+> backend Render còn Free (ngủ), Postgres còn Free, backup/PITR chưa xác nhận,
+> restore/rollback drill + Sentry + UptimeRobot chưa làm. **Chưa sẵn sàng go-live.**
+> Hoãn có chủ đích (chủ dự án chưa nâng hạ tầng). Nâng plan trả phí (mục 1b) +
+> monitoring là **bắt buộc trước go-live cuối**. Chi tiết:
+> [G7-M1 verification note](../08-audits-and-reports/current/2026-07-19-g7-m1-manual-ops-verification.md).
+
 > Frontend (Next.js) → **Vercel** · Backend (NestJS + Prisma) + PostgreSQL → **Render**.
 > Code đã push đầy đủ lên GitHub (`CESxMidas/thien-duc-website-frontend`, `CESxMidas/thien-duc-website-backend`).
 
@@ -147,6 +155,9 @@ Sau khi có domain Vercel chính thức:
 
 ## Document history
 
+- **2026-07-19** — G7-M1 (docs-only): thêm banner "Go-live readiness: BLOCKED /
+  DEFERRED" đầu file sau khi kiểm vận hành thủ công mức cao (hạ tầng còn Free /
+  chưa xác nhận). Liên kết audit note G7-M1.
 - **2026-07-19** — Batch G7-D1 (docs-only): giải quyết TODO "mock mode" ở mục 5
   bằng xác nhận mã nguồn (`client.ts` không có mock; `NEXT_PUBLIC_API_URL` bắt
   buộc); thêm mục **2b. Admin CMS (Vite static)** — host thật cần xác nhận thủ công.
