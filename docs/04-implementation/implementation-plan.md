@@ -98,7 +98,7 @@
 > 🐛 **Lỗi có sẵn đã sửa trong sprint này**:
 > 1. **Lộ dự án `DRAFT`**: `GET /projects/:slug`, `/:slug/gallery`, `/:slug/:itemSlug` là route công khai nhưng `findBySlug` không lọc `contentStatus` — đoán đúng slug là đọc được dự án nháp. Đã thêm `publishedOnly` (giống `news`/`pages`) và thêm `GET /projects/admin/:slug` + `/admin/:slug/gallery` cho Admin CMS (đã trỏ `admin/src/lib/api/projects.ts` sang route mới).
 > 2. **Không tạo được trang nội dung từ CMS**: `CreatePageDto.content` khai `@IsObject()`, nhưng class-validator **loại mảng ra khỏi "object"** — Admin gửi `Bilingual[]` luôn nhận `400`. Đã đổi sang `TranslatedTextDto[]`, cùng quy ước với `NewsPost.content`.
-> 3. **Sửa hạng mục dự án làm mất bản dịch tiếng Anh**: `ProjectItemsTab` gửi `title: { vi }`, mà `PATCH` ghi đè nguyên field JSON — `en` đã nhập bị xóa âm thầm. Nay gửi lại cả hai ngôn ngữ.
+> 3. **Sửa hạng mục dự án làm mất bản dịch tiếng Anh**: `ProjectItemsTab` gửi `title: { vi }`, mà `PATCH` ghi đè nguyên field JSON — `en` đã nhập bị xóa âm thầm. Nay gửi lại cả hai ngôn ngữ. ✅ **ADMIN-ITEM-CONTENT-P2 Batch M1** (2026-07-19) đã kiểm chứng runtime thủ công round-trip VI/EN, cơ chế bỏ qua field không đổi trong PATCH, xóa trắng có chủ đích, và fix Select dùng chung (`select.tsx`, commit `8a9de74`) — A–F PASS; xem [báo cáo](../08-audits-and-reports/current/2026-07-19-admin-item-content-p2-batch-m1.md).
 
 > ✅ **Đã kiểm chứng trên DB local** (2026-07-10, Postgres 17 qua Docker port 5433):
 > - Migration `20260710120000_add_fulltext_search` áp thành công; hai hàm `IMMUTABLE` và hai index GIN tồn tại đúng.
