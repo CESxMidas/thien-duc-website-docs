@@ -2,7 +2,7 @@
 
 > **Trạng thái:** Đang dùng
 > **Nhóm:** 07 — Deployment
-> **Cập nhật:** 2026-07-16
+> **Cập nhật:** 2026-07-19
 > **Tài liệu liên quan:** [environment-configuration.md](environment-configuration.md) · [database-migrations.md](database-migrations.md) · [rollback-plan.md](rollback-plan.md)
 
 > Frontend (Next.js) → **Vercel** · Backend (NestJS + Prisma) + PostgreSQL → **Render**.
@@ -87,6 +87,30 @@ Chỉ cần thêm **Environment Variables** (xem [environment-configuration.md](
 
 ---
 
+## 2b. Admin CMS (Vite static)
+
+Admin là app **Vite + React** (build tĩnh `npm run build` → thư mục `dist/`), tách
+repo `thien-duc-website-admin`. **Không** nằm trong `render.yaml`; **không** có
+`vercel.json`/blueprint riêng trong repo, và CI (`.github/workflows/ci.yml`) chỉ
+lint + build (không tự deploy).
+
+- **Host dự kiến:** README của admin ghi *"Vercel static — `admin.thienduc.vn`
+  (dự kiến)"*. Đây là **ý định**, chưa có bằng chứng cấu hình trong repo.
+- **Host thật đang chạy: ⚠️ cần xác nhận thủ công** ở dashboard (project/host nào
+  đang phục vụ Admin, domain thật). Repo không tự động hóa được bước này — xem
+  checklist G7-M1.
+- **Biến môi trường** (build-time, "nướng" vào bundle — đặt xong phải build lại):
+  `VITE_API_URL` = URL Render + `/api`, `VITE_SITE_URL` = domain website công khai,
+  `VITE_SENTRY_DSN` (tùy chọn). Chi tiết: [environment-configuration.md](environment-configuration.md).
+- **CORS:** origin thật của Admin **phải** được thêm vào `CORS_ORIGIN` của backend
+  trên Render (nhiều origin cách nhau bằng dấu phẩy), nếu không trình duyệt chặn
+  request đăng nhập/API.
+
+> Quyết định hosting tổng thể: [ADR-0001](../10-decisions/ADR-0001-hosting-vercel-render.md).
+> Nếu chốt được host + domain Admin thật, cập nhật lại mục này (thay "cần xác nhận").
+
+---
+
 ## 3. Nối 2 đầu (CORS)
 
 Sau khi có domain Vercel chính thức:
@@ -108,7 +132,7 @@ Sau khi có domain Vercel chính thức:
 - **Gửi form báo thành công nhưng DB "trống"** — thường không phải lỗi, mà do:
   - Xem sai **tên bảng**: Prisma map model `ContactSubmission` → bảng SQL là `contact_submissions` (chữ thường, số nhiều). Query: `SELECT * FROM contact_submissions ORDER BY created_at DESC;`
   - Frontend chưa gọi đúng backend: kiểm tra `NEXT_PUBLIC_API_URL` đã đặt và **đã Redeploy** Vercel chưa (biến `NEXT_PUBLIC_*` nướng vào lúc build). Kiểm tra: F12 → Network → gửi form → phải thấy request POST tới `…/api/contact` trả `201`.
-  > TODO: Nội dung mâu thuẫn, cần người phụ trách xác nhận. Bản gốc `DEPLOY.md` mô tả frontend chạy "chế độ mock (form giả lập thành công)" khi chưa đặt `NEXT_PUBLIC_API_URL`; nhưng `AGENTS.md` khẳng định frontend **đã bỏ hoàn toàn lớp mock/fallback** (`NEXT_PUBLIC_API_URL` bắt buộc). Cần xác nhận hành vi thật hiện tại rồi cập nhật lại đoạn này.
+  > ✅ **Đã xác nhận bằng mã nguồn (2026-07-19, không còn "mock mode"):** `src/lib/api/client.ts` đặt `API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? ""` và `apiFetch` luôn gọi `fetch` thật — **không có lớp mock/fallback trả dữ liệu giả**. Nếu thiếu `NEXT_PUBLIC_API_URL`, base URL rỗng làm mọi lời gọi API hỏng lúc chạy; cờ `isApiConfigured` chỉ để `generateStaticParams`/`sitemap` **bỏ prerender SSG** (trả rỗng) trong môi trường build không có API (vd. CI), **không** phải chế độ giả lập. Kết luận: `NEXT_PUBLIC_API_URL` là **bắt buộc** ở production — khớp với `AGENTS.md`. Mô tả "chế độ mock" cũ trong `DEPLOY.md`/`frontend/.env.example` đã lỗi thời (đề xuất sửa comment dòng 1 của `frontend/.env.example` — thuộc file code-adjacent, cần duyệt riêng).
 - **Kết nối DB từ máy local (pgAdmin / Prisma Studio)** — phải dùng **External Database URL** của Render (có đuôi `.singapore-postgres.render.com`), KHÔNG dùng Internal URL (host cụt, chỉ chạy trong mạng Render → lỗi `P1001`). pgAdmin: đặt **SSL mode = Require** ở tab Parameters. Xem thêm cảnh báo `sslmode` ở [environment-configuration.md](environment-configuration.md).
 - **Form thỉnh thoảng đỏ / "Failed to fetch" / timeout** — triệu chứng của backend **còn chạy free tier** (ngủ sau 15 phút; request đầu đợi ~30–50s trong khi FE hủy ở 10s). Cách xử lý đúng: nâng plan always-on theo mục **1b** (đây là task →2). Chữa tạm khi chưa nâng: mở `…/api` cho backend thức trước, hoặc ping định kỳ bằng UptimeRobot. Sau khi đã nâng plan mà vẫn gặp → không phải do ngủ, xem log Render.
 - **Giờ hiển thị lệch 7 tiếng** — DB lưu **UTC** (đúng chuẩn). Hiển thị giờ VN (UTC+7) bằng `formatDateTime` trong `src/lib/format.ts` (frontend), hoặc trong SQL: `created_at + interval '7 hour'`.
@@ -123,6 +147,9 @@ Sau khi có domain Vercel chính thức:
 
 ## Document history
 
+- **2026-07-19** — Batch G7-D1 (docs-only): giải quyết TODO "mock mode" ở mục 5
+  bằng xác nhận mã nguồn (`client.ts` không có mock; `NEXT_PUBLIC_API_URL` bắt
+  buộc); thêm mục **2b. Admin CMS (Vite static)** — host thật cần xác nhận thủ công.
 - **2026-07-16** — Task →2: thêm mục **1b. Nâng lên plan production** (plan trả
   phí khai ở `render.yaml`, checklist việc làm tay ở Dashboard, đường di trú
   Postgres free→paid); cập nhật mục troubleshooting timeout theo hướng nâng plan.

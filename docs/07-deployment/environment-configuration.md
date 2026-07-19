@@ -2,7 +2,7 @@
 
 > **Trạng thái:** Đang dùng
 > **Nhóm:** 07 — Deployment
-> **Cập nhật:** 2026-07-16
+> **Cập nhật:** 2026-07-19
 > **Tài liệu liên quan:** [deployment-guide.md](deployment-guide.md) · [database-migrations.md](database-migrations.md)
 
 > ⚠️ **Không lưu secret thật (mật khẩu, token, API secret, connection string thật) trong tài liệu này hay bất kỳ file nào trong Git.** Chỉ ghi *tên biến*, *nơi nhập*, *ý nghĩa*. Giá trị thật nhập trực tiếp ở dashboard Render/Vercel hoặc file `.env` (đã `.gitignore`).
@@ -31,7 +31,7 @@ Thêm cho cả 3 scope (Production / Preview / Development):
 
 | Key | Value | Ghi chú |
 |---|---|---|
-| `NEXT_PUBLIC_API_URL` | `https://thien-duc-website-backend.onrender.com/api` (URL Render + `/api`) | Bắt buộc. |
+| `NEXT_PUBLIC_API_URL` | `https://thien-duc-website-backend.onrender.com/api` (URL Render + `/api`) | **Bắt buộc.** Frontend **không có mock mode**: thiếu biến này thì base URL rỗng làm mọi lời gọi API hỏng lúc chạy (`isApiConfigured=false` chỉ bỏ prerender SSG trong build không có API, không giả lập dữ liệu). Xem [deployment-guide.md](deployment-guide.md) mục 5. |
 | `NEXT_PUBLIC_SITE_URL` | `https://thien-duc-website-frontend.vercel.app` (domain Vercel thật) | Dùng cho canonical/OG + JSON-LD. |
 | `NEXT_PUBLIC_SENTRY_DSN` | DSN project Sentry riêng của frontend (task →5), tùy chọn | DSN là khóa **ingest-only** — an toàn nằm trong bundle client, không phải secret. Thiếu = tắt tracking. |
 
@@ -45,4 +45,6 @@ Cả 3 project (`backend`, `frontend`, `admin`) đều có `.env.example` liệt
 
 ## Document history
 
+- **2026-07-19** — Batch G7-D1: ghi rõ `NEXT_PUBLIC_API_URL` bắt buộc và frontend
+  không có mock mode (xác nhận qua `client.ts`).
 - **2026-07-16** — Tách từ `DEPLOY.md` (mục "Các biến môi trường", cảnh báo `sslmode`, bảng biến Vercel) khi tái cấu trúc tài liệu.
