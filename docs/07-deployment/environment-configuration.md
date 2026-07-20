@@ -2,7 +2,7 @@
 
 > **Trạng thái:** Đang dùng
 > **Nhóm:** 07 — Deployment
-> **Cập nhật:** 2026-07-19
+> **Cập nhật:** 2026-07-20
 > **Tài liệu liên quan:** [deployment-guide.md](deployment-guide.md) · [database-migrations.md](database-migrations.md)
 
 > ⚠️ **Không lưu secret thật (mật khẩu, token, API secret, connection string thật) trong tài liệu này hay bất kỳ file nào trong Git.** Chỉ ghi *tên biến*, *nơi nhập*, *ý nghĩa*. Giá trị thật nhập trực tiếp ở dashboard Render/Vercel hoặc file `.env` (đã `.gitignore`).
@@ -19,8 +19,11 @@
 | `CLOUDINARY_CLOUD_NAME` | `thienduc` (công khai — nằm trong URL ảnh). | |
 | `CLOUDINARY_API_KEY` | **Nhập tay** ở Render Dashboard → service backend → Environment (`sync: false`). | Lấy tại Cloudinary Dashboard → API Keys, role **Master Admin**. |
 | `CLOUDINARY_API_SECRET` | **Nhập tay** (`sync: false`). | Role *Media Library User* KHÔNG gọi được Admin API → lệnh xóa ảnh thất bại. **Không bao giờ** đặt tiền tố `NEXT_PUBLIC_` / `VITE_`. |
-| `SMTP_*` | **Nhập tay** khi công ty cung cấp (câu 9 trong [open-questions](../01-requirements/open-questions.md)). | Email thông báo lead **đã cài** (task →1) — thiếu SMTP thì bỏ qua gửi mail, lead vẫn lưu. |
-| `CONTACT_NOTIFY_TO` | **Nhập tay** (`sync: false`), tùy chọn. | Nơi nhận email báo lead mới; bỏ trống → gửi về `SMTP_FROM` (task →1). |
+| `MAIL_PROVIDER` | **Production đặt `resend`** (mặc định code là `smtp`). | Chọn nhà cung cấp gửi email thông báo lead: `resend` (gọi Resend HTTPS API) hoặc `smtp` (Nodemailer). Render **chặn/timeout cổng SMTP outbound** nên production dùng Resend; SMTP giữ làm phương án dự phòng. |
+| `RESEND_API_KEY` | **Nhập tay** (`sync: false`) khi `MAIL_PROVIDER=resend`. | Lấy ở dashboard Resend. **Không bao giờ** đặt tiền tố `NEXT_PUBLIC_` / `VITE_`. Thiếu → bỏ qua gửi mail, lead vẫn lưu. |
+| `MAIL_FROM` | **Nhập tay** (`sync: false`) khi `MAIL_PROVIDER=resend`. | Địa chỉ gửi, phải thuộc domain đã verify ở Resend (bỏ trống → fallback `SMTP_FROM`). |
+| `SMTP_*` | **Nhập tay** khi dùng phương án dự phòng `MAIL_PROVIDER=smtp` (câu 9 trong [open-questions](../01-requirements/open-questions.md)). | Email thông báo lead **đã cài** (task →1) — thiếu SMTP thì bỏ qua gửi mail, lead vẫn lưu. |
+| `CONTACT_NOTIFY_TO` | **Nhập tay** (`sync: false`). Bắt buộc khi `MAIL_PROVIDER=resend`. | Nơi nhận email báo lead mới; provider `smtp` bỏ trống → gửi về `SMTP_FROM` (task →1). |
 | `SENTRY_DSN` | **Nhập tay** (`sync: false`), tùy chọn. | Error tracking backend (task →5) — DSN project Sentry riêng của backend. Thiếu = tắt tracking, app vẫn chạy. Xem [monitoring-and-alerting.md](monitoring-and-alerting.md). |
 
 > ⚠️ **Nối DB từ ngoài Render bắt buộc có `?sslmode=require` trong `DATABASE_URL`.** `PrismaService` dùng adapter `@prisma/adapter-pg` (node-postgres), mà node-postgres mặc định **không** bật SSL → Render đóng kết nối và mọi route chạm DB trả `500` kèm thông báo đánh lạc hướng `User was denied access on the database`. Prisma CLI (`studio`, `db execute`, `migrate`) có engine riêng tự bật SSL nên vẫn chạy bình thường — **đừng lấy CLI làm bằng chứng rằng DB ổn**. Backend chạy trên Render dùng Internal URL nên không gặp lỗi này; chỉ `.env` máy dev (trỏ External URL) mới cần.
@@ -47,6 +50,10 @@ Cả 3 project (`backend`, `frontend`, `admin`) đều có `.env.example` liệt
 
 ## Document history
 
+- **2026-07-20** — Email thông báo lead chạy thật trên production bằng **Resend**
+  (`MAIL_PROVIDER=resend`): thêm hàng `MAIL_PROVIDER`/`RESEND_API_KEY`/`MAIL_FROM`,
+  ghi rõ Render timeout cổng SMTP nên Resend là mặc định production, SMTP giữ làm
+  phương án dự phòng. Test production PASS, hộp thư Gmail công ty nhận được email.
 - **2026-07-19** — Batch G7-D1: ghi rõ `NEXT_PUBLIC_API_URL` bắt buộc và frontend
   không có mock mode (xác nhận qua `client.ts`); thêm ghi chú follow-up "comment
   mock mode ở `frontend/.env.example` đã lỗi thời — sửa ở batch riêng có duyệt".
