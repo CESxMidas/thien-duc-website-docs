@@ -4,6 +4,7 @@
 > **Nhóm:** 08 — Audits & Reports (chính: 07 Deployment; phụ: 04 Implementation)
 > **Trạng thái:** ✅ **XONG** — kiểm thử production PASS, đóng hạng mục cấu hình email.
 > **Liên quan:** [implementation-plan.md](../../04-implementation/implementation-plan.md) · [environment-configuration.md](../../07-deployment/environment-configuration.md) · [open-questions.md](../../01-requirements/open-questions.md) (câu 9).
+> **Superseded (phần SMTP fallback):** ghi nhận bên dưới "SMTP còn nguyên / retained" phản ánh trạng thái **tại thời điểm chốt 2026-07-20**. Ngay sau đó SMTP fallback đã **gỡ khỏi code + Render** (email nay là **Resend-only**) — xem [SMTP-REMOVAL-ENV-CLEANUP](2026-07-20-smtp-removal-env-cleanup.md). `MAIL_PROVIDER=smtp` không còn hiệu lực.
 
 ## Phạm vi
 

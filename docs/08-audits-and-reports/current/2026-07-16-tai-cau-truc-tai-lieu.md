@@ -73,6 +73,7 @@ Không mất nội dung — mỗi file mới có mục *Document history* ghi ng
 ## 9. Nội dung MÂU THUẪN cần xác nhận
 
 - **"Mock mode"**: `deployment-guide.md` (mục 5) và `ui-ux-handoff.md` (mục 9) vẫn mô tả frontend chạy "chế độ mock khi chưa đặt `VITE_API_URL`", trong khi `AGENTS.md` khẳng định frontend **đã bỏ hoàn toàn lớp mock/fallback**. Đã chèn `> TODO: ... cần người phụ trách xác nhận` tại cả hai chỗ — **không tự chọn phe**.
+  > **Ghi chú hiện hành (2026-07-21):** mâu thuẫn này **đã giải quyết** — frontend không có mock mode, và biến đúng là `NEXT_PUBLIC_API_URL` (frontend là Next.js, không phải Vite; tên `VITE_API_URL` ở trên chỉ còn là mô tả lịch sử tại thời điểm audit này). Xem `deployment-guide.md` mục 5 và `environment-configuration.md`.
 
 ## 10. Tham chiếu đã cập nhật & còn lại
 

@@ -166,7 +166,7 @@ Sửa `src/data/navigation.ts` + `site-header.tsx`:
 ## 9. Thứ tự triển khai đề xuất
 
 1. ~~**H3 Contact Form + API**~~ ✅ Xong 2026-07-08 — form gọi `POST /api/contact` (mailto đã bỏ), validate on-blur, đủ trạng thái submitting/success/error/429, honeypot; backend cho `email` optional (migration `contact_email_optional`).
-   > TODO: Nội dung mâu thuẫn, cần người phụ trách xác nhận — bản gốc ghi "Mock mode khi chưa đặt `VITE_API_URL`", trong khi `AGENTS.md` nói frontend đã bỏ hoàn toàn lớp mock/fallback. Cần xác nhận hành vi thật.
+   > ✅ Đã xác nhận (2026-07-21): frontend **không có mock mode** — `src/lib/api/client.ts` luôn `fetch` thật, biến bắt buộc là `NEXT_PUBLIC_API_URL` (frontend là Next.js, không phải Vite). Mô tả cũ "Mock mode khi chưa đặt `VITE_API_URL`" đã lỗi thời cả về hành vi lẫn tên biến — xem [deployment-guide.md](../07-deployment/deployment-guide.md) mục 5.
 2. ~~**H1+H2 Hero/trang chủ**~~ ✅ Xong 2026-07-08 — banner 75svh + CTA kép + h1, autoplay 7s pause hover/focus/tab ẩn/reduced-motion, swipe mobile, arrows mobile, dots 44px, a11y carousel đầy đủ; HomeHero → HomeIntroStrip (4 cột năng lực); FeaturedProjects dời lên ngay sau banner.
 3. ~~**H5 Breadcrumb**~~ ✅ Xong 2026-07-08 — `src/components/ui/breadcrumb.tsx` (JSON-LD BreadcrumbList, aria-current, thu gọn "…" mobile); đã áp cho `du-an/[slug]`, `tin-tuc/[slug]`, 3 trang con Nhân sự. Route `[hang-muc]` khi tạo chỉ cần thêm 1 cấp item.
 4. ~~**H4 Navigation**~~ ✅ Xong 2026-07-08 — dropdown chia nhóm heading (NavItem.group), nhãn "Tuyển dụng & Nhân sự", search "Tìm tin tức...", delay đóng 150ms + chevron + aria-haspopup/expanded + Escape, mobile toggle expand với link cha thành item đầu (overviewLabel).

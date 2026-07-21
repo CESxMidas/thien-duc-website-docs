@@ -8,8 +8,8 @@
 ## Sơ đồ 3 tầng
 
 ```
-[Vercel] Frontend (Next.js 16)  ──VITE_API_URL=──►  [Render] Backend (NestJS 11)  ──DATABASE_URL──►  [Render] PostgreSQL 17
-   Admin CMS (Vite SPA)         ──VITE_API_URL──────────►         │
+[Vercel] Frontend (Next.js 16)  ──NEXT_PUBLIC_API_URL──►  [Render] Backend (NestJS 11)  ──DATABASE_URL──►  [Render] PostgreSQL 17
+   Admin CMS (Vite SPA)         ──VITE_API_URL──────────────►     │
                                 ◄────────CORS_ORIGIN──────────────┘
                                                                   └── Cloudinary (lưu ảnh, WebP ≤1200px)
 ```
@@ -32,7 +32,7 @@ Nguồn sự thật đầy đủ: `AGENTS.md` (workspace root). Tóm tắt:
 - **Nội dung song ngữ:** field text lưu JSON `{ vi, en? }`. Frontend đọc `.vi` qua `src/lib/api/mappers.ts`.
 - **Enum nguồn sự thật** khai ở `prisma/schema.prisma`: `Role`, `ContentStatus`, `ProjectStatus` (chỉ `DA_BAN_GIAO`, `DANG_THI_CONG`, `CHUAN_BI_KHOI_CONG`), `SubmissionStatus`.
 - **Thời gian:** lưu UTC, hiển thị quy đổi giờ VN (UTC+7).
-- **Secret** chỉ nằm ở backend — không đặt tiền tố `VITE_` / `VITE_` cho secret.
+- **Secret** chỉ nằm ở backend — không đặt tiền tố client (`NEXT_PUBLIC_` cho frontend Next.js, `VITE_` cho admin Vite) cho secret.
 
 ## Backend — module theo domain
 

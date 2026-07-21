@@ -10,7 +10,7 @@ Cần chọn hạ tầng cho 3 thành phần: frontend Next.js, backend NestJS, 
 
 ## Quyết định
 
-- **Frontend → Vercel** (Git integration, biến `VITE_*`).
+- **Frontend → Vercel** (Git integration; frontend là Next.js nên biến client dùng tiền tố `NEXT_PUBLIC_*`).
 - **Backend + PostgreSQL → Render**, region Singapore, dựng bằng `render.yaml` Blueprint (auto-deploy khi push `main`, tự chạy `prisma migrate deploy`).
 - Giai đoạn đầu chạy gói **free**.
 

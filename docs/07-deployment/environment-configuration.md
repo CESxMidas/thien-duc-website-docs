@@ -18,12 +18,10 @@
 | `CORS_ORIGIN` | **Nhập tay** sau khi có domain Vercel thật (mặc định `https://thien-duc-website-frontend.vercel.app`). | Nhiều domain cách nhau bằng dấu phẩy, không khoảng trắng. Backend **từ chối khởi động** nếu thiếu — không fallback wildcard. |
 | `CLOUDINARY_CLOUD_NAME` | `thienduc` (công khai — nằm trong URL ảnh). | |
 | `CLOUDINARY_API_KEY` | **Nhập tay** ở Render Dashboard → service backend → Environment (`sync: false`). | Lấy tại Cloudinary Dashboard → API Keys, role **Master Admin**. |
-| `CLOUDINARY_API_SECRET` | **Nhập tay** (`sync: false`). | Role *Media Library User* KHÔNG gọi được Admin API → lệnh xóa ảnh thất bại. **Không bao giờ** đặt tiền tố `VITE_` / `VITE_`. |
-| `MAIL_PROVIDER` | **Production đặt `resend`** (mặc định code là `smtp`). | Chọn nhà cung cấp gửi email thông báo lead: `resend` (gọi Resend HTTPS API) hoặc `smtp` (Nodemailer). Render **chặn/timeout cổng SMTP outbound** nên production dùng Resend; SMTP giữ làm phương án dự phòng. |
-| `RESEND_API_KEY` | **Nhập tay** (`sync: false`) khi `MAIL_PROVIDER=resend`. | Lấy ở dashboard Resend. **Không bao giờ** đặt tiền tố `VITE_` / `VITE_`. Thiếu → bỏ qua gửi mail, lead vẫn lưu. |
-| `MAIL_FROM` | **Nhập tay** (`sync: false`) khi `MAIL_PROVIDER=resend`. | Địa chỉ gửi, phải thuộc domain đã verify ở Resend (bỏ trống → fallback `SMTP_FROM`). |
-| `SMTP_*` | **Nhập tay** khi dùng phương án dự phòng `MAIL_PROVIDER=smtp` (câu 9 trong [open-questions](../01-requirements/open-questions.md)). | Email thông báo lead **đã cài** (task →1) — thiếu SMTP thì bỏ qua gửi mail, lead vẫn lưu. |
-| `CONTACT_NOTIFY_TO` | **Nhập tay** (`sync: false`). Bắt buộc khi `MAIL_PROVIDER=resend`. | Nơi nhận email báo lead mới; provider `smtp` bỏ trống → gửi về `SMTP_FROM` (task →1). |
+| `CLOUDINARY_API_SECRET` | **Nhập tay** (`sync: false`). | Role *Media Library User* KHÔNG gọi được Admin API → lệnh xóa ảnh thất bại. **Không bao giờ** đặt tiền tố client (`NEXT_PUBLIC_` / `VITE_`). |
+| `RESEND_API_KEY` | **Nhập tay** (`sync: false`). | Email thông báo lead chạy **Resend-only** (SMTP fallback đã gỡ khỏi code — xem [SMTP-REMOVAL-ENV-CLEANUP](../08-audits-and-reports/current/2026-07-20-smtp-removal-env-cleanup.md)). Lấy ở dashboard Resend. **Không bao giờ** đặt tiền tố client (`NEXT_PUBLIC_` / `VITE_`). Thiếu → bỏ qua gửi mail, lead vẫn lưu. |
+| `MAIL_FROM` | **Nhập tay** (`sync: false`). | Địa chỉ gửi, phải thuộc domain đã verify ở Resend. Thiếu → bỏ qua gửi mail, lead vẫn lưu. |
+| `CONTACT_NOTIFY_TO` | **Nhập tay** (`sync: false`). | Nơi nhận email báo lead mới. Thiếu → bỏ qua gửi mail, lead vẫn lưu. |
 | `SENTRY_DSN` | **Nhập tay** (`sync: false`), tùy chọn. | Error tracking backend (task →5) — DSN project Sentry riêng của backend. Thiếu = tắt tracking, app vẫn chạy. Xem [monitoring-and-alerting.md](monitoring-and-alerting.md). |
 
 > ⚠️ **Nối DB từ ngoài Render bắt buộc có `?sslmode=require` trong `DATABASE_URL`.** `PrismaService` dùng adapter `@prisma/adapter-pg` (node-postgres), mà node-postgres mặc định **không** bật SSL → Render đóng kết nối và mọi route chạm DB trả `500` kèm thông báo đánh lạc hướng `User was denied access on the database`. Prisma CLI (`studio`, `db execute`, `migrate`) có engine riêng tự bật SSL nên vẫn chạy bình thường — **đừng lấy CLI làm bằng chứng rằng DB ổn**. Backend chạy trên Render dùng Internal URL nên không gặp lỗi này; chỉ `.env` máy dev (trỏ External URL) mới cần.
@@ -34,11 +32,11 @@ Thêm cho cả 3 scope (Production / Preview / Development):
 
 | Key | Value | Ghi chú |
 |---|---|---|
-| `VITE_API_URL` | `https://thien-duc-website-backend.onrender.com/api` (URL Render + `/api`) | **Bắt buộc.** Frontend **không có mock mode**: thiếu biến này thì base URL rỗng làm mọi lời gọi API hỏng lúc chạy (`isApiConfigured=false` chỉ bỏ prerender SSG trong build không có API, không giả lập dữ liệu). Xem [deployment-guide.md](deployment-guide.md) mục 5. |
-| `VITE_SITE_URL` | `https://thien-duc-website-frontend.vercel.app` (domain Vercel thật) | Dùng cho canonical/OG + JSON-LD. |
-| `VITE_SENTRY_DSN` | DSN project Sentry riêng của frontend (task →5), tùy chọn | DSN là khóa **ingest-only** — an toàn nằm trong bundle client, không phải secret. Thiếu = tắt tracking. |
+| `NEXT_PUBLIC_API_URL` | `https://thien-duc-website-backend.onrender.com/api` (URL Render + `/api`) | **Bắt buộc.** Frontend **không có mock mode**: thiếu biến này thì base URL rỗng làm mọi lời gọi API hỏng lúc chạy (`isApiConfigured=false` chỉ bỏ prerender SSG trong build không có API, không giả lập dữ liệu). Xem [deployment-guide.md](deployment-guide.md) mục 5. |
+| `NEXT_PUBLIC_SITE_URL` | `https://thien-duc-website-frontend.vercel.app` (domain Vercel thật) | Dùng cho canonical/OG + JSON-LD. |
+| `NEXT_PUBLIC_SENTRY_DSN` | DSN project Sentry riêng của frontend (task →5), tùy chọn | DSN là khóa **ingest-only** — an toàn nằm trong bundle client, không phải secret. Thiếu = tắt tracking. |
 
-> ⚠️ Biến `VITE_*` được **nướng vào lúc build** — đặt/đổi xong bắt buộc **Redeploy** mới có hiệu lực.
+> ⚠️ Frontend là **Next.js** — biến client dùng tiền tố `NEXT_PUBLIC_` (không phải `VITE_`), được **nướng vào lúc build**; đặt/đổi xong bắt buộc **Redeploy** mới có hiệu lực.
 
 ## `.env.example`
 
@@ -50,6 +48,13 @@ Cả 3 project (`backend`, `frontend`, `admin`) đều có `.env.example` liệt
 
 ## Document history
 
+- **2026-07-21** — Audit tính nhất quán tên biến env (docs-only): sửa bảng biến
+  Frontend từ `VITE_*` → `NEXT_PUBLIC_*` (frontend là **Next.js**, không phải Vite
+  — xác nhận qua `frontend/src/lib/api/client.ts`, `.env.example`); gộp email về
+  **Resend-only** và gỡ hàng `MAIL_PROVIDER`/`SMTP_*` đã lỗi thời (SMTP fallback
+  đã gỡ khỏi code — xem [SMTP-REMOVAL-ENV-CLEANUP](../08-audits-and-reports/current/2026-07-20-smtp-removal-env-cleanup.md)).
+  Các mục changelog cũ bên dưới ghi `VITE_API_URL`/`MAIL_PROVIDER` phản ánh cách
+  mô tả tại thời điểm đó; tên biến hiện hành xem bảng phía trên.
 - **2026-07-20** — Email thông báo lead chạy thật trên production bằng **Resend**
   (`MAIL_PROVIDER=resend`): thêm hàng `MAIL_PROVIDER`/`RESEND_API_KEY`/`MAIL_FROM`,
   ghi rõ Render timeout cổng SMTP nên Resend là mặc định production, SMTP giữ làm
