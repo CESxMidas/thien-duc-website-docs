@@ -21,7 +21,7 @@ npm run test:e2e                            # cần Postgres sống + admin đã
 
 # Frontend
 npm run lint && npx tsc --noEmit && npm test
-npm run build   # không cần API: thiếu NEXT_PUBLIC_API_URL → bỏ prerender /[locale] + sitemap tĩnh
+npm run build   # không cần API: thiếu VITE_API_URL → bỏ prerender /[locale] + sitemap tĩnh
 
 # Admin
 npm run lint && npm run build
@@ -45,7 +45,7 @@ Máy dev không có Postgres/Docker thì dựa vào CI để chạy e2e.
 
 ## `next build` không cần API sống
 
-`NEXT_PUBLIC_API_URL` không đặt (CI, máy dev offline) → `isApiConfigured`
+`VITE_API_URL` không đặt (CI, máy dev offline) → `isApiConfigured`
 (`lib/api/client.ts`) tắt prerender: `generateStaticParams` của `[locale]`
 layout + 3 trang chi tiết trả rỗng, sitemap chỉ gồm route tĩnh. Trang render
 on-demand lúc chạy (ISR `revalidate 60` sẵn có). Production (Vercel, env đã

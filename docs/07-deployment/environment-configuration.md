@@ -18,9 +18,9 @@
 | `CORS_ORIGIN` | **Nhập tay** sau khi có domain Vercel thật (mặc định `https://thien-duc-website-frontend.vercel.app`). | Nhiều domain cách nhau bằng dấu phẩy, không khoảng trắng. Backend **từ chối khởi động** nếu thiếu — không fallback wildcard. |
 | `CLOUDINARY_CLOUD_NAME` | `thienduc` (công khai — nằm trong URL ảnh). | |
 | `CLOUDINARY_API_KEY` | **Nhập tay** ở Render Dashboard → service backend → Environment (`sync: false`). | Lấy tại Cloudinary Dashboard → API Keys, role **Master Admin**. |
-| `CLOUDINARY_API_SECRET` | **Nhập tay** (`sync: false`). | Role *Media Library User* KHÔNG gọi được Admin API → lệnh xóa ảnh thất bại. **Không bao giờ** đặt tiền tố `NEXT_PUBLIC_` / `VITE_`. |
+| `CLOUDINARY_API_SECRET` | **Nhập tay** (`sync: false`). | Role *Media Library User* KHÔNG gọi được Admin API → lệnh xóa ảnh thất bại. **Không bao giờ** đặt tiền tố `VITE_` / `VITE_`. |
 | `MAIL_PROVIDER` | **Production đặt `resend`** (mặc định code là `smtp`). | Chọn nhà cung cấp gửi email thông báo lead: `resend` (gọi Resend HTTPS API) hoặc `smtp` (Nodemailer). Render **chặn/timeout cổng SMTP outbound** nên production dùng Resend; SMTP giữ làm phương án dự phòng. |
-| `RESEND_API_KEY` | **Nhập tay** (`sync: false`) khi `MAIL_PROVIDER=resend`. | Lấy ở dashboard Resend. **Không bao giờ** đặt tiền tố `NEXT_PUBLIC_` / `VITE_`. Thiếu → bỏ qua gửi mail, lead vẫn lưu. |
+| `RESEND_API_KEY` | **Nhập tay** (`sync: false`) khi `MAIL_PROVIDER=resend`. | Lấy ở dashboard Resend. **Không bao giờ** đặt tiền tố `VITE_` / `VITE_`. Thiếu → bỏ qua gửi mail, lead vẫn lưu. |
 | `MAIL_FROM` | **Nhập tay** (`sync: false`) khi `MAIL_PROVIDER=resend`. | Địa chỉ gửi, phải thuộc domain đã verify ở Resend (bỏ trống → fallback `SMTP_FROM`). |
 | `SMTP_*` | **Nhập tay** khi dùng phương án dự phòng `MAIL_PROVIDER=smtp` (câu 9 trong [open-questions](../01-requirements/open-questions.md)). | Email thông báo lead **đã cài** (task →1) — thiếu SMTP thì bỏ qua gửi mail, lead vẫn lưu. |
 | `CONTACT_NOTIFY_TO` | **Nhập tay** (`sync: false`). Bắt buộc khi `MAIL_PROVIDER=resend`. | Nơi nhận email báo lead mới; provider `smtp` bỏ trống → gửi về `SMTP_FROM` (task →1). |
@@ -34,11 +34,11 @@ Thêm cho cả 3 scope (Production / Preview / Development):
 
 | Key | Value | Ghi chú |
 |---|---|---|
-| `NEXT_PUBLIC_API_URL` | `https://thien-duc-website-backend.onrender.com/api` (URL Render + `/api`) | **Bắt buộc.** Frontend **không có mock mode**: thiếu biến này thì base URL rỗng làm mọi lời gọi API hỏng lúc chạy (`isApiConfigured=false` chỉ bỏ prerender SSG trong build không có API, không giả lập dữ liệu). Xem [deployment-guide.md](deployment-guide.md) mục 5. |
-| `NEXT_PUBLIC_SITE_URL` | `https://thien-duc-website-frontend.vercel.app` (domain Vercel thật) | Dùng cho canonical/OG + JSON-LD. |
-| `NEXT_PUBLIC_SENTRY_DSN` | DSN project Sentry riêng của frontend (task →5), tùy chọn | DSN là khóa **ingest-only** — an toàn nằm trong bundle client, không phải secret. Thiếu = tắt tracking. |
+| `VITE_API_URL` | `https://thien-duc-website-backend.onrender.com/api` (URL Render + `/api`) | **Bắt buộc.** Frontend **không có mock mode**: thiếu biến này thì base URL rỗng làm mọi lời gọi API hỏng lúc chạy (`isApiConfigured=false` chỉ bỏ prerender SSG trong build không có API, không giả lập dữ liệu). Xem [deployment-guide.md](deployment-guide.md) mục 5. |
+| `VITE_SITE_URL` | `https://thien-duc-website-frontend.vercel.app` (domain Vercel thật) | Dùng cho canonical/OG + JSON-LD. |
+| `VITE_SENTRY_DSN` | DSN project Sentry riêng của frontend (task →5), tùy chọn | DSN là khóa **ingest-only** — an toàn nằm trong bundle client, không phải secret. Thiếu = tắt tracking. |
 
-> ⚠️ Biến `NEXT_PUBLIC_*` được **nướng vào lúc build** — đặt/đổi xong bắt buộc **Redeploy** mới có hiệu lực.
+> ⚠️ Biến `VITE_*` được **nướng vào lúc build** — đặt/đổi xong bắt buộc **Redeploy** mới có hiệu lực.
 
 ## `.env.example`
 
@@ -54,7 +54,7 @@ Cả 3 project (`backend`, `frontend`, `admin`) đều có `.env.example` liệt
   (`MAIL_PROVIDER=resend`): thêm hàng `MAIL_PROVIDER`/`RESEND_API_KEY`/`MAIL_FROM`,
   ghi rõ Render timeout cổng SMTP nên Resend là mặc định production, SMTP giữ làm
   phương án dự phòng. Test production PASS, hộp thư Gmail công ty nhận được email.
-- **2026-07-19** — Batch G7-D1: ghi rõ `NEXT_PUBLIC_API_URL` bắt buộc và frontend
+- **2026-07-19** — Batch G7-D1: ghi rõ `VITE_API_URL` bắt buộc và frontend
   không có mock mode (xác nhận qua `client.ts`); thêm ghi chú follow-up "comment
   mock mode ở `frontend/.env.example` đã lỗi thời — sửa ở batch riêng có duyệt".
 - **2026-07-16** — Tách từ `DEPLOY.md` (mục "Các biến môi trường", cảnh báo `sslmode`, bảng biến Vercel) khi tái cấu trúc tài liệu.

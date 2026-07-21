@@ -33,7 +33,7 @@ degrade với Cloudinary/SMTP.
 | App | SDK | Điểm capture | Biến env |
 |---|---|---|---|
 | Backend | `@sentry/nestjs` | `src/instrument.ts` (init, import đầu tiên ở `main.ts`) + `HttpExceptionFilter` — **chỉ** exception ngoài `HttpException` (500 bất ngờ). 4xx/423/429 chủ đích **không** capture. | `SENTRY_DSN` (Render, `sync: false`) |
-| Frontend | `@sentry/nextjs` | `src/instrumentation.ts` (server/edge + `onRequestError`), `src/instrumentation-client.ts` (browser), `app/global-error.tsx` + `app/[locale]/error.tsx` (error boundary kèm capture) | `NEXT_PUBLIC_SENTRY_DSN` (Vercel — DSN ingest-only, không phải secret) |
+| Frontend | `@sentry/nextjs` | `src/instrumentation.ts` (server/edge + `onRequestError`), `src/instrumentation-client.ts` (browser), `app/global-error.tsx` + `app/[locale]/error.tsx` (error boundary kèm capture) | `VITE_SENTRY_DSN` (Vercel — DSN ingest-only, không phải secret) |
 | Admin | `@sentry/react` | `src/main.tsx` (init) + `Sentry.ErrorBoundary` với `CrashFallback` — hết trắng trang lặng lẽ | `VITE_SENTRY_DSN` |
 
 **Scrubbing PII:** backend `beforeSend` xóa `event.request` (body chứa nội dung
@@ -46,8 +46,8 @@ lead — task →1/→3) và IP/email của `event.user`; FE server cũng xóa
 - [ ] Tạo **3 project riêng**: `thien-duc-backend` (Node/Nest), `thien-duc-frontend`
       (Next.js), `thien-duc-admin` (React) → lấy 3 DSN.
 - [ ] Render → service backend → Environment → dán `SENTRY_DSN` → redeploy.
-- [ ] Vercel → project frontend → Environment Variables → `NEXT_PUBLIC_SENTRY_DSN`
-      (cả 3 scope) → **Redeploy** (biến `NEXT_PUBLIC_*` nướng lúc build).
+- [ ] Vercel → project frontend → Environment Variables → `VITE_SENTRY_DSN`
+      (cả 3 scope) → **Redeploy** (biến `VITE_*` nướng lúc build).
 - [ ] Nơi build/host admin → đặt `VITE_SENTRY_DSN` → build lại.
 - [ ] Bật alert rule mặc định (email khi có issue mới) ở cả 3 project.
 
