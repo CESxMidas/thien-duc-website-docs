@@ -12,7 +12,7 @@
 - **Tính năng website + CMS: gần như hoàn tất.** FE public (Next.js/Vercel), Admin CMS (Vite), Backend (NestJS/Prisma/Postgres trên Render) đã chạy thật end-to-end; toàn bộ Admin đã nối API thật, song ngữ VI/EN cho nội dung production/audited đã xong. Chi tiết: **§1** + ledger **§7**.
 - **Production-readiness: CHƯA hoàn tất — cố ý hoãn.** 🟠 **Cổng go-live BLOCKED/DEFERRED** (G7-M1, [note](../08-audits-and-reports/current/2026-07-19-g7-m1-manual-ops-verification.md)): hạ tầng còn Free/chưa xác nhận (backend + Postgres Free; backup/PITR + restore + monitoring chưa bật). Nâng plan trả phí + monitoring **bắt buộc trước go-live cuối**. Checklist: **§3**.
 - **Số checkbox mở ≠ số việc code đang mở.** Nhiều `[ ]` mở là *manual ops / deferred / backlog*, không phải hàng đợi coding (di sản của lần chuyển văn xuôi→checkbox, xem [CHECKBOX-AUDIT-M1](#section-7--changelog--audit-trail)).
-- **Việc code đang mở thật sự: 1 — →6 Enforce CSP** (§2). Các mục mở còn lại: manual/go-live (§3), deferred security/infra (§4), backlog tùy chọn (§6). Backlog nội dung (§5) phần code/CMS đã xong, chỉ chờ công ty nhập liệu.
+- **Việc code đang mở thật sự: 1 — →6 Enforce CSP** (§2), và đang **HOÃN** tới khi monitoring active. Đợt hardening phân quyền/bảo mật 2026-07-22 đã đóng: R1 media-delete, R2 banner governance, R3 users read-only lock-in, TRUSTED-PROXY-RATE-LIMIT-FIX-M1, ADMIN-SPA-SECURITY-HEADERS-M1 (ledger §7). Coding/security còn lại đều deferred: CSP enforce (§2, chờ monitoring) + Auth HttpOnly (§4, post-launch). Các mục mở khác: manual/go-live (§3), deferred infra (§4), backlog tùy chọn (§6). Backlog nội dung (§5) phần code/CMS đã xong, chỉ chờ công ty nhập liệu.
 
 ## Section 1 — Completed work summary
 
@@ -35,6 +35,7 @@
 - [ ] **(→6) Enforce CSP — bỏ Report-Only** · *Nhóm 5* · phiên: **SEC-CSP-ENFORCE-M1**
   - `frontend/next.config.ts` đang `Content-Security-Policy-Report-Only`, còn `unsafe-inline`/`unsafe-eval`.
   - Theo dõi report → chuyển sang `Content-Security-Policy`, thay `unsafe-*` bằng nonce/hash Next.js. Làm **sau** →5 (monitoring); khi enforce thêm domain ingest Sentry vào `connect-src`. Cập nhật `next.config.spec.ts` theo header mới.
+  - **Trạng thái (SECURITY-CODING-REMAINING-AUDIT-M1, 2026-07-22): vẫn HOÃN** cho tới khi monitoring/Sentry DSN active (§3). Gồm cả CSP cho Admin SPA (đã có header cơ bản ở `admin/vercel.json`, còn CSP để pass sau). Chỉ prep (kiểm kê nguồn `script-src`/`connect-src`) là làm trước được.
 
 ## Section 3 — Manual production / go-live tasks
 
@@ -54,7 +55,7 @@
 
 > Việc kỹ thuật tương lai, **không active**; phụ thuộc ngân sách / đánh đổi độ phức tạp. Không chặn go-live cơ bản.
 
-- [ ] **(→9) Auth bằng cookie HttpOnly** · *Nhóm 5* — token đang ở localStorage (`admin/src/lib/api/client.ts`); HttpOnly loại rủi ro XSS lấy token (đổi lại phải xử lý CSRF). Việc lớn FE+BE. (Finding #10)
+- [ ] **(→9) Auth bằng cookie HttpOnly** · *Nhóm 5* — token đang ở localStorage (`admin/src/lib/api/client.ts`); HttpOnly loại rủi ro XSS lấy token (đổi lại phải xử lý CSRF). Việc lớn FE+BE. (Finding #10). **Trạng thái (SECURITY-CODING-REMAINING-AUDIT-M1, 2026-07-22): HOÃN sang post-launch** — scope luồng auth lớn (phát hành cookie + CSRF + refresh), rủi ro cao nếu làm sát production; Finding #10 mức LOW (trade-off SPA). Ưu tiên header cơ bản (đã xong ADMIN-SPA-SECURITY-HEADERS-M1) thay vì đổi luồng auth trước bàn giao.
 - [ ] **(→10) Môi trường staging + WAF** · *Nhóm 7* — staging verify trước khi lên thật; WAF (Cloudflare trước API) chắn DDoS/scan. Phụ thuộc ngân sách.
 
 ## Section 5 — Content backlog / business input
@@ -105,6 +106,19 @@
 - [x] **IMPLEMENTATION-PLAN-CHECKBOX-AUDIT-M1** (2026-07-21) — kiểm đếm & làm sạch checkbox: xác định `[ ]` tăng 11→22 là do PLAN-RESTRUCTURE-M1 đổi văn xuôi→checkbox (không phải việc mới; git `c65787d`); giải trùng cặp placeholder; ghi nhận 3 việc phiên gần đây. Tiếp nối bằng **FINAL-RESTRUCTURE-M2** (2026-07-21) — gom toàn bộ về cấu trúc §0–§7 này.
 - [x] **Email Resend-only closeout** (2026-07-20) — SMTP fallback gỡ khỏi code, `SMTP_*` gỡ khỏi Render, Gmail App Password thu hồi. Notes: [EMAIL-RESEND-CLOSEOUT](../08-audits-and-reports/current/2026-07-20-email-resend-closeout.md), [SMTP-REMOVAL-ENV-CLEANUP](../08-audits-and-reports/current/2026-07-20-smtp-removal-env-cleanup.md).
 - [x] **FRONTEND-UI-POLISH-M1** — commit `85d5fb1` "Fix UI UX FRONT END" (Nhóm 3+4).
+
+### Phiên 2026-07-22 — Hardening phân quyền & bảo mật (trước production setup)
+
+> Nguồn: **SECURITY-CODING-REMAINING-AUDIT-M1** (rà soát chỉ việc code/security còn
+> mở trước production) + **ADMIN-ROLE-VISIBILITY-AUDIT-M1** (rà quyền hiển thị Admin CMS).
+> Các fix dưới đây đều **backend/admin runtime → cần redeploy**; chưa kiểm chứng thủ công.
+
+- [x] **ADMIN-ROLE-VISIBILITY-AUDIT-M1** — rà quyền sidebar/route/nút theo vai trò (EDITOR/ADMIN/SUPER_ADMIN) trên toàn Admin CMS. Kết luận: nav + route + nút đã khớp backend, không có nút nào gây 403; phát hiện 3 điểm cần siết → R1/R2/R3 dưới. Không đổi runtime ở bước audit.
+  - [x] **R1 — Media delete chỉ ADMIN+** — xóa ảnh là thao tác phá hủy (gỡ Cloudinary, có thể hỏng trang đang dùng). Backend `media.controller.ts`: `DELETE /media/:id` thêm method-level `@Roles(ADMIN, SUPER_ADMIN)` (override EDITOR+ ở controller). Admin `MediaPage.tsx`: ẩn nút xóa với EDITOR (`canDelete`). Upload/list giữ nguyên cho EDITOR. Test: `media.controller.spec.ts` (metadata @Roles) + `MediaPage.test.tsx`.
+  - [x] **R2 — Banner governance chỉ ADMIN+** — banner là nội dung trang chủ, không có luồng duyệt riêng. Backend `banners.controller.ts`: `create`/`update`(toggle `isActive`)/`reorder` chuyển sang `@Roles(ADMIN, SUPER_ADMIN)` (delete vốn đã ADMIN+). Admin: ẩn cả trang Banner khỏi EDITOR (nav `roles` + `ProtectedRoute` ở `/banner`), giống Liên hệ/Tài khoản. Test: `banners.controller.spec.ts` + `nav.test.ts`. EDITOR vào `/banner` trực tiếp → `/403`.
+  - [x] **R3 — Users ADMIN read-only (lock-in test)** — hành vi đã đúng sẵn (ADMIN xem danh sách/chi tiết, mọi thao tác tạo/sửa/khóa/đổi vai trò gated `canManage = SUPER_ADMIN`; backend mutation `@Roles(SUPER_ADMIN)`); **không đổi runtime**, chỉ thêm test khóa hợp đồng: `users.controller.spec.ts` (đọc ADMIN+, mutation SUPER_ADMIN-only, self-service `/users/me` vẫn EDITOR+) + `UsersPage.test.tsx`.
+- [x] **TRUSTED-PROXY-RATE-LIMIT-FIX-M1** (Finding 7) — sau reverse proxy của Render, `req.ip` phải lấy từ `X-Forwarded-For` thì `@nestjs/throttler` (rate-limit contact/auth) và IP lưu kèm lead mới đúng IP client; nếu không, mọi request gộp chung IP proxy → chặn nhầm cả trang / rate-limit theo IP mất tác dụng. Fix backend: `main.ts` tạo app kiểu `NestExpressApplication` + gọi helper `common/trust-proxy.ts` (`configureTrustProxy` → `app.set('trust proxy', 1)` — tin đúng **1 hop** Render, **không** `true` để tránh giả `X-Forwarded-For`). Test `trust-proxy.spec.ts`. Xác minh X-Forwarded-For thật là **manual trên staging**.
+- [x] **ADMIN-SPA-SECURITY-HEADERS-M1** — Admin (Vite static trên Vercel) trước đây **không có** header bảo mật như FE public. Thêm `admin/vercel.json`: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`, `Strict-Transport-Security: max-age=31536000; includeSubDomains`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`; áp cho mọi route `/(.*)` + SPA fallback rewrite `→ /index.html`. **CSP cố ý hoãn** (Radix/Tailwind/Sentry có inline style + ingest, cần giai đoạn Report-Only riêng — xem →6). Test `vercel-headers.test.ts`. Redeploy Vercel mới có hiệu lực.
 
 ### Audit-baseline →1…→13 (2026-07-16 → 19)
 
