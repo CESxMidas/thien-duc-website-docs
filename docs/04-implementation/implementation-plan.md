@@ -19,7 +19,7 @@
 > Tóm tắt theo workstream (không lặp từng phiên chat). Ledger chi tiết + mã truy vết ở **§7**.
 
 - **1. Integrations / lead capture** — Form liên hệ `POST /contact` (rate-limit 5/IP/giờ, honeypot, validate) + email báo lead **Resend-only** chạy thật production; trang quản lý lead ở Admin. (→1, YC-09)
-- **2. Content ops / CMS** — CRUD đầy đủ projects / news / pages / banners / cooperation + luồng nháp→duyệt→đăng; Admin 8+ trang nối API thật, `BilingualField` nhập VI/EN; seed pages/projects/news. (→4, →11, ED-03/04/06/07)
+- **2. Content ops / CMS** — CRUD đầy đủ projects / news / pages / banners / cooperation + luồng nháp→duyệt→đăng; Admin 8+ trang nối API thật, `BilingualField` nhập VI/EN; seed pages/projects/news/**banners**. (→4, →11, ED-03/04/06/07, THIEN-DUC-BANNER-CONTENT-IMPLEMENTATION-M1)
 - **3. Frontend UI/UX** — Đồng nhất bố cục dự án theo chuẩn Hưng Phú, carousel hạng mục, gallery có điều kiện, cơ cấu lại trang chủ↔giới thiệu chống trùng lặp, redesign typography (Playfair + Be Vietnam Pro), footer. (FRONTEND-UI-POLISH-M1, PROJECT-GALLERY-IMAGES-FIX-M1)
 - **4. SEO / structured data / performance** — canonical + hreflang + sitemap/robots, JSON-LD Organization/NewsArticle/Breadcrumb, baseline đo production (Rich Results + Lighthouse), fix NO_FCP/NO_LCP. (→7, →13, YC-12)
 - **5. Security / validation / roles** — 3 HIGH findings đóng (CORS, rate-limit, SQL-inj), HTTP security headers, `@MaxLength` toàn bộ DTO chữ, 3 cấp role, SUPER_ADMIN đăng ngay. (→3, SEC-*, ADMIN-SUPER-ADMIN-GLOBAL-APPROVAL-BYPASS-M1)
@@ -89,6 +89,21 @@
 ## Section 7 — Changelog / audit trail
 
 > Ledger nén các việc đã hoàn tất, giữ mã truy vết + link báo cáo. **Không lặp mô tả dài đã tóm ở §1.** Dates chỉ giữ khi hữu ích cho lịch sử. Các mục con của một task được gộp thành một dòng.
+
+### Phiên 2026-07-28 — Nội dung banner trang chủ (THIEN-DUC-BANNER-CONTENT-IMPLEMENTATION-M1)
+
+- [x] **THIEN-DUC-BANNER-CONTENT-IMPLEMENTATION-M1** — điền nội dung banner trang chủ song ngữ cho **4 ảnh banner đã có sẵn**. Bảng `banners` trước đó **rỗng** nên khối hero trang chủ không render gì (`HomeBannerSlider` trả `null` khi không có banner). Không tạo ảnh mới, không upload lại ảnh cũ, không đổi schema, không migration.
+  - **Nguồn sự thật nội dung**: `backend/prisma/banner-content.json` (4 bản ghi) — dùng chung cho seed, cho test backend và cho E2E, nên ba nơi không thể lệch nhau. Nạp bằng `backend/prisma/seed-banners.js` (`npm run prisma:seed:banners`).
+  - **Idempotent theo khóa nghiệp vụ `image`**: có bản ghi cùng ảnh → `UPDATE` **giữ nguyên `id`**; chưa có → `INSERT`. Không `DELETE`, không đụng banner do Admin tự thêm. Chạy lại nhiều lần vẫn đúng 4 bản ghi / 4 ảnh phân biệt (đã kiểm). Cầu chì `SEED_CONFIRM_PRODUCTION` như các seed khác.
+  - **Ánh xạ ảnh → nội dung** (thứ tự 0→3, tất cả `isActive`): master-plan-02 → *Khu đô thị Hưng Phú, TP. Bến Tre* (`/du-an/khu-do-thi-hung-phu`, `objectPosition 35% center`); aerial-01 → *Fancy Tower — 196 căn hộ tại Hưng Phú* (`/du-an/khu-do-thi-hung-phu/fancy-tower`, `45% center`); fancy-tower-01 → *Dự án Thiên Đức tại các tỉnh phía Nam* (`/du-an`, `center center`); master-plan-top-01 → *Thiên Đức — xây dựng từ năm 2010* (`/gioi-thieu`, `center center`). **Tên file lệch nội dung ảnh** (ảnh tên `fancy-tower-01` là phối cảnh tổng thể, ảnh tên `aerial-01` mới là tòa căn hộ) — ánh xạ dựa trên ảnh thật, không dựa trên tên file.
+  - **Dữ kiện dùng trong nội dung đều đã được công ty xác nhận** (`01-requirements/open-questions.md` §1 câu 2 và 7): 11,25 ha · Nguyễn Thị Định, Phú Tân, TP. Bến Tre · 330 căn thấp tầng · Fancy Tower 19 tầng nổi + 1 hầm, 196 căn, đã nghiệm thu & bàn giao · thành lập 2010 · hợp tác CapitaLand tại TP.HCM · giá trị cốt lõi. **Không** thêm giải thưởng/số liệu/mốc thời gian ngoài danh sách đó.
+  - **Trần độ dài đo từ chính khung hero**, không phải con số tùy chọn: tiêu đề ≤ 45 ký tự (`line-clamp-2`, tới `3.25rem` ở desktop) và mô tả ≤ 125 ký tự (`line-clamp-3`, `text-sm` ở mobile 375px). Bản nháp đầu 52–55 ký tự tiêu đề **bị clamp mất chữ ở tablet + desktop** — phát hiện bằng E2E responsive rồi rút gọn.
+  - **Frontend**: gỡ mảng `homeBanners` chép cứng trong `src/data/banners.ts` (không nơi nào import, trùng nội dung với backend → nguồn sự thật thứ hai). Giữ lại kiểu `HomeBanner`.
+  - **Test mới**: backend `src/banners/banner-content.spec.ts` (8 test — validate qua đúng `CreateBannerDto`, song ngữ đủ, độ dài, `href` đối chiếu route tĩnh + slug trong `seed-projects.js`, `objectPosition`, thứ tự); frontend `src/lib/api/banners.test.ts` (4 test — `mapBanner` VI/EN + fallback); admin `src/pages/BannersPage.test.tsx` (6 test — danh sách, ảnh xem trước, bật/tắt, form nạp VI/EN + payload khớp DTO, validate `href`); E2E `admin/e2e/public/banner-content.e2e.ts` (**21 test** — API công khai chỉ lộ banner bật, trang chủ VI/EN, ảnh tải được + alt, bàn phím, route CTA mở được ở cả hai locale, responsive 375/768/1280, axe khối banner, `prefers-reduced-motion`).
+  - Helper `admin/e2e/helpers/a11y.ts` thêm tham số `include` **tùy chọn** để giới hạn phạm vi quét axe — **không tắt/hạ mức rule nào**.
+  - **Kiểm định**: Backend `prisma validate` · `tsc` · `lint` (0 lỗi) · `jest 306/306` · `build` xanh. Admin `tsc` · `lint` (0 lỗi) · `vitest 126/126` · `build` xanh. Frontend `tsc` · `lint` (0 lỗi/0 warning) · `jest 53/53` · `next build` xanh (prerender cả `/vi/du-an/khu-do-thi-hung-phu/fancy-tower` → route CTA có thật). E2E full-stack **111/112**.
+  - **Tồn đọng — KHÔNG do banner**: (a) `admin/e2e/admin/accessibility.e2e.ts` "Admin quản lý tài khoản: axe" fail `color-contrast` (badge `text-green-700` trên `bg-green-50` = 4.3:1; `text-slate` #7a8287 trên trắng = 3.91:1) — **đã xác minh có sẵn trước thay đổi này** (stash helper a11y, chạy lại, vẫn fail); (b) trang chủ ngoài khối banner còn 1 vi phạm `color-contrast` ở CTA liên hệ (`text-gold` trên `bg-brand` = 3.52:1). Cả hai cần task riêng.
+  - **Chưa chạy trên production** — seed mới chỉ chạy trên DB test cục bộ `localhost/thien_duc_test`. Muốn lên production phải chạy `SEED_CONFIRM_PRODUCTION=yes npm run prisma:seed:banners` có chủ ý.
 
 ### Phiên gần đây (2026-07-20 → 21)
 
