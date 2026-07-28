@@ -50,8 +50,24 @@ npm run test:e2e:report     # mở HTML report
 ## Kết quả accessibility
 
 - **Vi phạm cấu trúc mức serious/critical (nhãn, ARIA, vai trò): KHÔNG có** — cổng axe chặn nhóm này, tất cả trang PASS.
-- **Giới hạn còn lại — `color-contrast` (serious):** đây là vấn đề **bảng màu thương hiệu (design token)** cần design sign-off, KHÔNG sửa ở tầng test mà không đổi nhận diện. Số lượng ghi nhận (không chặn CI, có báo cáo): admin login 2 / forgot 1 / reset 1 / setup 1 / users 1 / dialog 2; frontend home 9 / contact 5 / news 5. **Khuyến nghị:** rà lại token màu (`globals.css`, `index.css`) để đạt tỉ lệ tương phản ≥ 4.5:1 cho text thường.
+- **`color-contrast` (serious): ĐÃ XỬ LÝ TRỌN VẸN ở M2** (xem mục dưới) — 0 vi phạm tương phản trên mọi trang đã test × 3 viewport. Rule KHÔNG bị tắt/loại trừ; nay là cổng CHẶN đầy đủ.
 - axe chỉ bắt phần tự động — **không** khẳng định đạt chuẩn a11y toàn diện.
+
+## M2 — Xử lý color-contrast (2026-07-27)
+
+**Baseline (máy đọc, 3 viewport):** 94 findings, gom về **2 nguyên nhân gốc**:
+
+1. **Brand `#b06613` chỉ đạt 4.41:1** (dưới 4.5) — trắng-trên-brand (nút), brand-trên-trắng/ấm (link, eyebrow). ~67 findings.
+2. **`#faf4ed` trên `#c99248` = 2.5:1** — chữ trắng trên panel `bg-brand-soft`, chủ yếu ở **header top-strip dùng chung** (xuất hiện mọi trang) + vài panel section. ~27 findings.
+
+**Sửa ở tầng token/idiom (không magic hex rải rác):**
+
+- **`--color-brand: #b06613 → #9f5a0f`** (cả `admin/src/index.css` + `frontend/src/app/globals.css`) — cùng tông đồng, đậm hơn chút. Kết quả đo: trắng-trên-brand **4.42 → 5.33**, brand-trên-nền-ấm (#f6f3ee) **3.9x → 4.73**, brand-trên-trắng **4.41 → 5.33**. Viền focus (dùng chính brand) vẫn ≥ 3:1: **5.33** trên trắng, **3.31** trên sidebar espresso (WCAG 2.4.11 vẫn đạt). Literal `#b06613` ở focus/skip-link của `globals.css` cũng cập nhật theo.
+- **`bg-brand-soft` + `text-white` → `bg-brand`** cho các panel chữ trắng: header top-strip (dùng chung), `home-contact-cta`, và cùng idiom ở `du-an`/`gioi-thieu`/`cong-ty-thanh-vien`. Trắng trên brand mới = 5.33:1. `brand-soft` giữ nguyên cho các dùng ĐÚNG (gradient trang trí, scrollbar, marker) — không đụng.
+
+**Kiểm chứng tự động (không dùng ảnh chụp):** spec mới `e2e/admin/contrast.e2e.ts` chạy axe `color-contrast` ở **375/768/1280** trên toàn bộ trang admin (login/forgot/reset/setup/users) + frontend (home/contact/news + du-an/gioi-thieu/cong-ty) → **0 vi phạm**. Helper `expectNoSeriousA11y` bỏ loại trừ color-contrast → nay chặn đầy đủ. Bộ Playwright: **82 → 91** test.
+
+**Giữ được ý nghĩa ngữ nghĩa:** brand vẫn là brand (đậm hơn chút), muted `slate` không đổi (vốn đã đạt), disabled/link/badge/focus giữ phân biệt, không "đen tuyền/trắng tinh". Không tắt/loại trừ/hạ mức bất kỳ rule axe nào.
 
 ## Kết quả responsive
 
@@ -76,7 +92,7 @@ Không tràn ngang + control chính hiển thị + điều hướng truy cập �
 
 ## Giới hạn / còn lại
 
-1. **`color-contrast`** — cần design sign-off (ở trên).
+1. **`color-contrast`** — ✅ **ĐÃ XỬ LÝ ở M2** (0 vi phạm, 3 viewport). Ngoài phạm vi test tự động (các trang/thành phần chưa đưa vào cổng axe) vẫn nên rà thủ công; axe chỉ bắt phần tự động.
 2. **CI full-stack + cross-repo** — YAML đã soạn nhưng **chưa chạy trên CI ở lần này** (không push; checkout cross-repo cần `WORKSPACE_TOKEN`). Bằng chứng hiện tại là **chạy cục bộ tự động**.
 3. **Frontend orchestration** dùng `next dev` (không prerender lúc build) — nhanh khi lặp; production build có thể thêm sau nếu muốn kiểm SSG.
 4. Refresh token của **tài khoản seed** tích lũy qua nhiều lần chạy (session, không phải rò rỉ `@e2e.test`) — vô hại trong DB test; có thể thêm bước dọn nếu cần.
