@@ -90,6 +90,10 @@
 
 > Ledger nén các việc đã hoàn tất, giữ mã truy vết + link báo cáo. **Không lặp mô tả dài đã tóm ở §1.** Dates chỉ giữ khi hữu ích cho lịch sử. Các mục con của một task được gộp thành một dòng.
 
+### Phiên 2026-07-29 — Slider tin trang chủ + phân trang /tin-tuc (NEWS-SLIDER-AND-PAGINATION-M1)
+
+- [~] **THIEN-DUC-NEWS-SLIDER-AND-PAGINATION-M1** — Trang chủ đổi 3 thẻ tin tĩnh thành **slider** (mobile 1 / tablet 2 / desktop 3 thẻ, trượt 1 thẻ/lần, **không autoplay**), viết theo pattern `ProjectItemsCarousel` sẵn có — **không thêm thư viện**. `/tin-tuc` có **phân trang thật, 9 bài/trang**, trang hiện tại nằm trong URL (`?page=2`); `?page=` sai/0/âm/chữ/1 → redirect URL sạch, vượt trang cuối → redirect về trang cuối có thật. Backend `GET /news` thêm `page`/`limit` **tùy chọn** (giữ mảng phẳng khi không có → không breaking), trần `limit` 50, chỉ PUBLISHED, sắp **tất định** `publishedAt desc, id desc` (khoá phụ `id` sửa lỗi thứ tự không tất định của bài trùng `publishedAt`), `count`+`findMany` trong một transaction. Canonical mỗi trang tự trỏ chính nó (không noindex). **54 unit test mới** xanh (BE 10 / FE 44). ⚠️ **22 spec Playwright + axe đã viết nhưng CHƯA chạy** — thiếu `.env` cục bộ ở cả 3 repo nên backend không boot được; chưa có bằng chứng đo được cho a11y/overflow/Back-Forward. Chi tiết + cách chạy: [news-slider-and-pagination-m1](../08-audits-and-reports/current/2026-07-29-news-slider-and-pagination-m1.md).
+
 ### Phiên 2026-07-29 — Nâng trần nội dung dài (LONG-FORM-CONTENT-LIMIT-M1)
 
 - [x] **LONG-FORM-CONTENT-LIMIT-M1** — Biên tập viên không lưu được bài dài: API trả `400 content.0.vi must be shorter than or equal to 5000 characters`.
