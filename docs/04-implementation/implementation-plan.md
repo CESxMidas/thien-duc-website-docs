@@ -90,6 +90,19 @@
 
 > Ledger nén các việc đã hoàn tất, giữ mã truy vết + link báo cáo. **Không lặp mô tả dài đã tóm ở §1.** Dates chỉ giữ khi hữu ích cho lịch sử. Các mục con của một task được gộp thành một dòng.
 
+### Phiên 2026-07-29 — Nâng trần nội dung dài (LONG-FORM-CONTENT-LIMIT-M1)
+
+- [x] **LONG-FORM-CONTENT-LIMIT-M1** — Biên tập viên không lưu được bài dài: API trả `400 content.0.vi must be shorter than or equal to 5000 characters`.
+  - **Nguyên nhân** — `content[]` của tin tức và trang tĩnh dùng chung `TranslatedTextDto` (trần **5.000** ký tự, đặt ở →3 cho các field *ngắn*). Admin CMS chỉ tách đoạn theo **dòng trống**, nên dán cả bài không có dòng trống thì toàn bộ nội dung rơi vào `content[0].vi` và vượt trần. Trần là ràng buộc chống payload khổng lồ, **không** phải giới hạn biên tập — nên nó chặn nhầm nội dung hợp lệ.
+  - **Trần cũ → mới: 5.000 → 100.000 ký tự/đoạn**, chỉ cho nội dung dài. Thêm `common/dto/long-translated-text.dto.ts` (`LongTranslatedTextDto`, `MAX_LONG_TEXT_LENGTH`) dùng ở `CreatePageDto.content` + `CreateNewsPostDto.content`; DTO update kế thừa qua `PartialType`. **Không** `extends TranslatedTextDto` vì class-validator kế thừa cả decorator, `@MaxLength(5000)` của lớp cha sẽ vẫn chặn.
+  - **Field ngắn giữ nguyên 5.000** — `title`, `summary`, `slug`, `name`, `caption`, `location`, `category`, banner… vẫn dùng `TranslatedTextDto`. Có test khẳng định chúng không bị nâng lây.
+  - **Không cần migration** — cột `content` của `news_posts` và `pages` là **JSONB** (`20260707093428_init`), không có ràng buộc độ dài; toàn bộ migration không có `VARCHAR(n)` nào. `prisma validate` xanh.
+  - **Trần body JSON 100 kb → 2 MB** (`common/body-limit.ts`, `main.ts` `useBodyParser`) — mặc định Express là 100 kb ≈ 80.000 ký tự tiếng Việt, thấp hơn trần DTO mới, nên phần vừa nới ra sẽ bị **413 trước khi** ValidationPipe chạy. (Bài ~5.000 từ của ticket gốc chỉ ~42 kb nên vốn đã lọt — đây là chỗ hở lộ ra khi nâng trần, không phải nguyên nhân lỗi 400.)
+  - **Admin** — thêm `lib/long-form-content.ts`: trần khớp backend, validate **theo từng đoạn** (đúng thứ backend soi) chứ không theo tổng cả ô, báo lỗi tại chỗ thay vì đợi 400. Gom `splitParagraphs`/`paragraphsToText`/`toParagraphPayload` đang lặp ở `NewsFormDialog` + `PageFormDialog` về một chỗ. Ô nhập không đặt `maxLength` nên trình soạn thảo không cắt chữ.
+  - **Test** — backend 38 test mới (`long-translated-text.dto.spec.ts`: 5.001 / 50.000 / đúng 100.000 chấp nhận, 100.001 chặn, cả `vi` lẫn `en`, cả 4 DTO create/update, báo đúng `content.1.vi`) + 5 test trần body. Admin 20 test (`long-form-content.test.ts`), gồm round-trip khẳng định payload gửi đi và form nạp lại **đủ nguyên văn**, không truncate.
+  - **Kiểm định** — Backend: `prisma validate` xanh · `prisma generate` xanh · `jest 349/349` · `tsc` sạch · `lint` 0 lỗi (8 warning cũ, không thuộc thay đổi này) · `build` xanh. Admin: `vitest 146/146` · `tsc` sạch · `lint` 0 lỗi (1 warning cũ ở `ui/form.tsx`) · `build` xanh.
+  - **Ghi chú** — index GIN `news_posts_search_idx` tính `to_tsvector` trên cả `content`; `tsvector` có trần cứng 1 MB của PostgreSQL. Chỉ chạm tới khi một bài vượt ~1 triệu ký tự (≥10 đoạn kịch trần) — xa hơn nhu cầu thực tế nhiều lần, chưa xử lý, ghi lại để biết.
+
 ### Phiên 2026-07-29 — Sửa CI E2E đỏ (E2E-CI-RED-FIX-M1)
 
 - [x] **E2E-CI-RED-FIX-M1** — CI `e2e-fullstack.yml` cho **109 passed · 1 failed · 2 flaky**; sau bản sửa: **113/113, 0 fail, 0 flaky** (chạy lại 2 lượt, một lượt `--retries=0`). Báo cáo đầy đủ: [2026-07-29-e2e-ci-red-contrast-overflow-flake-fix.md](../08-audits-and-reports/current/2026-07-29-e2e-ci-red-contrast-overflow-flake-fix.md).
@@ -193,7 +206,7 @@
 
 - [x] **→1 Email báo lead** — `backend/src/mail/` (Nodemailer→Resend), lead lưu trước, gửi fire-and-forget nuốt lỗi, body HTML escape; 4 test. Production Resend PASS.
 - [x] **→2 Rời free-tier + backup DB** (phần repo) — `render.yaml` plan trả phí; runbook backup-restore / rollback / deployment-guide 1b. *Thao tác Dashboard → §3.*
-- [x] **→3 `@MaxLength` cho DTO chữ** — phủ 13 DTO (name 120/phone 30/email 200/message 5000/`TranslatedTextDto` 5000…), FE khớp `maxLength`; test DoS payload. (Finding #9)
+- [x] **→3 `@MaxLength` cho DTO chữ** — phủ 13 DTO (name 120/phone 30/email 200/message 5000/`TranslatedTextDto` 5000…), FE khớp `maxLength`; test DoS payload. (Finding #9) · **Sửa 2026-07-29:** nội dung dài (`content[]` của tin tức + trang) tách sang `LongTranslatedTextDto` trần **100.000** ký tự/đoạn — 5.000 chặn nhầm bài viết hợp lệ. Field ngắn giữ nguyên 5.000. Xem LONG-FORM-CONTENT-LIMIT-M1 (§7).
 - [x] **→4 Bản dịch EN** — HOÀN TẤT phạm vi production/audited: CMS batch 1–4 + i18n UI tĩnh (B-series) + loạt C data-model song ngữ + [EN-FULL 7-route](../08-audits-and-reports/current/2026-07-18-en-full-group2-closure.md) + [EN-SITE-WIDE 5-route](../08-audits-and-reports/current/2026-07-18-en-site-wide-follow-up.md) + [EN-PROJECT-ITEMS-P1](../08-audits-and-reports/current/2026-07-18-en-project-items-p1.md) + [ADMIN-ITEM-CONTENT-P2 A–F](../08-audits-and-reports/current/2026-07-19-admin-item-content-p2-batch-m1.md). VI byte-identical, 0 `[object Object]`. Dự án tương lai nhập EN trước publish → **§5**. (câu 19)
 - [x] **→5 Error tracking + uptime** (phần repo) — Sentry 3 app errors-only (no-op khi thiếu DSN, `beforeSend` xóa body/IP); doc `monitoring-and-alerting.md`. *DSN + UptimeRobot → §3.*
 - [x] **→7 JSON-LD** — `Organization` toàn site + `NewsArticle` (tin) + `BreadcrumbList`; builders trong `lib/seo.ts`. Cố ý chưa: `RealEstateListing`/`LocalBusiness`/`sameAs` (→ §6).
