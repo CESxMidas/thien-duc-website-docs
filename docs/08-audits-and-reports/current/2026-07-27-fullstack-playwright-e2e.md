@@ -2,8 +2,8 @@
 
 > **Ngày:** 2026-07-27
 > **Nhóm:** 08 — Audits & Reports (chính: 06 Testing; phụ: 02 Architecture, 05 Reliability)
-> **Trạng thái:** 🟢 **PASS** — E2E trình duyệt full-stack đã tự động hóa; toàn bộ chạy xanh cục bộ. CI đã soạn (chạy khi push).
-> **Liên quan:** [testing-strategy.md](../../06-testing/testing-strategy.md) · [implementation-plan.md](../../04-implementation/implementation-plan.md)
+> **Trạng thái:** 🟡 **PASS có điều kiện — đã bị vượt qua một phần.** Hạ tầng E2E full-stack trong báo cáo này vẫn đúng và đang dùng. Nhưng khẳng định “toàn bộ chạy xanh” **chỉ đúng cho lần chạy cục bộ 82/82 tại thời điểm 2026-07-27**: khi CI thật chạy (`e2e-fullstack.yml`, sau khi bộ test mở rộng lên 112) kết quả là **109 passed · 1 failed · 2 flaky**. Xem đính chính và bản sửa ở [2026-07-29-e2e-ci-red-contrast-overflow-flake-fix.md](2026-07-29-e2e-ci-red-contrast-overflow-flake-fix.md) — sau bản sửa: **113/113, 0 fail, 0 flaky**.
+> **Liên quan:** [testing-strategy.md](../../06-testing/testing-strategy.md) · [implementation-plan.md](../../04-implementation/implementation-plan.md) · [2026-07-29 — sửa CI đỏ](2026-07-29-e2e-ci-red-contrast-overflow-flake-fix.md)
 
 ## Phạm vi
 
@@ -92,7 +92,7 @@ Không tràn ngang + control chính hiển thị + điều hướng truy cập �
 
 ## Giới hạn / còn lại
 
-1. **`color-contrast`** — ✅ **ĐÃ XỬ LÝ ở M2** (0 vi phạm, 3 viewport). Ngoài phạm vi test tự động (các trang/thành phần chưa đưa vào cổng axe) vẫn nên rà thủ công; axe chỉ bắt phần tự động.
+1. **`color-contrast`** — ⚠️ **ĐÍNH CHÍNH (2026-07-29).** Khẳng định “đã xử lý ở M2, 0 vi phạm, 3 viewport” **là sai**: nó đúng cho phạm vi trang đã quét tại thời điểm đó, nhưng khi bộ test mở rộng thì CI vẫn đỏ `color-contrast` ở huy hiệu “Đang hoạt động” (Admin → Tài khoản), và trang chủ vẫn còn vi phạm ở eyebrow CTA liên hệ. Cả hai **đã được sửa thật** ngày 2026-07-29 — xem [báo cáo sửa](2026-07-29-e2e-ci-red-contrast-overflow-flake-fix.md) (huy hiệu 4.723:1 → **7.80:1**; eyebrow 3.53:1 → **4.84:1**). Ngoài phạm vi test tự động vẫn nên rà thủ công; axe chỉ bắt phần tự động.
 2. **CI full-stack + cross-repo** — YAML đã soạn nhưng **chưa chạy trên CI ở lần này** (không push; checkout cross-repo cần `WORKSPACE_TOKEN`). Bằng chứng hiện tại là **chạy cục bộ tự động**.
 3. **Frontend orchestration** dùng `next dev` (không prerender lúc build) — nhanh khi lặp; production build có thể thêm sau nếu muốn kiểm SSG.
 4. Refresh token của **tài khoản seed** tích lũy qua nhiều lần chạy (session, không phải rò rỉ `@e2e.test`) — vô hại trong DB test; có thể thêm bước dọn nếu cần.

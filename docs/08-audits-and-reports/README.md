@@ -15,6 +15,8 @@ Báo cáo & audit có ngày. `current/` = hiện hành; `archive/` = đã bị t
 | [current/2026-07-18-en-site-wide-follow-up.md](current/2026-07-18-en-site-wide-follow-up.md) | EN-SITE-WIDE (F1–F3) — dọn tiếng Việt 5 route `/en` ngoài phạm vi 7-route | Đang dùng |
 | [current/2026-07-18-en-project-items-p1.md](current/2026-07-18-en-project-items-p1.md) | EN-PROJECT-ITEMS-P1 — backfill tiếng Anh cho 3 route hạng mục Hưng Phú | Đang dùng |
 | [current/2026-07-19-admin-item-content-p2-batch-m1.md](current/2026-07-19-admin-item-content-p2-batch-m1.md) | ADMIN-ITEM-CONTENT-P2 Batch M1 — kiểm chứng runtime nội dung hạng mục + fix Select | Đang dùng |
+| [current/2026-07-27-fullstack-playwright-e2e.md](current/2026-07-27-fullstack-playwright-e2e.md) | Hạ tầng E2E full-stack Playwright (Admin + Frontend + Backend) — có đính chính về kết quả CI | Đang dùng |
+| [current/2026-07-29-e2e-ci-red-contrast-overflow-flake-fix.md](current/2026-07-29-e2e-ci-red-contrast-overflow-flake-fix.md) | E2E-CI-RED-FIX-M1 — sửa tương phản huy hiệu, tràn ngang mobile, chập chờn bàn phím banner; CI 109/1/2 → 113/113 | Đang dùng |
 | [archive/](archive/) | Báo cáo cũ/đã thay thế | Lưu trữ |
 
 ## Tài liệu liên quan
