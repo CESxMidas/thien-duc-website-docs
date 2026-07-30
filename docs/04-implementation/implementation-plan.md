@@ -90,6 +90,7 @@
 
 > Ledger nén các việc đã hoàn tất, giữ mã truy vết + link báo cáo. **Không lặp mô tả dài đã tóm ở §1.** Dates chỉ giữ khi hữu ích cho lịch sử. Các mục con của một task được gộp thành một dòng.
 
+<<<<<<< HEAD
 ### Phiên 2026-07-30 — Siết chặt trước bàn giao (FINAL-RELEASE-HARDENING-M2)
 
 - [x] **FINAL-RELEASE-HARDENING-M2** — đóng 7 khoảng trống ưu tiên cao của M1. Kết luận vẫn **🟠 PARTIALLY GREEN** nhưng đã thu hẹp nhiều. Báo cáo: [2026-07-30-m2-release-hardening](../08-audits-and-reports/current/2026-07-30-m2-release-hardening.md).
@@ -123,6 +124,11 @@
   - **Defect còn mở, cố ý KHÔNG tự sửa** (cần quyết định chủ dự án): **D5** tiêu đề rỗng/chỉ khoảng trắng vẫn tạo được (thay đổi quy tắc nghiệp vụ); **D6** thiếu `@ArrayMaxSize` cho `content[]`; **D7** khoảng trống test sanitize/URL scheme; **D8** `images.qualities` lệch (`quality={100}` vs `[75,90]`); **D9** 8 lint warning tồn đọng + script `lint` của backend có `--fix` (tự ghi file).
   - **An toàn**: chỉ `localhost`/`127.0.0.1`; DB `thien_duc_test` (cầu chì 2 tầng); transport email GIẢ, không email thật; không Resend/Cloudinary/Sentry/Gmail; không chạm DB production; không in secret/token; **không commit, không push**; không skip test, không tắt rule axe, không nới timeout, không thêm sleep, không `overflow-x:hidden` toàn cục.
   - ⚠️ **Bài học đo lường**: lượt Playwright đầu chạy qua `| tail` nên **exit code bị `tail` che** (báo 0 dù suite đỏ) — phải đọc dòng tổng kết, không tin exit code của pipeline. Và phân loại "flaky" chỉ được kết luận **sau khi chạy lặp**: D4 thoạt trông như flake nhưng thực ra đỏ 6/6.
+=======
+### Phiên 2026-07-29 — Slider tin trang chủ + phân trang /tin-tuc (NEWS-SLIDER-AND-PAGINATION-M1)
+
+- [~] **THIEN-DUC-NEWS-SLIDER-AND-PAGINATION-M1** — Trang chủ đổi 3 thẻ tin tĩnh thành **slider** (mobile 1 / tablet 2 / desktop 3 thẻ, trượt 1 thẻ/lần, **không autoplay**), viết theo pattern `ProjectItemsCarousel` sẵn có — **không thêm thư viện**. `/tin-tuc` có **phân trang thật, 9 bài/trang**, trang hiện tại nằm trong URL (`?page=2`); `?page=` sai/0/âm/chữ/1 → redirect URL sạch, vượt trang cuối → redirect về trang cuối có thật. Backend `GET /news` thêm `page`/`limit` **tùy chọn** (giữ mảng phẳng khi không có → không breaking), trần `limit` 50, chỉ PUBLISHED, sắp **tất định** `publishedAt desc, id desc` (khoá phụ `id` sửa lỗi thứ tự không tất định của bài trùng `publishedAt`), `count`+`findMany` trong một transaction. Canonical mỗi trang tự trỏ chính nó (không noindex). **54 unit test mới** xanh (BE 10 / FE 44). ⚠️ **22 spec Playwright + axe đã viết nhưng CHƯA chạy** — thiếu `.env` cục bộ ở cả 3 repo nên backend không boot được; chưa có bằng chứng đo được cho a11y/overflow/Back-Forward. Chi tiết + cách chạy: [news-slider-and-pagination-m1](../08-audits-and-reports/current/2026-07-29-news-slider-and-pagination-m1.md).
+>>>>>>> e3cb42b5ecb5139c21ac9f283cd8a30a072385a4
 
 ### Phiên 2026-07-29 — Nâng trần nội dung dài (LONG-FORM-CONTENT-LIMIT-M1)
 
