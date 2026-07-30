@@ -169,3 +169,34 @@ Sau khi có domain Vercel chính thức:
   phí khai ở `render.yaml`, checklist việc làm tay ở Dashboard, đường di trú
   Postgres free→paid); cập nhật mục troubleshooting timeout theo hướng nâng plan.
 - **2026-07-16** — Tái cấu trúc tài liệu: tách từ `DEPLOY.md` (gốc ở thư mục root) thành 4 file trong `docs/07-deployment/`. File này giữ quy trình deploy + troubleshooting; biến môi trường, migration, rollback tách sang file riêng. Đánh dấu 1 điểm mâu thuẫn "mock mode" cần xác nhận.
+
+---
+
+## Hop dong API luc BUILD (AUDIT-M2 / D10)
+
+**Route nao fetch luc build:** `generateStaticParams` cua `[locale]/layout.tsx`,
+`tin-tuc/[slug]`, `du-an/[slug]`, `du-an/[slug]/[hang-muc]`, cong voi cac trang
+duoc prerender (trang chu, `gioi-thieu`, `lien-he`...). Muc dich: prerender SSG
+danh sach slug that.
+
+**Hanh vi khi loi (da kiem du 4 che do):**
+
+| Che do | Ket qua |
+|---|---|
+| Thieu `NEXT_PUBLIC_API_URL` (CI hien tai) | build **xanh**, khong prerender |
+| Co URL + backend song | build **xanh**, **co** prerender |
+| Co URL + backend ngu | build **xanh** + canh bao kem `ECONNREFUSED`, khong prerender, render on-demand luc chay |
+| Co URL + backend ngu + `BUILD_REQUIRE_API=1` | build **do** co chu dich |
+
+**Truoc M2, che do thu ba lam `next build` CHET** (`Failed to collect page data`).
+Vi backend dang o **Render Free — ngu sau 15 phut**, mot lan build cua Vercel trung
+luc backend ngu se that bai. Nay build van xanh; hanh vi runtime giu nguyen nho ISR
+(`revalidate = 60`), chi mat phan tinh hoa.
+
+**Yeu cau moi truong CI:** `frontend/.github/workflows/ci.yml` dat tuong minh
+`NEXT_PUBLIC_API_URL: ''` — buoc build cua CI **co y khong** phu prerender phu thuoc
+backend. Truoc day no xanh chi vi *tinh co thieu bien*, nen khoang trong nay bi che.
+
+**He qua cho Vercel:** muon **bao dam** trang duoc prerender voi du lieu that thi
+phai (a) danh thuc / giu backend always-on, va (b) dat `BUILD_REQUIRE_API=1` de build
+do neu API khong phan hoi — thay vi am tham ra ban khong prerender.

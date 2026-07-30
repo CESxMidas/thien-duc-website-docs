@@ -181,3 +181,65 @@ If audit findings unclear:
 **Methodology:** Manual code review + configuration audit  
 **Scope:** Full-stack (Next.js, NestJS, PostgreSQL, Render, Vercel)
 
+---
+
+## AUDIT-M2 (2026-07-30) — XSS luu tru da dong + hang rao URL phia server
+
+Bao cao day du: [08-audits-and-reports/current/2026-07-30-m2-release-hardening.md](../08-audits-and-reports/current/2026-07-30-m2-release-hardening.md)
+
+### XSS-01 — XSS luu tru qua JSON-LD · **Critical** · DA SUA
+
+- **Noi:** `frontend/src/components/ui/json-ld.tsx` + `components/ui/breadcrumb.tsx`
+  nhung structured data bang `dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}`.
+- **Vi sao hong:** `JSON.stringify` **khong escape `<`**, ma schema co nhung chu do
+  nguoi dung CMS nhap (`headline` = tieu de tin, `description` = tom tat,
+  `name` = nhan breadcrumb). Chu thich cu trong ma khang dinh du lieu "do ta dung,
+  khong phai HTML nguoi dung" — **sai**.
+- **Da tai hien:** tieu de `BREAKOUT</script><img src=x onerror=alert(1)>` (tao duoc
+  boi vai tro **EDITOR** tro len) dong som the `<script type="application/ld+json">`;
+  `<img src=x onerror=...>` va `<svg onload=...>` tro thanh **phan tu HTML song** tren
+  trang cong khai.
+- **Ban sua:** `frontend/src/lib/json-ld.ts` — `serializeJsonLd()` escape `<`, `>`,
+  `&`, U+2028, U+2029 sang dang `\uXXXX`. Van la JSON hop le nen structured data khong
+  doi nghia. Escape o **server** (Server Component).
+- **Xac minh da dong:** khoi `NewsArticle` parse JSON thanh cong, `headline`
+  round-trip nguyen van, khong con `<img`/`<svg` tho trong DOM.
+- **Hoi quy:** `frontend/src/lib/json-ld.test.ts` (8) +
+  `admin/e2e/public/rich-content-security.e2e.ts` (5, ca VI va EN).
+
+### URL-01 — Field URL khong duoc kiem o server · **High** · DA SUA
+
+- **Truoc:** `href`/`image`/`url`/`gallery[]` chi co `@IsString() @MaxLength()`. Do
+  duoc: **9/9 bien the nguy hiem duoc API nhan (201)** — `javascript:`,
+  `JaVaScRiPt:`, khoang trang dau, tab chen giua scheme, `data:text/html`,
+  `vbscript:`, `//evil.example.com`, `http://evil.example.com`.
+- React 19 tinh co chan `href="javascript:"` luc render, nhung do la co che
+  **client** va **khong** chan `data:`/`vbscript:`/URL ngoai => khong duoc coi la lop
+  bao ve duy nhat.
+- **Ban sua:** `backend/src/common/validators/safe-url.ts` — allowlist theo **hinh
+  dang** (`@IsSafeInternalPath` cho `href`; `@IsSafeImageRef` cho anh: duong dan noi
+  bo hoac `https://`), va bo moi ky tu dieu khien/khoang trang Unicode truoc khi soi
+  nen bien the lam roi truot ngay. Ap cho **7 DTO**.
+- **Hoi quy:** `safe-url.spec.ts` (51) + 11 case HTTP E2E.
+
+### Hop dong noi dung: VAN BAN THUAN
+
+Noi dung CMS **khong** ho tro HTML (editor la `Input`/`Textarea` thuong, khong co
+dependency rich-text/sanitizer nao, frontend render `<p>{text}</p>` de React escape).
+Vi vay **co y KHONG** them sanitizer allowlist HTML — them vao se ngu y HTML duoc ho
+tro va pha noi dung hop le nhu `a < b`.
+
+### Siet validate kem theo
+
+- **D5** — chuoi bat buoc chi gom khoang trang bi tu choi (`@IsNotBlank`, hop dong
+  **tu choi, khong tu trim**). Khong ap cho field optional (`en?`).
+- **D6** — `content[]` co tran **500 doan** (~10x bai dai nhat that la 48 doan);
+  tran tong payload van la body parser 2 MB.
+
+### Ton dong bao mat
+
+- **M2-R1 (Medium):** `postcss` + `sharp` bac cau qua Next van con advisory High;
+  **khong co ban sua** cho toi khi Next phat hanh ban ghim moi (npm chi de xuat ha
+  Next ve 9.x — vo ly). Day la phu thuoc thoi diem build / xu ly anh.
+- **CSP** van o `Report-Only` (->6, hoan toi khi monitoring active).
+- Chua pentest. Bao cao nay **khong** khang dinh khong con rui ro bao mat.

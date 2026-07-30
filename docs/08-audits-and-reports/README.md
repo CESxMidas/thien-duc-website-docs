@@ -17,6 +17,9 @@ Báo cáo & audit có ngày. `current/` = hiện hành; `archive/` = đã bị t
 | [current/2026-07-19-admin-item-content-p2-batch-m1.md](current/2026-07-19-admin-item-content-p2-batch-m1.md) | ADMIN-ITEM-CONTENT-P2 Batch M1 — kiểm chứng runtime nội dung hạng mục + fix Select | Đang dùng |
 | [current/2026-07-27-fullstack-playwright-e2e.md](current/2026-07-27-fullstack-playwright-e2e.md) | Hạ tầng E2E full-stack Playwright (Admin + Frontend + Backend) — có đính chính về kết quả CI | Đang dùng |
 | [current/2026-07-29-e2e-ci-red-contrast-overflow-flake-fix.md](current/2026-07-29-e2e-ci-red-contrast-overflow-flake-fix.md) | E2E-CI-RED-FIX-M1 — sửa tương phản huy hiệu, tràn ngang mobile, chập chờn bàn phím banner; CI 109/1/2 → 113/113 | Đang dùng |
+| [current/2026-07-30-final-test-case-matrix.md](current/2026-07-30-final-test-case-matrix.md) | FINAL-QUALITY-AUDIT-M1 — ma trận 295 test-case truy vết theo tính năng (224 covered / 39 partial / 27 missing / 4 blocked) | Đang dùng |
+| [current/2026-07-30-final-website-quality-audit.md](current/2026-07-30-final-website-quality-audit.md) | FINAL-QUALITY-AUDIT-M1 — audit tự động cuối trước bàn giao; **PARTIALLY GREEN**; 2 defect sản phẩm + 2 defect test đã sửa, +59 test mới | Đang dùng |
+| [current/2026-07-30-m2-release-hardening.md](current/2026-07-30-m2-release-hardening.md) | FINAL-RELEASE-HARDENING-M2 - nang Next 16.2.12, **dong XSS luu tru qua JSON-LD**, hang rao URL phia server, validate khoang trang, tran `content[]`, 8 viewport, sua D10 | Dang dung |
 | [archive/](archive/) | Báo cáo cũ/đã thay thế | Lưu trữ |
 
 ## Tài liệu liên quan
