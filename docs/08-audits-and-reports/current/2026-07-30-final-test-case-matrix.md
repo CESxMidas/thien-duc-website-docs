@@ -531,3 +531,23 @@ Gỡ hẳn route tạo tài khoản trực tiếp `POST /api/users` (xem ledger
 
 **Không case nào bị hạ trạng thái** — luồng lời mời, đặt lại mật khẩu, đăng nhập,
 refresh token và fixture `/api/test/*` giữ nguyên coverage.
+
+## Cập nhật THIEN-DUC-CI-FLAKY-AND-WARNINGS-CLEANUP-M1 (2026-07-31)
+
+Dọn chất lượng CI (xem [báo cáo](2026-07-31-ci-flaky-and-warnings-cleanup.md)).
+
+| ID | Trước | Sau | Bằng chứng |
+|---|---|---|---|
+| CI-15 | *(chưa có case)* | **covered** | Healthcheck Postgres thăm dò **đúng** database: `pg_isready -U thienduc_ci -d thien_duc_test` — hết `FATAL: database "thienduc_ci" does not exist` mỗi 5 giây |
+| CI-16 | *(chưa có case)* | **covered** | `checkout` / `setup-node` / `upload-artifact` ở **v5** (Node 24) trên cả 4 workflow — hết cảnh báo Node 20 đã bỏ; **không** dùng `ACTIONS_ALLOW_USE_UNSECURE_NODE_VERSION` |
+| CI-17 | *(chưa có case)* | **covered** | Cache CI **chỉ** `.next/cache`, không bao giờ cache cả `.next` (kết quả build); key theo lockfile + mã nguồn |
+| OB-01 | *(chưa có case)* | **covered** | `instrument.spec.ts` — thiếu `SENTRY_DSN` thì **chỉ cảnh báo một lần**, không init; cảnh báo nay được khẳng định thay vì in nhiễu ra stderr mỗi lần `npm test` |
+
+**Tổng cập nhật:** nhóm U `covered` 13 → **16**; nhóm mới **V. Observability** 1
+`covered`; toàn ma trận `covered` 237 → **241**, tổng số case 295 → **299**.
+`partial` / `missing` / `blocked` / `n/a` không đổi.
+
+**Không case nào bị hạ trạng thái.** Bốn test Playwright chập chờn
+(`news-slider-pagination.e2e.ts`) vẫn phủ **đúng** các case cũ — chỉ thêm cổng
+hydrate và điều kiện chờ tất định, **không** bỏ hay nới lỏng khẳng định nào; số
+test Playwright giữ nguyên **187**. Backend unit 491 → **492** (+OB-01).

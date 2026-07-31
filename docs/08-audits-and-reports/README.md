@@ -22,6 +22,7 @@ Báo cáo & audit có ngày. `current/` = hiện hành; `archive/` = đã bị t
 | [current/2026-07-30-m2-release-hardening.md](current/2026-07-30-m2-release-hardening.md) | FINAL-RELEASE-HARDENING-M2 - nang Next 16.2.12, **dong XSS luu tru qua JSON-LD**, hang rao URL phia server, validate khoang trang, tran `content[]`, 8 viewport, sua D10 | Dang dung |
 | [current/2026-07-31-retire-direct-user-create.md](current/2026-07-31-retire-direct-user-create.md) | CMS-RETIRE-DIRECT-USER-CREATE-M1 — gỡ hẳn `POST /api/users` (tạo tài khoản kèm mật khẩu); lời mời là lối cấp tài khoản duy nhất; +25 test, Playwright 181/181 | Đang dùng |
 | [current/2026-07-31-optional-backlog-repo-work.md](current/2026-07-31-optional-backlog-repo-work.md) | THIEN-DUC-OPTIONAL-BACKLOG-REPO-WORK-M1 — backlog §6 phần làm trong repo: **unaccent (checkbox `[x]` cũ là SAI)**, 121 test Zod, chuẩn bị Sentry source map + backup off-site, sửa reduced-motion & `quality={100}`; Playwright 187/187 | Đang dùng |
+| [current/2026-07-31-ci-flaky-and-warnings-cleanup.md](current/2026-07-31-ci-flaky-and-warnings-cleanup.md) | THIEN-DUC-CI-FLAKY-AND-WARNINGS-CLEANUP-M1 — 4 test chập chờn (cổng hydrate, tái hiện bằng CPU throttling 20×), lint backend 5 cảnh báo → 0, healthcheck Postgres, phân loại log duplicate-key, triage npm audit, Actions v5 | Đang dùng |
 | [archive/](archive/) | Báo cáo cũ/đã thay thế | Lưu trữ |
 
 ## Tài liệu liên quan
