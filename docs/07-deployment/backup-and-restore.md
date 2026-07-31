@@ -177,3 +177,62 @@ tier riêng — có thể phải tạo instance mới). Khi đó:
   managed backup + `pg_dump`/`pg_restore` thủ công + đường di trú free→paid).
   Nguồn khoảng trống: Audit Baseline mục 7. Backup off-site tự động tách task sau
   (quyết định của chủ dự án 2026-07-16).
+
+## 7. Script backup off-site trong repo (THIEN-DUC-OPTIONAL-BACKLOG-REPO-WORK-M1)
+
+> **Trạng thái: REPO AUTOMATION PREPARED · EXTERNAL STORAGE NOT CONFIGURED ·
+> RESTORE DRILL NOT PRODUCTION-VERIFIED.** Script đã có và đã chạy thật trên DB
+> **test** cục bộ, nhưng **chưa** trỏ tới kho lưu trữ nào và **chưa** diễn tập
+> khôi phục trên dữ liệu production. Đây là lớp **bổ sung** cho backup do Render
+> quản lý ở §1, không thay thế.
+
+Vị trí: `thien-duc-website-backend/scripts/backup/`
+
+| File | Vai trò |
+|---|---|
+| `backup.sh` | `pg_dump -Fc -Z6` + tên có timestamp + `.sha256` + mã hóa gpg tùy chọn + adapter upload |
+| `verify-restore.sh` | Khôi phục vào DB **dùng-một-lần** rồi đếm bảng/hàng |
+| `prune.sh` | Dọn theo tuổi, luôn giữ N bản mới nhất, mặc định **chỉ liệt kê** |
+| `lib.sh` | Cầu chì đích + mã thoát + tiện ích chung |
+| `backup.env.example` | Mẫu biến — **chỉ tên, không giá trị** |
+| `scheduler-examples.md` | Mẫu cron / GitHub Actions / scheduler ngoài — **chưa kích hoạt** |
+
+### Dùng nhanh
+
+```bash
+cd thien-duc-website-backend
+cp scripts/backup/backup.env.example scripts/backup/backup.env   # rồi điền
+set -a && . ./scripts/backup/backup.env && set +a
+
+./scripts/backup/backup.sh --dry-run          # xem sẽ làm gì, không ghi gì
+./scripts/backup/backup.sh                    # tạo bản backup + checksum
+./scripts/backup/verify-restore.sh --file backups/<tên>.dump
+./scripts/backup/prune.sh                     # liệt kê; thêm --apply mới xóa
+```
+
+### Kiểm soát an toàn (đã chạy thật, không phải mô tả suông)
+
+| Tình huống | Kết quả |
+|---|---|
+| Backup `thien_duc_test` | 195.324 byte + `.sha256`, exit 0 |
+| `verify-restore.sh` | checksum khớp → 17 bảng, users 2, projects 4, exit 0, DB thử tự xoá |
+| Thiếu `DATABASE_URL` | exit **2** |
+| Đích không phải localhost | exit **3** |
+| Đích tên DB production | exit **3** |
+| Đích `*.render.com` | exit **3** |
+| Checksum bị sửa | exit **6** |
+| Mật khẩu trong log | **0 lần** |
+
+Script **không bao giờ** in `DATABASE_URL` đầy đủ, **không bao giờ** ghi đè
+production (chỉ nhận đích `localhost` + tên DB kết thúc `_test`/`_verify`/
+`_restore`), và dọn file tạm kể cả khi lỗi.
+
+### Còn phải làm thủ công
+
+1. Chọn nhà cung cấp kho lưu trữ (S3 / B2 / GCS / kho riêng) — **chưa chọn**.
+2. Cấp credential cho CLI tương ứng trên máy chạy backup.
+3. Đặt `BACKUP_ENCRYPT_KEY` — bản dump chứa dữ liệu cá nhân (email/điện thoại
+   người liên hệ), **không được** rời máy khi chưa mã hóa.
+4. Bật một lịch chạy trong `scheduler-examples.md`.
+5. **Diễn tập khôi phục từ backup production thật** — bắt buộc trước go-live (§5).
+6. Máy chạy backup phải có `pg_dump` **≥ 17** (production là PostgreSQL 17).

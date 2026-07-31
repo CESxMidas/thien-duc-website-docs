@@ -97,3 +97,43 @@ nhận thông báo phục hồi.
   Liên kết audit note G7-M1.
 - **2026-07-16** — Task →5: tạo mới. Sentry errors-only cho 3 app + runbook
   UptimeRobot + checklist thủ công + ghi chú liên đới CSP (task →6).
+
+## Sentry source map — trạng thái repo (THIEN-DUC-OPTIONAL-BACKLOG-REPO-WORK-M1)
+
+> **Trạng thái: REPO PREPARATION COMPLETE · EXTERNAL UPLOAD NOT VERIFIED.**
+> Chưa có token, **chưa upload lần nào**.
+
+Không có source map thì stack trace production chỉ là tên hàm đã minify, gần
+như vô dụng. `frontend/next.config.ts` nay bọc `withSentryConfig` — tích hợp
+**chính thức** của `@sentry/nextjs` (đã cài sẵn), không phải script tự chế.
+
+**Cổng bật**: chỉ upload khi có ĐỦ ba biến. Thiếu bất kỳ cái nào thì trả về cấu
+hình gốc nguyên vẹn — build vẫn xanh, không gọi mạng (đã kiểm).
+
+| Biến | Ghi chú |
+|---|---|
+| `SENTRY_AUTH_TOKEN` | scope `project:releases`. **Chỉ** đặt ở Vercel/CI. |
+| `SENTRY_ORG` | không có giá trị mặc định — đoán sai là bắn nhầm project |
+| `SENTRY_PROJECT` | như trên |
+| `SENTRY_RELEASE` | tùy chọn; không có thì lấy `VERCEL_GIT_COMMIT_SHA` → `GITHUB_SHA` |
+
+Bảo đảm khác: `deleteSourcemapsAfterUpload: true` (không phát source map công
+khai), `telemetry: false`, và `errorHandler` chỉ **cảnh báo** — hỏng đường
+truyền tới Sentry không được làm đổ một bản deploy vốn lành lặn.
+
+Logic cổng nằm ở `frontend/src/lib/sentry-build.ts` và có **15 test** chạy
+không cần build, không cần mạng, không cần token thật.
+
+### Việc thủ công còn lại trên Sentry Dashboard
+
+1. Tạo/xác nhận project Sentry cho frontend.
+2. Settings → Auth Tokens → tạo token scope `project:releases`.
+3. Dán 3 biến vào Vercel (Production + Preview). **Không commit.**
+4. Deploy một bản → Releases → xác nhận có artifact source map.
+5. Bắn một lỗi thử → xác nhận stack trace hiện đúng file/dòng TypeScript.
+
+### Admin (Vite) — BLOCKED BY DEPENDENCY
+
+Đường chính thức là `@sentry/vite-plugin`, **chưa cài** (admin chỉ có
+`@sentry/react`). Cần duyệt thêm dependency: `npm i -D @sentry/vite-plugin`,
+rồi bật `build.sourcemap` + plugin với **đúng cổng ba biến** như frontend.
