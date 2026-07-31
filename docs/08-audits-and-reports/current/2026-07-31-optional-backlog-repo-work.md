@@ -9,7 +9,7 @@
 
 | # | Mục backlog §6 | Trạng thái sau phiên |
 |---|---|---|
-| 1 | Tìm kiếm bỏ dấu (`unaccent`) | **COMPLETE (repo)** + EXTERNAL VERIFICATION REQUIRED (quyền tạo extension trên Render) |
+| 1 | Tìm kiếm bỏ dấu (`unaccent`) | **COMPLETE (repo)** — CI bắt được defect CSDL-sạch, đã sửa và chứng minh lại từ DB rỗng · **EXTERNAL VERIFICATION REQUIRED** (quyền tạo extension trên Render) |
 | 2 | Sentry source-map upload | **REPO PREPARATION COMPLETE** (frontend) · EXTERNAL UPLOAD NOT VERIFIED · Admin BLOCKED BY DEPENDENCY |
 | 3 | Backup off-site tự động | **REPO AUTOMATION PREPARED** · EXTERNAL STORAGE NOT CONFIGURED · RESTORE DRILL NOT PRODUCTION-VERIFIED |
 | 4 | G4 — hiệu năng còn lại | **PARTIALLY COMPLETE** — sửa 1 defect ảnh thật; LCP/TBT/Lighthouse: EXTERNAL VERIFICATION REQUIRED |
@@ -77,6 +77,86 @@ Migration `20260731120000_search_unaccent`:
 **+23 test integration** (`test/search-unaccent.e2e-spec.ts`) qua HTTP thật: có
 dấu / bỏ dấu / HOA-thường / một phần / bản dịch EN / DRAFT không lộ / thứ tự tất
 định / injection vô hại / `q` 1 ký tự vẫn 400.
+
+### ⚠️ CI phát hiện defect migration trên CSDL SẠCH (đã sửa)
+
+Bản đầu của migration **chạy được ở máy dev nhưng đổ ở CI**:
+
+```
+P3018 / SQLSTATE 42883
+function immutable_unaccent(text) does not exist
+SQL function "project_search_document" during inlining
+```
+
+**Nguyên nhân gốc.** Hàm `LANGUAGE sql` lưu thân dưới dạng **văn bản**; tên bên
+trong thân chỉ được phân giải lúc **inlining**, dùng `search_path` của **phiên
+gọi** — không phải `search_path` lúc `CREATE FUNCTION`. Thân
+`project_search_document` gọi `immutable_unaccent(...)` **không schema-qualify**,
+nên `CREATE INDEX` chỉ chạy được khi `search_path` tình cờ chứa schema của hàm
+bọc.
+
+Chú ý sự bất đối xứng trong thông báo lỗi: hàm **ngoài**
+(`project_search_document`) phân giải được, hàm **trong** thì không. Vì tên
+trong *câu lệnh* `CREATE INDEX` được phân giải lúc parse (search_path bình
+thường), còn tên trong *thân hàm* được phân giải muộn hơn, lúc inline khi dựng
+index — thời điểm CI (PostgreSQL 17) chạy với `search_path` bị siết.
+
+**KHÔNG phải do rác CSDL cục bộ.** Đã kiểm chứng hẳn hoi: tạo lại
+`thien_duc_test` **rỗng hoàn toàn** (0 bảng, 0 hàm `immutable_unaccent`, 0
+extension) rồi chạy `prisma migrate deploy` với bản migration CŨ trên
+PostgreSQL **16** cục bộ → **vẫn thành công**. Thứ che khuyết điểm là **khác
+biệt môi trường** (phiên bản PostgreSQL / `search_path` lúc dựng index), không
+phải trạng thái CSDL còn sót.
+
+**Đã tái hiện cơ chế cục bộ, trên chính đối tượng thật của dự án:**
+
+| Điều kiện | Kết quả |
+|---|---|
+| Thân hàm gọi **không** qualify, `search_path = pg_catalog, pg_temp` | ❌ `function immutable_unaccent(text) does not exist … during inlining` — **đúng lỗi của CI** |
+| Thân hàm gọi **có** `public.` qualify, `search_path = public` | ✅ `CREATE INDEX` |
+| Thân hàm gọi **có** `public.` qualify, `search_path = pg_catalog, pg_temp` | ✅ `CREATE INDEX` |
+| Thân hàm gọi **có** `public.` qualify, `search_path = ''` (rỗng) | ✅ `CREATE INDEX` |
+
+**Bản sửa** (sửa THẲNG vào migration sau lần chạy production thất bại,
+**không** thêm migration vá):
+
+- `CREATE EXTENSION IF NOT EXISTS unaccent **WITH SCHEMA public**` — ghim
+  extension để mọi tham chiếu `public.unaccent` bên dưới luôn đúng.
+- Hàm bọc đặt tên tường minh `public.immutable_unaccent(input TEXT) → TEXT`,
+  tạo **trước** mọi hàm phụ thuộc.
+- Cả hai `*_search_document` gọi `public.immutable_unaccent(...)`.
+- Định nghĩa hàm và biểu thức index cũng qualify (`public.project_search_document`,
+  `public.news_search_document`) — hết phụ thuộc `search_path` ở mọi tầng.
+- Giữ nguyên đúng tên index thật khi drop/tạo lại:
+  `projects_search_idx`, `news_posts_search_idx`.
+- `src/search/search.service.ts` cũng qualify `public.immutable_unaccent(...)`
+  cho đồng bộ (cùng lớp rủi ro ở tầng truy vấn lúc chạy).
+
+Schema `public` **suy ra từ cấu hình Prisma thật**: `schema.prisma` không bật
+multiSchema, không có `@@schema`, và CI đặt `?schema=public`.
+
+**Bằng chứng trên CSDL sạch** (`127.0.0.1:5432/thien_duc_test` tạo lại từ rỗng):
+
+| Kiểm tra | Kết quả |
+|---|---|
+| `prisma migrate deploy` | **11/11 migration áp dụng, 0 lỗi** |
+| `_prisma_migrations` mục `20260731120000_search_unaccent` | `finished=true`, `rolled_back=false` |
+| `public.immutable_unaccent` | `args=input text`, `returns=text`, volatility `i`, parallel `s`, strict |
+| `public.project_search_document` / `public.news_search_document` | tồn tại, gọi trong đã qualify |
+| `public.projects_search_idx`, `public.news_posts_search_idx` | cả hai tồn tại |
+| extension `unaccent` | schema `public` |
+
+Trong phiên repo ban đầu **KHÔNG** dùng `prisma migrate resolve`, **KHÔNG** đánh
+dấu migration đã áp dụng bằng tay. Tuy nhiên, production sau đó đã nhận lần áp
+migration thất bại và hiện bị `P3009`; câu “không chạm production” chỉ đúng với
+phiên repo ban đầu, không còn mô tả đúng trạng thái hệ thống. Recovery đang
+**BLOCKED** tại cổng backup; xem
+[incident 2026-07-31](2026-07-31-production-unaccent-migration-incident.md).
+
+**CI đã có sẵn cổng chặn này** — job `e2e` dựng service container `postgres:17`
+mới tinh mỗi lần rồi chạy `prisma validate` → `generate` → `migrate deploy` →
+seed → test, và `migrate deploy` đỏ là job đỏ. Chính nó bắt được defect này, nên
+**không thêm hạ tầng mới**.
 
 ### Còn lại (ngoài repo)
 

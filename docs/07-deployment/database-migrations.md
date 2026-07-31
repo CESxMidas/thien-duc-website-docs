@@ -12,6 +12,40 @@ Stack: **Prisma 7 + PostgreSQL 17**. Schema nguồn sự thật ở `thien-duc-w
 - Khi web service start, Render tự chạy **`prisma migrate deploy`** (cấu hình trong `render.yaml`) — áp mọi migration còn thiếu vào DB. Lần đầu tạo 12 bảng.
 - Migration mới: commit vào `prisma/migrations/` → Render tự `migrate deploy` ở lần deploy kế tiếp.
 
+### Recovery khi Prisma báo P3009
+
+Không deploy lặp lại. Không dùng `migrate reset`, không xóa dữ liệu và không sửa
+tay `_prisma_migrations`.
+
+1. Xác nhận đúng database production bằng tên database, schema, host suffix đã
+   redacted và PostgreSQL version; đối chiếu Render deploy commit với commit
+   đang vận hành.
+2. Tạo hoặc xác minh backup production hiện hành. Bắt buộc có timestamp, trạng
+   thái thành công, retention/nơi lưu và phương thức restore khả dụng. Thiếu
+   một trong các bằng chứng này thì dừng `BLOCKED`.
+3. Chạy inspection read-only: `prisma migrate status`, lấy đúng failed row, đọc
+   object/function/index bằng catalog PostgreSQL, `pg_get_functiondef` và
+   `pg_get_indexdef`.
+4. Mặc định chọn **Path A** nếu effect thiếu hoặc không chính xác: cleanup chỉ
+   các function/index thuộc migration bằng exact signature, sau đó:
+
+   ```bash
+   npx prisma migrate resolve --rolled-back 20260731120000_search_unaccent
+   npx prisma migrate status
+   npx prisma migrate deploy
+   npx prisma migrate status
+   ```
+
+5. Chỉ dùng **Path B** (`--applied`) khi đã chứng minh mọi effect của migration
+   tồn tại và khớp chính xác migration hiện hành.
+6. Sau deploy, xác minh function volatility/parallel safety, index GIN valid,
+   không có invalid index, search có dấu/bỏ dấu/uppercase, nội dung unpublished
+   không lộ, backend bind port và health endpoint phản hồi.
+
+Mọi SQL cleanup production phải được hiển thị trước và cần phê duyệt riêng.
+Runbook sự cố hiện hành:
+[2026-07-31-production-unaccent-migration-incident](../08-audits-and-reports/current/2026-07-31-production-unaccent-migration-incident.md).
+
 ## Trên máy dev (local)
 
 Local Postgres chạy Docker ở **port 5433** (`docker compose up -d`) — vì máy dev có Postgres Windows chiếm 5432.
@@ -62,6 +96,8 @@ Chuyển `description`, `highlights`, `quick_facts` của 3 hạng mục Hưng P
 
 ## Document history
 
+- **2026-07-31** — Thêm runbook P3009 sau sự cố production của
+  `20260731120000_search_unaccent`; bắt buộc backup + inspection trước resolve.
 - **2026-07-18** — Thêm mục "Backfill hạng mục dự án song ngữ (EN-PROJECT-ITEMS-P1)" — script `backfill-project-items.js`, dry-run + chốt production.
 - **2026-07-18** — Thêm mục "Backfill nhãn bản đồ song ngữ (EN-FULL-C5b)" — script `backfill-map-labels.js`, dry-run + chốt production.
 - **2026-07-16** — Tách từ `DEPLOY.md` + gom các ghi chú migration/seed rải rác trong `KE-HOACH-CODING.md` khi tái cấu trúc tài liệu.
