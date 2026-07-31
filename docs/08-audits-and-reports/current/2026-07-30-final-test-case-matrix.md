@@ -158,6 +158,10 @@ Nguồn: `auth/auth.service.ts`, `auth/auth.controller.ts`, `admin/e2e/admin/log
 | UM-14 | Tương phản WCAG AA của huy hiệu trạng thái | browser-e2e | `accessibility.e2e.ts`, `contrast.e2e.ts` | covered |
 | UM-15 | Phân trang / filter / search danh sách tài khoản | — | — | **missing** |
 | UM-16 | Đổi vai trò thu hồi phiên | api-e2e | `user-management-security.e2e.ts` | covered |
+| UM-17 | **`POST /api/users` (tạo trực tiếp) đã gỡ — trả 404** cho khách / ADMIN / EDITOR / SUPER_ADMIN | unit + integration + api-e2e | `users.controller.spec.ts`, `test/retired-user-create.e2e-spec.ts`, `retired-user-create.e2e.ts` | covered |
+| UM-18 | **Payload `password` / `passwordHash` / rỗng gửi tới `POST /api/users` không tạo hàng nào trong DB** | integration + api-e2e | `test/retired-user-create.e2e-spec.ts`, `retired-user-create.e2e.ts` | covered |
+| UM-19 | **Admin không còn hàm/hook/URL tạo tài khoản trực tiếp**; UI tạo tài khoản không phát sinh `POST /users` | unit + browser-e2e | `lib/api/users.retired-create.test.ts`, `retired-user-create.e2e.ts` | covered |
+| UM-20 | **Lời mời vẫn là lối cấp tài khoản duy nhất** và từ chối field `password` (400) | integration + api-e2e | `test/retired-user-create.e2e-spec.ts`, `invitation.e2e.ts` | covered |
 
 ## F. Tin tức (Phase 8 admin · Phase 9 public)
 
@@ -441,7 +445,7 @@ Route thật (từ `frontend/src/app/[locale]/`): `/`, `gioi-thieu`,
 | B. Xác thực | 19 | 0 | 0 | 0 | 1 |
 | C. Quên/đặt lại mật khẩu | 18 | 0 | 0 | 0 | 0 |
 | D. Lời mời / thiết lập | 17 | 0 | 0 | 0 | 0 |
-| E. Quản lý tài khoản | 15 | 0 | 1 | 0 | 0 |
+| E. Quản lý tài khoản | 19 | 0 | 1 | 0 | 0 |
 | F. Tin tức | 19 | 3 | 2 | 0 | 0 |
 | G. Banner | 15 | 0 | 1 | 0 | 0 |
 | H. Dự án | 4 | 3 | 1 | 0 | 0 |
@@ -509,3 +513,21 @@ Tỷ lệ có test tự động thật: 75,9% → **79,0%**.
    chỉ phủ gián tiếp.
 6. **M2-R2** — `prefers-reduced-motion` không trung hoà reveal trên trang
    `.projects-motion` (a11y gap mới phát hiện, chưa sửa).
+
+## Cập nhật CMS-RETIRE-DIRECT-USER-CREATE-M1 (2026-07-31)
+
+Gỡ hẳn route tạo tài khoản trực tiếp `POST /api/users` (xem ledger
+[implementation-plan §7](../../04-implementation/implementation-plan.md#section-7--changelog--audit-trail)).
+
+| ID | Trước | Sau | Bằng chứng |
+|---|---|---|---|
+| UM-17 | *(chưa có case — route vẫn reachable)* | **covered** | 404 cho khách/ADMIN/EDITOR/SUPER_ADMIN; unit khẳng định controller không còn handler `create` và không còn route `POST ""` |
+| UM-18 | *(chưa có case)* | **covered** | `password` / `passwordHash` / `setupCompletedAt` / payload rỗng đều 404 + **0 hàng DB**; tổng số user không đổi sau 5 lần thử |
+| UM-19 | *(chưa có case)* | **covered** | Admin không còn `createUser` / `CreateUserInput` / `useCreateUser`; Playwright bắt request xác nhận UI không gọi `POST /users` |
+| UM-20 | UM-01 phủ gián tiếp | **covered** | lời mời vẫn tạo đúng 1 tài khoản pending; gửi kèm `password` → 400, 0 hàng DB |
+
+**Tổng cập nhật:** nhóm E `covered` 15 → **19**; toàn ma trận `covered` 233 →
+**237**. `partial` / `missing` / `blocked` / `n/a` không đổi.
+
+**Không case nào bị hạ trạng thái** — luồng lời mời, đặt lại mật khẩu, đăng nhập,
+refresh token và fixture `/api/test/*` giữ nguyên coverage.

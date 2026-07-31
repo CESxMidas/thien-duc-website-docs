@@ -20,6 +20,7 @@ Báo cáo & audit có ngày. `current/` = hiện hành; `archive/` = đã bị t
 | [current/2026-07-30-final-test-case-matrix.md](current/2026-07-30-final-test-case-matrix.md) | FINAL-QUALITY-AUDIT-M1 — ma trận 295 test-case truy vết theo tính năng (224 covered / 39 partial / 27 missing / 4 blocked) | Đang dùng |
 | [current/2026-07-30-final-website-quality-audit.md](current/2026-07-30-final-website-quality-audit.md) | FINAL-QUALITY-AUDIT-M1 — audit tự động cuối trước bàn giao; **PARTIALLY GREEN**; 2 defect sản phẩm + 2 defect test đã sửa, +59 test mới | Đang dùng |
 | [current/2026-07-30-m2-release-hardening.md](current/2026-07-30-m2-release-hardening.md) | FINAL-RELEASE-HARDENING-M2 - nang Next 16.2.12, **dong XSS luu tru qua JSON-LD**, hang rao URL phia server, validate khoang trang, tran `content[]`, 8 viewport, sua D10 | Dang dung |
+| [current/2026-07-31-retire-direct-user-create.md](current/2026-07-31-retire-direct-user-create.md) | CMS-RETIRE-DIRECT-USER-CREATE-M1 — gỡ hẳn `POST /api/users` (tạo tài khoản kèm mật khẩu); lời mời là lối cấp tài khoản duy nhất; +25 test, Playwright 181/181 | Đang dùng |
 | [archive/](archive/) | Báo cáo cũ/đã thay thế | Lưu trữ |
 
 ## Tài liệu liên quan
