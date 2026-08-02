@@ -43,8 +43,12 @@ tay `_prisma_migrations`.
    không lộ, backend bind port và health endpoint phản hồi.
 
 Mọi SQL cleanup production phải được hiển thị trước và cần phê duyệt riêng.
-Runbook sự cố hiện hành:
+
+Quy trình trên **đã được chạy thật và thành công** trong sự cố
+`20260731120000_search_unaccent` (trạng thái **RESOLVED**). Hồ sơ đầy đủ — gồm
+chronology lúc còn BLOCKED, cổng backup và các bước resolve/deploy — ở
 [2026-07-31-production-unaccent-migration-incident](../08-audits-and-reports/current/2026-07-31-production-unaccent-migration-incident.md).
+Dùng làm **tiền lệ tham chiếu**, không phải sự cố đang mở.
 
 ## Trên máy dev (local)
 
@@ -58,7 +62,8 @@ Local Postgres chạy Docker ở **port 5433** (`docker compose up -d`) — vì 
 `.env` của máy dev có thể đang trỏ `DATABASE_URL` vào **Render (production)**. Vì vậy:
 
 - Mọi lệnh `prisma migrate deploy` / `db execute` phải là **hành động có chủ ý**, xác nhận `DATABASE_URL` đang trỏ đúng đích trước khi chạy.
-- Ví dụ đã ghi nhận: migration full-text search (`20260710120000_add_fulltext_search`) mới chỉ kiểm chứng trên **DB local**; trước go-live phải `prisma migrate deploy` lên Render một cách có chủ ý.
+- **Trạng thái hiện tại (2026-07-31):** toàn bộ **11 migration đã được áp lên production**; `prisma migrate status` trả *Database schema is up to date*. Ghi chú cũ rằng `20260710120000_add_fulltext_search` "mới chỉ kiểm chứng trên DB local" **không còn đúng**.
+- Điều đó **không** có nghĩa mọi lần áp đều trót lọt: `20260731120000_search_unaccent` đã **thất bại một lần trên production** và chỉ trở lại sạch sau recovery có kiểm soát (mục "Recovery khi Prisma báo P3009" ở trên). Bài học: migration production **luôn** cần backup kiểm chứng được → inspection read-only → resolve có kiểm soát → deploy → xác minh sau deploy.
 
 ## Seed dữ liệu
 
@@ -96,6 +101,10 @@ Chuyển `description`, `highlights`, `quick_facts` của 3 hạng mục Hưng P
 
 ## Document history
 
+- **2026-07-31** — Sự cố `20260731120000_search_unaccent` **RESOLVED**: cập nhật
+  trạng thái migration production (11/11 đã áp, *Database schema is up to date*),
+  gỡ ghi chú cũ "full-text search chưa áp production", chuyển link sự cố thành
+  tiền lệ tham chiếu thay vì sự cố đang mở.
 - **2026-07-31** — Thêm runbook P3009 sau sự cố production của
   `20260731120000_search_unaccent`; bắt buộc backup + inspection trước resolve.
 - **2026-07-18** — Thêm mục "Backfill hạng mục dự án song ngữ (EN-PROJECT-ITEMS-P1)" — script `backfill-project-items.js`, dry-run + chốt production.
