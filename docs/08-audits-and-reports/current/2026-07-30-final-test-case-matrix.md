@@ -551,3 +551,45 @@ Dọn chất lượng CI (xem [báo cáo](2026-07-31-ci-flaky-and-warnings-clean
 (`news-slider-pagination.e2e.ts`) vẫn phủ **đúng** các case cũ — chỉ thêm cổng
 hydrate và điều kiện chờ tất định, **không** bỏ hay nới lỏng khẳng định nào; số
 test Playwright giữ nguyên **187**. Backend unit 491 → **492** (+OB-01).
+
+---
+
+## Delta 2026-08-02 — THIEN-DUC-OPTIONAL-BACKLOG-CODING-COMPLETION-M2
+
+Chi tiết: [báo cáo phiên](2026-08-02-optional-backlog-coding-completion.md).
+
+| Nhóm | Case mới | Ghi chú |
+|---|---|---|
+| V. Observability | **+29** (Admin) | Cổng upload source map Sentry của Admin: mọi tổ hợp thiếu biến, có/không commit SHA, source map khi tắt/bật, plugin vắng mặt khi tắt và đúng **một** lần khi bật, **release runtime khớp release upload**, token không lọt ra release/log. Chạy không cần mạng/token thật. |
+| W. Backup & recovery (**mới**) | **+20** (Backend) | Test an toàn **không cần PostgreSQL**: fail-closed khi thiếu biến (mã 2); cầu chì đích (mã 3) gồm host ≠ localhost, tên DB giống production, `render.com`, thiếu đuôi `_test/_verify/_restore`; checksum lệch (mã 6); adapter upload tắt/dry-run/thiếu prefix/lỗi lan truyền/chạy thật cục bộ; tên DB dùng-một-lần duy nhất; retention dry-run không xoá. |
+| X. Performance guards (**mới**) | **+11** (Frontend) | Hàng rào chống hồi quy đọc mã nguồn: `quality={100}` (D8), allowlist `[75, 90]`, preload chỉ slide banner đầu, slide sau vẫn `lazy`, `sizes=100vw`, đúng một `<Image>` trong slider, analyzer không chạy trong `npm run build`. **Đã chứng minh test bắt lỗi** (tái hiện D8 → 3 đỏ). |
+
+**Tổng cập nhật:** `covered` 241 → **301**; tổng số case 299 → **359**.
+`partial` / `missing` / `blocked` / `n/a` **không đổi**.
+
+**Không case nào bị hạ trạng thái, không test nào bị bỏ hay nới lỏng.**
+
+Số test theo bộ sau phiên: Admin vitest **306** (277 → +29) · Frontend jest
+**200** (189 → +11) · Backend jest unit **492** (491 → +1, test cảnh báo thiếu
+`SENTRY_DSN` thêm trong reconciliation §10) · Backend backup **20** (mới) ·
+Playwright **187** (không đổi — phiên này không chạm E2E).
+
+> **Đính chính so với delta 2026-07-31 (đã giải quyết trong cùng ngày):**
+>
+> - **Đã báo cáo trước đây:** "Backend unit 491 → **492** (+OB-01)", cùng các
+>   case **CI-15** (healthcheck `pg_isready … -d thien_duc_test`) và **CI-16**
+>   (Actions **v5**) được đánh **covered** từ 2026-07-31.
+> - **Repo thực tế chứa gì:** không có mục nào trong số đó. Đo ngày 2026-08-02:
+>   backend unit **491 / 37 suite**, lint **0 lỗi / 5 cảnh báo**, workflow vẫn
+>   `checkout@v4`/`setup-node@v4`, healthcheck vẫn thiếu `-d`. Nguyên nhân: phần
+>   **backend** của phiên CI 2026-07-31 chưa từng được commit (frontend và admin
+>   thì đã nhận đủ).
+> - **Đã làm trong reconciliation 2026-08-02:** cài thật cả sáu mục — type guard
+>   `destroyStatusOf`, ba hàm bọc matcher trả `unknown`, healthcheck `-d
+>   thien_duc_test`, Actions v5, và `loadInstrument()` ở tầng test kèm **một test
+>   mới thật** khẳng định cảnh báo thiếu `SENTRY_DSN`.
+> - **Trạng thái cuối đã kiểm chứng:** backend lint **0 lỗi / 0 cảnh báo**, unit
+>   **492 / 37 suite** (0 fail, 0 skip), backup **20/20**, `tsc` sạch, build
+>   xanh. **CI-15 và CI-16 nay covered THẬT.**
+>
+> Chi tiết: [báo cáo 2026-08-02 §10](2026-08-02-optional-backlog-coding-completion.md).

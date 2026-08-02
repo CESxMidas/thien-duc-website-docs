@@ -1,7 +1,7 @@
 # 08 — Audits & Reports
 
 > **Trạng thái:** Đang dùng (index thư mục)
-> **Cập nhật:** 2026-07-31
+> **Cập nhật:** 2026-08-02
 
 Báo cáo & audit có ngày. `current/` = hiện hành; `archive/` = đã bị thay thế. Đặt tên `YYYY-MM-DD-*.md`.
 
@@ -24,6 +24,7 @@ Báo cáo & audit có ngày. `current/` = hiện hành; `archive/` = đã bị t
 | [current/2026-07-31-optional-backlog-repo-work.md](current/2026-07-31-optional-backlog-repo-work.md) | THIEN-DUC-OPTIONAL-BACKLOG-REPO-WORK-M1 — backlog §6 phần làm trong repo: **unaccent (checkbox `[x]` cũ là SAI)**, 121 test Zod, chuẩn bị Sentry source map + backup off-site, sửa reduced-motion & `quality={100}`; Playwright 187/187 | Đang dùng |
 | [current/2026-07-31-production-unaccent-migration-incident.md](current/2026-07-31-production-unaccent-migration-incident.md) | THIEN-DUC-PRODUCTION-UNACCENT-MIGRATION-RECOVERY-M1 — sự cố `P3009` của `20260731120000_search_unaccent` trên production: cổng backup, restore drill, `migrate resolve --rolled-back` + deploy lại; **RESOLVED**, giữ làm chronology + tiền lệ runbook | Đang dùng (RESOLVED) |
 | [current/2026-07-31-ci-flaky-and-warnings-cleanup.md](current/2026-07-31-ci-flaky-and-warnings-cleanup.md) | THIEN-DUC-CI-FLAKY-AND-WARNINGS-CLEANUP-M1 — 4 test chập chờn (cổng hydrate, tái hiện bằng CPU throttling 20×), lint backend 5 cảnh báo → 0, healthcheck Postgres, phân loại log duplicate-key, triage npm audit, Actions v5 | Đang dùng |
+| [current/2026-08-02-optional-backlog-coding-completion.md](current/2026-08-02-optional-backlog-coding-completion.md) | THIEN-DUC-OPTIONAL-BACKLOG-CODING-COMPLETION-M2 — hoàn tất phần code §6 không cần DB: Admin Sentry source map (+29 test), adapter backup trung lập + 20 test không cần PostgreSQL (bắt 1 defect thứ tự cầu chì), `npm run analyze` Turbopack-native + 11 hàng rào hiệu năng; ghi rõ phần hoãn vì thiếu DB | Đang dùng |
 | [archive/](archive/) | Báo cáo cũ/đã thay thế | Lưu trữ |
 
 ## Tài liệu liên quan

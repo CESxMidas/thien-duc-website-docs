@@ -180,22 +180,52 @@ tier riêng — có thể phải tạo instance mới). Khi đó:
 
 ## 7. Script backup off-site trong repo (THIEN-DUC-OPTIONAL-BACKLOG-REPO-WORK-M1)
 
-> **Trạng thái: REPO AUTOMATION PREPARED · EXTERNAL STORAGE NOT CONFIGURED ·
-> RESTORE DRILL NOT PRODUCTION-VERIFIED.** Script đã có và đã chạy thật trên DB
-> **test** cục bộ, nhưng **chưa** trỏ tới kho lưu trữ nào và **chưa** diễn tập
-> khôi phục trên dữ liệu production. Đây là lớp **bổ sung** cho backup do Render
-> quản lý ở §1, không thay thế.
+> **Trạng thái (cập nhật 2026-08-02): REPO AUTOMATION COMPLETE · EXTERNAL
+> STORAGE NOT CONFIGURED · PRODUCTION RESTORE DRILL NOT VERIFIED.** Phần làm
+> được trong repo đã xong và có test; **chưa** trỏ tới kho lưu trữ nào và
+> **chưa** diễn tập khôi phục trên dữ liệu production. Đây là lớp **bổ sung**
+> cho backup do Render quản lý ở §1, không thay thế.
 
 Vị trí: `thien-duc-website-backend/scripts/backup/`
 
 | File | Vai trò |
 |---|---|
 | `backup.sh` | `pg_dump -Fc -Z6` + tên có timestamp + `.sha256` + mã hóa gpg tùy chọn + adapter upload |
-| `verify-restore.sh` | Khôi phục vào DB **dùng-một-lần** rồi đếm bảng/hàng |
+| `verify-restore.sh` | Khôi phục vào DB **dùng-một-lần** (tên **duy nhất mỗi lần chạy**) rồi đếm bảng/hàng |
 | `prune.sh` | Dọn theo tuổi, luôn giữ N bản mới nhất, mặc định **chỉ liệt kê** |
-| `lib.sh` | Cầu chì đích + mã thoát + tiện ích chung |
+| `lib.sh` | Cầu chì đích + mã thoát + adapter upload trung lập + tiện ích chung |
 | `backup.env.example` | Mẫu biến — **chỉ tên, không giá trị** |
-| `scheduler-examples.md` | Mẫu cron / GitHub Actions / scheduler ngoài — **chưa kích hoạt** |
+| `scheduler-examples.md` | Mẫu cron / GitHub Actions / Windows / scheduler ngoài — **chưa kích hoạt** |
+| `scheduler-windows.ps1` | Wrapper Task Scheduler: nạp env, ghi log, **xoay vòng log**, lan truyền mã thoát |
+| `tests/run-tests.sh` | **20 test an toàn, KHÔNG cần PostgreSQL** (`npm run test:backup`) |
+
+### Yêu cầu môi trường
+
+| Công cụ | Dùng cho | Bắt buộc? |
+|---|---|---|
+| `bash` (POSIX) | mọi script; trên Windows dùng **Git Bash** | có |
+| `pg_dump` | tạo backup | có, khi backup thật |
+| `pg_restore`, `psql`, `createdb`, `dropdb` | kiểm chứng khôi phục | có, khi verify |
+| `sha256sum` **hoặc** `shasum` | checksum | có |
+| `gpg` | mã hóa (tùy chọn) | chỉ khi đặt `BACKUP_ENCRYPT_KEY` |
+
+Client `pg_dump` phải **bằng hoặc mới hơn** server. Bộ **test an toàn** thì
+**không** cần công cụ PostgreSQL nào — cố ý, để cầu chì kiểm chứng được ở mọi máy.
+
+### Upload off-site — trung lập nhà cung cấp
+
+Dự án **chưa chọn** nhà cung cấp, nên đường khuyến nghị là một mẫu lệnh do người
+vận hành khai, không ràng vào AWS/B2/GCS/R2:
+
+| Biến | Nghĩa |
+|---|---|
+| `BACKUP_UPLOAD_COMMAND` | mẫu lệnh; `{file}` = file cục bộ, `{remote}` = đích đầy đủ |
+| `BACKUP_REMOTE_PREFIX` | tiền tố đích; **bắt buộc** nếu có `BACKUP_UPLOAD_COMMAND` |
+| `BACKUP_UPLOAD_DRY_RUN=1` | chỉ **in** lệnh sẽ chạy — diễn tập an toàn, không gửi gì đi |
+
+Không đặt `BACKUP_UPLOAD_COMMAND` → giữ cục bộ, thoát 0. Lệnh upload hỏng →
+**lan truyền** lỗi, `backup.sh` thoát mã **7**. Adapter cũ `BACKUP_DEST=s3|b2|gcs`
+vẫn dùng được cho cấu hình đã có.
 
 ### Dùng nhanh
 

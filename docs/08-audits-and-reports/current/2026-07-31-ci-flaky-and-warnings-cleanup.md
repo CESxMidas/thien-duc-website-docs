@@ -1,6 +1,32 @@
 # Dọn nốt chất lượng CI — 4 test chập chờn, cảnh báo lint, nhiễu log
 
-> **Trạng thái:** Đang dùng · **Ngày:** 2026-07-31 · **Phiên:** `THIEN-DUC-CI-FLAKY-AND-WARNINGS-CLEANUP-M1`
+> ## ⚠ ĐÍNH CHÍNH 2026-08-02 — phần BACKEND của báo cáo này chưa từng vào repo
+>
+> Báo cáo dưới đây mô tả đúng những gì phiên `M1` **đã làm trong working tree**,
+> nhưng **phần backend chưa bao giờ được commit**. Khi kiểm lại ngày 2026-08-02,
+> repo backend vẫn ở `28abb81` và **không** có bất kỳ thay đổi backend nào của
+> phiên này. Frontend và admin thì **đã** nhận commit đầy đủ.
+>
+> | Mục backend báo cáo này tuyên bố | Repo thực tế 2026-08-02 (trước reconciliation) |
+> |---|---|
+> | lint `0 lỗi / 0 cảnh báo` (§2, §8) | **0 lỗi / 5 cảnh báo** |
+> | unit `492 / 37 suite` (§8) | **491 / 37 suite** |
+> | `pg_isready … -d thien_duc_test` (§3) | vẫn `pg_isready -U thienduc_ci` |
+> | Actions `v5` (§6) | vẫn `checkout@v4` / `setup-node@v4` |
+> | `destroyStatusOf()` type guard (§2) | **không tồn tại** |
+> | `loadInstrument()` (§7.2) | **không tồn tại** |
+>
+> **Đã khắc phục** trong phiên `THIEN-DUC-OPTIONAL-BACKLOG-CODING-COMPLETION-M2`
+> (2026-08-02): toàn bộ sáu mục trên nay đã được cài thật vào repo backend và
+> kiểm chứng lại — lint **0/0**, unit **492 / 37 suite**, healthcheck và Actions
+> đã đúng. Chi tiết + khác biệt cách cài so với mô tả cũ:
+> [2026-08-02-optional-backlog-coding-completion §10](2026-08-02-optional-backlog-coding-completion.md).
+>
+> **Không viết lại nội dung gốc bên dưới.** Nó vẫn là bản ghi trung thực của
+> phiên M1; chỉ cần đọc kèm đính chính này. Các con số backend trong thân báo
+> cáo chỉ đúng **kể từ 2026-08-02**, không phải từ 2026-07-31.
+
+> **Trạng thái:** Đang dùng (kèm đính chính ở trên) · **Ngày:** 2026-07-31 · **Phiên:** `THIEN-DUC-CI-FLAKY-AND-WARNINGS-CLEANUP-M1`
 > **Liên quan:** [backlog §6 repo](2026-07-31-optional-backlog-repo-work.md) ·
 > [sự cố migration unaccent](2026-07-31-production-unaccent-migration-incident.md) ·
 > [ma trận test-case](2026-07-30-final-test-case-matrix.md)

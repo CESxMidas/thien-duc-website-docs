@@ -134,6 +134,22 @@ không cần build, không cần mạng, không cần token thật.
 
 ### Admin (Vite) — BLOCKED BY DEPENDENCY
 
-Đường chính thức là `@sentry/vite-plugin`, **chưa cài** (admin chỉ có
-`@sentry/react`). Cần duyệt thêm dependency: `npm i -D @sentry/vite-plugin`,
-rồi bật `build.sourcemap` + plugin với **đúng cổng ba biến** như frontend.
+**Cập nhật 2026-08-02 — ĐÃ LÀM XONG PHẦN REPO.** `@sentry/vite-plugin@5.4.0` đã
+cài; `vite.config.ts` thêm plugin với **đúng cổng ba biến** như frontend, và:
+
+- **Release runtime khớp release upload**: `vite.config.ts` chèn
+  `__SENTRY_RELEASE__` qua `define`, `src/main.tsx` dùng đúng giá trị đó cho
+  `Sentry.init`. Cả hai sinh từ cùng một hàm nên không thể lệch — lệch release
+  thì source map đã upload **không map được lỗi nào**.
+- **Source map chỉ sinh khi cổng bật**, dạng `hidden` (không gắn
+  `//# sourceMappingURL=`), rồi plugin xoá khỏi `dist/` sau khi upload. Đã đo bản
+  build với cổng tắt: **0 file `.map`**, **0** tham chiếu `sourceMappingURL`.
+- **Upload lỗi → build ĐỔ** (khác frontend, cố ý): cổng chỉ bật khi chủ động đặt
+  đủ ba biến, nên upload hỏng nghĩa là release lên production mà không có source
+  map dùng được. Nếu vận hành thấy quá ngặt thì đổi sang cảnh báo — nhưng phải
+  chấp nhận release có thể lên mà thiếu source map.
+- Logic cổng ở `src/lib/sentry-build.ts`, **29 test** không cần mạng/token.
+
+**Còn lại (ngoài repo, chưa xác minh):** tạo token → đặt `SENTRY_AUTH_TOKEN` /
+`SENTRY_ORG` / `SENTRY_PROJECT` ở môi trường build của Admin → deploy thật →
+kiểm tra artifact trong Releases. **Chưa từng upload lần nào.**
