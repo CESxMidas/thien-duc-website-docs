@@ -30,6 +30,34 @@ Tài liệu này mô tả **quy trình triển khai**. Chi tiết biến môi tr
 
 **Làm Backend trước** (để có URL API), rồi cấu hình Frontend trỏ vào.
 
+### Thứ tự triển khai (bắt buộc theo đúng thứ tự này)
+
+Lý do thứ tự: frontend **build** cần API sống (xem cảnh báo sitemap cuối tài liệu),
+còn `CORS_ORIGIN`/`ADMIN_APP_URL` chỉ biết được **sau khi** đã có domain thật.
+
+| # | Việc | Ghi chú |
+|---|---|---|
+| 1 | Tạo PostgreSQL production | Render Blueprint tự tạo `thien-duc-db` |
+| 2 | Tạo/deploy backend trên Render | `render.yaml` → New → Blueprint |
+| 3 | Nhập biến môi trường backend | Checklist ở [environment-configuration.md](environment-configuration.md) |
+| 4 | Chạy migration production | `prisma migrate deploy` (đã nằm trong `startCommand`) — xem [database-migrations.md](database-migrations.md) |
+| 5 | Seed tài khoản quản trị đầu tiên | `npm run prisma:seed` với `ADMIN_EMAIL`/`ADMIN_PASSWORD`, **đổi mật khẩu ngay** sau lần đăng nhập đầu |
+| 6 | **Xác minh API sống** | `…/api` trả 200, `…/api/docs` mở được |
+| 7 | Cấu hình Cloudinary | Cloud name phải **khớp** allowlist `next.config.ts` |
+| 8 | Test upload một ảnh trong Admin | Thiếu Cloudinary → 503 |
+| 9 | (Tùy chọn) Cấu hình Resend | Bỏ qua được ở lần deploy đầu |
+| 10 | **Đánh thức `…/api`** rồi deploy Frontend lên Vercel | ⚠️ Bắt buộc nếu backend còn Free tier — tránh build đỏ ở `/sitemap.xml` |
+| 11 | Gắn custom domain cho Frontend | Chốt redirect `www` ↔ apex |
+| 12 | Deploy Admin lên Vercel | Preset Vite, output `dist`, `vercel.json` đã có sẵn |
+| 13 | Gắn subdomain admin | vd. `admin.example.com` |
+| 14 | **Cập nhật `CORS_ORIGIN`** = domain frontend + admin thật | Không để lại origin localhost |
+| 15 | **Cập nhật `ADMIN_APP_URL`** = domain admin (HTTPS) | http bị từ chối khi `NODE_ENV=production` |
+| 16 | Redeploy backend | Để 14 + 15 có hiệu lực |
+| 17 | Cập nhật `NEXT_PUBLIC_SITE_URL` + redeploy Frontend | Biến `NEXT_PUBLIC_*` nướng lúc build |
+| 18 | Verify: web công khai, đăng nhập Admin, upload ảnh | |
+| 19 | Verify: form liên hệ (+ email nếu đã bật) | Lead phải vào DB |
+| 20 | Verify: `/sitemap.xml`, `/robots.txt`, canonical URL | Kiểm URL sinh ra đúng domain thật |
+
 ---
 
 ## 1. Backend + Database trên Render
@@ -98,9 +126,24 @@ Chỉ cần thêm **Environment Variables** (xem [environment-configuration.md](
 ## 2b. Admin CMS (Vite static)
 
 Admin là app **Vite + React** (build tĩnh `npm run build` → thư mục `dist/`), tách
-repo `thien-duc-website-admin`. **Không** nằm trong `render.yaml`; **không** có
-`vercel.json`/blueprint riêng trong repo, và CI (`.github/workflows/ci.yml`) chỉ
-lint + build (không tự deploy).
+repo `thien-duc-website-admin`. **Không** nằm trong `render.yaml`, và CI
+(`.github/workflows/ci.yml`) chỉ lint + build (không tự deploy).
+
+> ✅ **Cập nhật 2026-08-10:** repo admin **đã có `vercel.json`** (khác với ghi chú cũ
+> "không có"). File này khai sẵn **SPA rewrite** `/(.*) → /index.html` (bắt buộc cho
+> React Router: thiếu nó thì F5 ở route con trả 404) và các security header
+> (`X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, HSTS, `Permissions-Policy`).
+> **Không cần tạo thêm file cấu hình routing nào.**
+
+Cấu hình khi import vào Vercel:
+
+| Mục | Giá trị |
+|---|---|
+| Framework Preset | **Vite** (Vercel tự nhận) |
+| Root Directory | `./` — repo độc lập, **không** phải monorepo, để mặc định |
+| Build Command | `npm run build` (= `tsc -b && vite build`) |
+| Output Directory | `dist` |
+| Install Command | `npm ci` (mặc định) |
 
 - **Host dự kiến:** README của admin ghi *"Vercel static — `admin.thienduc.vn`
   (dự kiến)"*. Đây là **ý định**, chưa có bằng chứng cấu hình trong repo.
@@ -155,6 +198,12 @@ Sau khi có domain Vercel chính thức:
 
 ## Document history
 
+- **2026-08-10** — Chuẩn bị bàn giao deploy: thêm **bảng thứ tự triển khai 20 bước**;
+  **đính chính** bảng "hợp đồng API lúc build" — tổ hợp "có URL + backend ngủ" làm
+  build **ĐỎ ở `/sitemap.xml`** (tái hiện thực tế), kèm nguyên nhân (`sitemap.ts`
+  không có try/catch) và follow-up "làm sitemap chịu được backend không phản hồi";
+  cập nhật mục 2b — admin **đã có `vercel.json`** (SPA rewrite + security headers),
+  bổ sung bảng cấu hình import Vercel cho admin.
 - **2026-07-19** — G7-M1 (docs-only): thêm banner "Go-live readiness: BLOCKED /
   DEFERRED" đầu file sau khi kiểm vận hành thủ công mức cao (hạ tầng còn Free /
   chưa xác nhận). Liên kết audit note G7-M1.
@@ -185,8 +234,36 @@ danh sach slug that.
 |---|---|
 | Thieu `NEXT_PUBLIC_API_URL` (CI hien tai) | build **xanh**, khong prerender |
 | Co URL + backend song | build **xanh**, **co** prerender |
-| Co URL + backend ngu | build **xanh** + canh bao kem `ECONNREFUSED`, khong prerender, render on-demand luc chay |
+| Co URL + backend ngu | 🔴 build **ĐỎ** tại `/sitemap.xml` — xem đính chính bên dưới |
 | Co URL + backend ngu + `BUILD_REQUIRE_API=1` | build **do** co chu dich |
+
+> 🔴 **ĐÍNH CHÍNH (2026-08-10, đo thực tế — không suy đoán).** Dòng thứ ba trước đây
+> ghi "build **xanh** + cảnh báo `ECONNREFUSED`". Điều đó **chỉ đúng với cây trang
+> `/[locale]`**, KHÔNG đúng với sitemap. Đã tái hiện được trên máy: có
+> `NEXT_PUBLIC_API_URL` + backend tắt → `next build` **thất bại**:
+>
+> ```
+> Error occurred prerendering page "/sitemap.xml"
+> [TypeError: fetch failed] … code: 'ECONNREFUSED'
+> Export encountered an error on /sitemap.xml/route, exiting the build.
+> ```
+>
+> **Nguyên nhân:** `src/app/sitemap.ts` chỉ rào bằng `isApiConfigured` (biến *đã đặt*
+> hay chưa) rồi `await Promise.all([getProjects(...), getNewsPosts(...)])` **không có
+> try/catch** — khác với cây trang vốn được bọc bằng `safeGenerateStaticParams`.
+> Vì vậy `BUILD_REQUIRE_API` để trống **cũng không cứu được**.
+>
+> **Vì sao CI không bắt được:** `ci.yml` build với `NEXT_PUBLIC_API_URL: ''` → rơi vào
+> dòng 1 của bảng. Tổ hợp "có URL + backend chết" **chưa hề được CI phủ**.
+>
+> **Hệ quả vận hành:** backend Render Free ngủ sau 15 phút → một lần build/redeploy
+> Vercel trúng lúc backend ngủ sẽ **hỏng deploy**. Cách né: **deploy backend trước và
+> đánh thức `…/api` ngay trước khi redeploy frontend** (hoặc nâng plan always-on, mục 1b).
+>
+> **Follow-up (chưa làm, cố ý ngoài phạm vi batch này):** *"Làm sitemap chịu được
+> việc backend không phản hồi"* — bọc try/catch quanh lời gọi API trong `sitemap.ts`
+> để degrade về sitemap chỉ-route-tĩnh giống cây trang, và thêm một ca CI phủ tổ hợp
+> "có URL + backend chết". Cần batch code riêng có duyệt.
 
 **Truoc M2, che do thu ba lam `next build` CHET** (`Failed to collect page data`).
 Vi backend dang o **Render Free — ngu sau 15 phut**, mot lan build cua Vercel trung

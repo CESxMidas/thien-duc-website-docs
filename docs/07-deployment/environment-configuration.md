@@ -16,7 +16,7 @@
 | `DATABASE_URL` | Render tự nối từ Postgres. ✅ không cần làm gì. | Nối từ ngoài Render **bắt buộc `?sslmode=require`** — xem cảnh báo bên dưới. |
 | `JWT_ACCESS_SECRET` | Render tự sinh ngẫu nhiên. ✅ | Secret chỉ nằm ở backend. |
 | `CORS_ORIGIN` | **Nhập tay** sau khi có domain Vercel thật (mặc định `https://thien-duc-website-frontend.vercel.app`). | Nhiều domain cách nhau bằng dấu phẩy, không khoảng trắng. Backend **từ chối khởi động** nếu thiếu — không fallback wildcard. |
-| `CLOUDINARY_CLOUD_NAME` | `thienduc` (công khai — nằm trong URL ảnh). | |
+| `CLOUDINARY_CLOUD_NAME` | **`ksnntvmu`** — đã xác nhận 2026-08-10. Công khai (nằm trong URL ảnh), đã khai sẵn `value` trong `render.yaml` nên không phải nhập tay. | ✅ Khớp với allowlist ảnh của frontend (`next.config.ts` → `pathname: "/ksnntvmu/**"`, có test khoá ở `next.config.spec.ts`). Ghi chú cũ `thienduc` trong bảng này là **SAI** và đã bỏ. Đổi cloud sau này thì phải sửa **cả** `next.config.ts` + test, nếu không `next/image` trả **400** và ảnh không hiện. |
 | `CLOUDINARY_API_KEY` | **Nhập tay** ở Render Dashboard → service backend → Environment (`sync: false`). | Lấy tại Cloudinary Dashboard → API Keys, role **Master Admin**. |
 | `CLOUDINARY_API_SECRET` | **Nhập tay** (`sync: false`). | Role *Media Library User* KHÔNG gọi được Admin API → lệnh xóa ảnh thất bại. **Không bao giờ** đặt tiền tố client (`NEXT_PUBLIC_` / `VITE_`). |
 | `RESEND_API_KEY` | **Nhập tay** (`sync: false`). | Email thông báo lead chạy **Resend-only** (SMTP fallback đã gỡ khỏi code — xem [SMTP-REMOVAL-ENV-CLEANUP](../08-audits-and-reports/current/2026-07-20-smtp-removal-env-cleanup.md)). Lấy ở dashboard Resend. **Không bao giờ** đặt tiền tố client (`NEXT_PUBLIC_` / `VITE_`). Thiếu → bỏ qua gửi mail, lead vẫn lưu. |
@@ -38,15 +38,121 @@ Thêm cho cả 3 scope (Production / Preview / Development):
 
 > ⚠️ Frontend là **Next.js** — biến client dùng tiền tố `NEXT_PUBLIC_` (không phải `VITE_`), được **nướng vào lúc build**; đặt/đổi xong bắt buộc **Redeploy** mới có hiệu lực.
 
+### Biến chỉ dùng lúc BUILD (frontend)
+
+Không có tiền tố `NEXT_PUBLIC_` nên **không lọt vào bundle client**.
+
+| Key | Bắt buộc? | Ghi chú |
+|---|---|---|
+| `SENTRY_AUTH_TOKEN` | Tùy chọn | 🔒 **SECRET THẬT** (khác DSN). Chỉ đặt ở Vercel/CI, không bao giờ commit, **không bao giờ** đặt sang `NEXT_PUBLIC_*`. Scope cần: `project:releases`. |
+| `SENTRY_ORG` | Tùy chọn | Phải có **đủ cả ba** (`AUTH_TOKEN` + `ORG` + `PROJECT`) thì build mới upload source map; thiếu bất kỳ cái nào → bỏ qua, build vẫn xanh (`src/lib/sentry-build.ts`). |
+| `SENTRY_PROJECT` | Tùy chọn | |
+| `SENTRY_RELEASE` | Tùy chọn | Bỏ trống thì suy theo `VERCEL_GIT_COMMIT_SHA` → `GITHUB_SHA`. |
+| `BUILD_REQUIRE_API` | Tùy chọn — **khuyến nghị để trống** | `=1` làm lỗi gọi API lúc build thành **build đỏ** thay vì degrade. Không bật trên Vercel production khi backend còn Free tier (ngủ sau 15 phút) — trúng lúc ngủ là hỏng deploy. |
+
+## Admin CMS (Vercel — project `thien-duc-website-admin`)
+
+Admin là **Vite SPA**, biến client dùng tiền tố `VITE_` và **nướng vào lúc build** → đổi xong phải **Redeploy**.
+
+> 🔒 **Mọi biến `VITE_*` đều lộ ra trình duyệt.** Tuyệt đối không đặt API secret, DB password hay Sentry auth token vào `VITE_*`.
+
+| Key | Bắt buộc? | Value production | Ghi chú |
+|---|---|---|---|
+| `VITE_API_URL` | **Bắt buộc** | `https://<api-domain>/api` | URL gốc backend, **không** có dấu `/` ở cuối. Origin của admin phải nằm trong `CORS_ORIGIN` của backend. |
+| `VITE_SITE_URL` | Nên có | `https://<domain-frontend>` | Dùng dựng URL ảnh xem trước (ảnh lưu dạng đường dẫn tương đối của web công khai). Thiếu → tab "Hình ảnh" hiện ô giữ chỗ. Tên biến đúng là `VITE_SITE_URL` (**không** phải `VITE_PUBLIC_SITE_URL`) — xác nhận trong `admin/src`. |
+| `VITE_SENTRY_DSN` | Tùy chọn | DSN project Sentry riêng của admin | Ingest-only, an toàn trong bundle client. |
+| `SENTRY_AUTH_TOKEN` / `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_RELEASE` | Tùy chọn | — | Build-only, **không** tiền tố `VITE_`. Cùng cổng "đủ cả ba" như frontend (`vite.config.ts`). |
+
+## Cloudinary — chốt cloud name (phải làm trước khi deploy)
+
+Backend upload lên cloud nào thì frontend phải cho phép đúng cloud đó:
+
+- Backend: `CLOUDINARY_CLOUD_NAME` (Render env).
+- Frontend: `next.config.ts` → `images.remotePatterns[0].pathname` = `"/<cloud>/**"` — **hardcode trong code**, có test khoá (`next.config.spec.ts`).
+
+Hai nơi lệch nhau → `next/image` trả **400**, ảnh không hiện.
+
+> ✅ **ĐÃ CHỐT (2026-08-10): cloud name production là `ksnntvmu`.** Trùng khớp với
+> allowlist đang có trong `next.config.ts` → **không cần sửa code frontend**.
+> `render.yaml` đã đặt sẵn `CLOUDINARY_CLOUD_NAME: ksnntvmu` (giá trị công khai,
+> không phải secret). Chỉ còn `CLOUDINARY_API_KEY` + `CLOUDINARY_API_SECRET` phải
+> nhập tay ở Render Dashboard.
+
+Nếu sau này đổi sang Cloudinary account/cloud khác thì phải sửa **đồng thời**:
+`next.config.ts`, `next.config.spec.ts`, `render.yaml`, và bảng biến ở trên.
+
+## Kiểm tra nhanh: giá trị phải nhập tay
+
+Đánh dấu: **REQUIRED** = thiếu là hỏng · **OPTIONAL** = bỏ được ở lần deploy đầu · **LATER** = làm sau khi có domain thật.
+
+**Render — Backend**
+
+- [ ] `DATABASE_URL` — REQUIRED (Blueprint tự nối; chỉ nhập tay nếu dựng thủ công)
+- [ ] `JWT_ACCESS_SECRET` — REQUIRED (Blueprint `generateValue: true`; nếu tự nhập: `openssl rand -base64 48`)
+- [ ] `CORS_ORIGIN` — REQUIRED (backend **không khởi động** nếu thiếu)
+- [ ] `ADMIN_APP_URL` — LATER (bắt buộc **HTTPS** ở production)
+- [ ] `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` — REQUIRED nếu cần upload ảnh (thiếu → upload trả 503, app vẫn chạy)
+- [ ] `RESEND_API_KEY` / `MAIL_FROM` / `CONTACT_NOTIFY_TO` — OPTIONAL cho lần deploy đầu (thiếu → không gửi mail, lead vẫn lưu)
+- [ ] `SENTRY_DSN` — OPTIONAL
+- [ ] `ADMIN_EMAIL` / `ADMIN_PASSWORD` — REQUIRED một lần, để chạy `npm run prisma:seed` tạo tài khoản đầu tiên (đổi mật khẩu ngay sau khi đăng nhập)
+
+**Vercel — Frontend**
+
+- [ ] `NEXT_PUBLIC_API_URL` — REQUIRED
+- [ ] `NEXT_PUBLIC_SITE_URL` — REQUIRED
+- [ ] `NEXT_PUBLIC_SENTRY_DSN` — OPTIONAL
+- [ ] `SENTRY_AUTH_TOKEN` / `SENTRY_ORG` / `SENTRY_PROJECT` — OPTIONAL (chỉ khi bật upload source map)
+- [ ] `BUILD_REQUIRE_API` — để trống (khuyến nghị)
+
+**Vercel — Admin**
+
+- [ ] `VITE_API_URL` — REQUIRED
+- [ ] `VITE_SITE_URL` — REQUIRED (để ảnh xem trước hiện đúng)
+- [ ] `VITE_SENTRY_DSN` — OPTIONAL
+
+## Lấy giá trị ở đâu
+
+| Biến | Nguồn |
+|---|---|
+| `DATABASE_URL` | Render Dashboard → Postgres `thien-duc-db` → Connection (Internal URL cho service cùng region) |
+| `JWT_ACCESS_SECRET` | Tự sinh: `openssl rand -base64 48` — không lấy từ đâu, không dùng lại giá trị cũ |
+| `CORS_ORIGIN` | Suy ra từ domain frontend + admin đã deploy |
+| `ADMIN_APP_URL` | Domain admin trên Vercel (hoặc custom subdomain) |
+| `CLOUDINARY_CLOUD_NAME` / `API_KEY` / `API_SECRET` | Cloudinary Console → Dashboard / API Keys (role **Master Admin**) |
+| `RESEND_API_KEY` | Resend Dashboard → API Keys (cần verify domain gửi trước) |
+| `MAIL_FROM` | Địa chỉ thuộc domain đã verify ở Resend |
+| `CONTACT_NOTIFY_TO` | Hộp thư công ty muốn nhận lead |
+| `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` / `VITE_SENTRY_DSN` | Sentry → Project Settings → Client Keys (DSN) — **mỗi app một project riêng** |
+| `SENTRY_AUTH_TOKEN` | Sentry → Settings → Auth Tokens (scope `project:releases`) |
+| `NEXT_PUBLIC_API_URL` / `VITE_API_URL` | URL Render (hoặc custom API domain) + `/api` |
+| `NEXT_PUBLIC_SITE_URL` / `VITE_SITE_URL` | Domain frontend cuối cùng trên Vercel |
+
 ## `.env.example`
 
 Cả 3 project (`backend`, `frontend`, `admin`) đều có `.env.example` liệt kê đầy đủ biến cần thiết — dùng làm mẫu khi dựng môi trường mới. Admin CMS dùng `VITE_API_URL` (mặc định `http://localhost:3001/api`) và `VITE_SENTRY_DSN` (tùy chọn, task →5 — DSN project Sentry riêng của admin, ingest-only nên không phải secret).
 
-> 📌 **Follow-up tách batch riêng (chưa làm trong G7-D1):** comment "mock mode" ở dòng đầu `frontend/.env.example` đã **lỗi thời** (frontend không có mock mode — xem [deployment-guide.md](deployment-guide.md) mục 5). `.env.example` là file code-adjacent nên **không sửa trong batch docs-only này**; cần một batch follow-up có duyệt riêng để dọn comment đó.
+Quy ước file env của cả ba repo:
+
+| File | Trạng thái Git | Dùng để |
+|---|---|---|
+| `.env.example` | **Được track** | Mẫu, chỉ chứa placeholder — không bao giờ chứa giá trị thật |
+| `.env` | **Bị ignore** | Giá trị thật ở máy dev. Production KHÔNG dùng file này — nhập thẳng ở dashboard Render/Vercel |
+
+> ✅ Follow-up "comment mock mode ở `frontend/.env.example` đã lỗi thời" (G7-D1)
+> đã xong — dòng đầu file hiện ghi rõ frontend **không** có mock mode.
 
 ---
 
 ## Document history
+
+- **2026-08-10** — Chuẩn bị bàn giao deploy: bổ sung mục **Admin CMS** (`VITE_API_URL`,
+  `VITE_SITE_URL`, `VITE_SENTRY_DSN` — xác nhận tên biến trong `admin/src`, **không**
+  phải `VITE_PUBLIC_SITE_URL`); bổ sung bảng **biến chỉ dùng lúc build** của frontend
+  (`SENTRY_AUTH_TOKEN`/`ORG`/`PROJECT`/`RELEASE`, `BUILD_REQUIRE_API`); thêm checklist
+  giá trị nhập tay + bảng "lấy giá trị ở đâu"; thêm quy ước `.env.example` (track) vs
+  `.env` (ignore). **Đánh dấu mâu thuẫn chưa chốt**: `CLOUDINARY_CLOUD_NAME` trong bảng
+  ghi `thienduc` nhưng `frontend/next.config.ts` khoá allowlist `"/ksnntvmu/**"` — phải
+  xác nhận cloud thật trước khi deploy, lệch nhau thì ảnh không hiện.
 
 - **2026-07-21** — Audit tính nhất quán tên biến env (docs-only): sửa bảng biến
   Frontend từ `VITE_*` → `NEXT_PUBLIC_*` (frontend là **Next.js**, không phải Vite
