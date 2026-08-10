@@ -76,14 +76,31 @@ Repo đã có sẵn `render.yaml` (Blueprint) — Render tự dựng cả web se
 
 ### 1b. Nâng lên plan production (task →2 — bắt buộc trước go-live)
 
-`render.yaml` đã khai plan trả phí cho cả hai thành phần (mục tiêu: hết ngủ, hết
-cold start ~30–50s làm timeout form liên hệ, hết hạn 90 ngày của Postgres free,
-và có backup được quản lý):
+> 🟠 **Trạng thái hiện tại (2026-08-10): `render.yaml` đang khai `plan: free` cho
+> CẢ HAI thành phần** — cố ý, để deploy/kiểm thử ban đầu mà không cần gắn thẻ
+> thanh toán. **Đây KHÔNG phải hạ tầng production.** Phải nâng plan trước go-live.
 
-| Thành phần | Khai trong `render.yaml` | Mục đích |
+**Giới hạn của Free tier (phải biết trước khi dùng):**
+
+| Thành phần | Giới hạn Free |
+|---|---|
+| Web service | **Ngủ sau ~15 phút** không có traffic · request đánh thức mất **~1 phút** · **750 giờ** instance/workspace/tháng · **không có disk bền** |
+| PostgreSQL | **1 GB** lưu trữ · **chỉ MỘT** Postgres Free mỗi workspace · **HẾT HẠN sau 30 ngày** (mất dữ liệu) · **KHÔNG có backup**, không PITR |
+
+Hệ quả thực tế khi còn ở Free:
+
+- Form liên hệ có thể **timeout** ở request đầu (frontend hủy ở 10s, cold start lâu hơn).
+- Cron đăng bài (`@Cron`) **không chạy đáng tin** vì service ngủ.
+- Backend ngủ đúng lúc Vercel build → frontend build **ĐỎ ở `/sitemap.xml`**
+  (xem đính chính cuối tài liệu). Đánh thức `…/api` ngay trước khi build frontend.
+- Postgres Free hết hạn 30 ngày → **dữ liệu production thật KHÔNG được để ở đây**.
+
+**Mục tiêu khi nâng plan (bắt buộc trước go-live):**
+
+| Thành phần | Plan đề xuất | Mục đích |
 |---|---|---|
-| Web service | `plan: starter` | Always-on: không ngủ sau 15 phút, cron đăng bài (`@Cron`) chạy đáng tin, không cần UptimeRobot để "giữ thức" |
-| PostgreSQL | `plan: basic-256mb` | Lưu trữ bền (không hết hạn 90 ngày), backup daily + PITR nếu plan hỗ trợ |
+| Web service | `starter` | Always-on: không ngủ, cron đăng bài (`@Cron`) chạy đáng tin, không cần UptimeRobot để "giữ thức" |
+| PostgreSQL | `basic-256mb` | Lưu trữ bền (không hết hạn), backup daily + PITR nếu plan hỗ trợ |
 
 > ⚠️ **Tên plan, giá, retention backup và PITR phải kiểm tra lại ở Render
 > Dashboard tại thời điểm nâng** — Render đổi tên/giá plan theo thời gian, tài
@@ -97,7 +114,8 @@ và có backup được quản lý):
       Nếu Dashboard không cho đổi plan trực tiếp → theo **"Đường di trú free →
       paid"** trong [backup-and-restore.md](backup-and-restore.md) mục 6 (tạo DB
       trả phí mới → `pg_dump`/`pg_restore` → repoint `DATABASE_URL`). Làm **trước
-      mốc 90 ngày** hết hạn.
+      mốc 30 ngày** hết hạn của Postgres Free (mốc 90 ngày ghi trước đây đã cũ —
+      xác nhận lại ở Render Dashboard vì Render đổi chính sách theo thời gian).
 - [ ] Sau khi nâng: xác nhận backup daily + retention + PITR, điền *Nhật ký xác
       nhận* trong [backup-and-restore.md](backup-and-restore.md).
 - [ ] Kiểm thử khôi phục một lần ([backup-and-restore.md](backup-and-restore.md) mục 5).
@@ -198,6 +216,11 @@ Sau khi có domain Vercel chính thức:
 
 ## Document history
 
+- **2026-08-10** — Chuyển `render.yaml` sang `plan: free` cho cả web service lẫn
+  Postgres (deploy/kiểm thử ban đầu, không cần gắn thẻ): mục 1b nay ghi rõ trạng
+  thái Free + bảng giới hạn (ngủ 15 phút, ~1 phút cold start, 750 giờ/tháng;
+  Postgres 1 GB, một instance/workspace, hết hạn 30 ngày, không backup) và tách
+  riêng bảng "plan đề xuất khi nâng". Sửa mốc hết hạn 90 → 30 ngày.
 - **2026-08-10** — Chuẩn bị bàn giao deploy: thêm **bảng thứ tự triển khai 20 bước**;
   **đính chính** bảng "hợp đồng API lúc build" — tổ hợp "có URL + backend ngủ" làm
   build **ĐỎ ở `/sitemap.xml`** (tái hiện thực tế), kèm nguyên nhân (`sitemap.ts`
