@@ -2,7 +2,7 @@
 
 > **Trạng thái:** Đang dùng
 > **Nhóm:** 07 — Deployment
-> **Cập nhật:** 2026-07-19
+> **Cập nhật:** 2026-08-22 (đồng bộ tài liệu Batch 13E)
 > **Tài liệu liên quan:** [environment-configuration.md](environment-configuration.md) · [database-migrations.md](database-migrations.md) · [rollback-plan.md](rollback-plan.md)
 
 > 🟠 **Go-live readiness: BLOCKED / DEFERRED (2026-07-19, G7-M1).** Kiểm vận hành
@@ -67,7 +67,7 @@ Repo đã có sẵn `render.yaml` (Blueprint) — Render tự dựng cả web se
 1. Render Dashboard → **New → Blueprint**.
 2. Kết nối GitHub, chọn repo **`thien-duc-website-backend`**, nhánh `main`.
 3. Render đọc `render.yaml`, hiện: 1 database `thien-duc-db` + 1 web service `thien-duc-website-backend`. Bấm **Apply**.
-4. Chờ build (`npm ci && npm run build`) → khi start sẽ tự chạy `prisma migrate deploy` (tạo 12 bảng). Xem [database-migrations.md](database-migrations.md).
+4. Chờ build (`npm ci && npm run build`) → khi start sẽ tự chạy `prisma migrate deploy` (áp toàn bộ migration; schema hiện có **16 model**). Xem [database-migrations.md](database-migrations.md) và mục [Hành vi migration khi deploy](#hành-vi-migration-khi-deploy) bên dưới.
 5. Xong sẽ có URL, dạng: `https://thien-duc-website-backend.onrender.com`.
    - Kiểm tra: mở `…/api` → trả về "Hello World!"; mở `…/api/docs` → Swagger.
 
@@ -206,6 +206,84 @@ Sau khi có domain Vercel chính thức:
 - **Form thỉnh thoảng đỏ / "Failed to fetch" / timeout** — triệu chứng của backend **còn chạy free tier** (ngủ sau 15 phút; request đầu đợi ~30–50s trong khi FE hủy ở 10s). Cách xử lý đúng: nâng plan always-on theo mục **1b** (đây là task →2). Chữa tạm khi chưa nâng: mở `…/api` cho backend thức trước, hoặc ping định kỳ bằng UptimeRobot. Sau khi đã nâng plan mà vẫn gặp → không phải do ngủ, xem log Render.
 - **Giờ hiển thị lệch 7 tiếng** — DB lưu **UTC** (đúng chuẩn). Hiển thị giờ VN (UTC+7) bằng `formatDateTime` trong `src/lib/format.ts` (frontend), hoặc trong SQL: `created_at + interval '7 hour'`.
 
+## Hành vi migration khi deploy
+
+### Cấu hình hiện tại trong `render.yaml`
+
+| Khoá | Giá trị hiện tại |
+|---|---|
+| `branch` | `main` |
+| `autoDeploy` | `true` |
+| `buildCommand` | `npm ci && npm run build` |
+| `startCommand` | `npx prisma migrate deploy && npm run start:prod` |
+| `healthCheckPath` | `/api` |
+
+**Push lên `main` có thể tự kích hoạt một lần deploy.** Migration còn thiếu dự
+kiến được áp bởi `prisma migrate deploy` **trước khi** ứng dụng start.
+
+### Cân nhắc vận hành — `&&` trong `startCommand`
+
+`migrate deploy` nối với lệnh start bằng `&&`. Hệ quả trực tiếp:
+
+> **Nếu migration hỏng thì service KHÔNG start.**
+
+Đây là một **đặc tính vận hành cần biết**, không tự động là khiếm khuyết: chặn
+ngay còn hơn để ứng dụng chạy trên schema sai. Nhưng nó có nghĩa là một migration
+lỗi sẽ làm **downtime**, chứ không phải "deploy hỏng, bản cũ vẫn chạy". Trước khi
+deploy một migration nặng, xem [rollback-plan.md](rollback-plan.md).
+
+`render.yaml` **không** được sửa trong đợt đồng bộ tài liệu này.
+
+### Danh mục migration (đọc trực tiếp từ `prisma/migrations/`)
+
+Tên dưới đây là **tên thư mục thật** trong repo backend tại commit `9032698`:
+
+| Thư mục migration | Nội dung |
+|---|---|
+| `20260707093428_init` | Khởi tạo schema |
+| `20260708024644_contact_email_optional` | Email liên hệ thành tuỳ chọn |
+| `20260710120000_add_fulltext_search` | Full-text search |
+| `20260711120000_add_cooperation_projects` | Bảng dự án hợp tác |
+| `20260711130000_add_user_profile_change_requests` | Duyệt đổi hồ sơ |
+| `20260712000000_add_cooperation_image` | Ảnh dự án hợp tác |
+| `20260715044523` | (không có hậu tố mô tả) |
+| `20260717120000_project_location_category_bilingual` | Song ngữ địa điểm/danh mục dự án |
+| `20260722164315_add_account_invitations` | Lời mời tài khoản |
+| `20260724100000_add_password_reset_tokens` | Token đặt lại mật khẩu |
+| `20260731120000_search_unaccent` | Tìm kiếm không dấu |
+| `20260811120000_news_category_index` | Index danh mục tin |
+| **`20260819120000_project_publication_schedule`** | **Hẹn giờ đăng — Dự án** |
+| **`20260819130000_cooperation_publication_schedule`** | **Hẹn giờ đăng — Dự án hợp tác** |
+| **`20260819140000_page_publication_schedule`** | **Hẹn giờ đăng — Trang nội dung** |
+| **`20260821120000_banner_display_window`** | **Cửa sổ hiển thị Banner** |
+
+Bốn migration in đậm là phần mới so với lần cập nhật tài liệu trước.
+
+Đặc điểm chung của cả bốn:
+
+- **Chỉ thêm cột, đều NULL** cho mọi hàng đang có. **Không backfill.**
+- Ba migration hẹn giờ tạo thêm một **partial index** trên đúng nhúm hàng đang
+  hẹn giờ (`…_scheduled_at_idx`).
+- Migration banner **cố ý không tạo index** — bảng cấu hình vài hàng, Postgres
+  seq-scan rẻ hơn đi qua index.
+- Tương thích ngược: mọi bản ghi cũ giữ **nguyên** hành vi trước migration.
+
+### Trạng thái xác minh trên production
+
+> ⚠️ **Tài liệu này KHÔNG khẳng định bốn migration trên đã được áp trên DB
+> production.** Việc áp thật phải được xác minh qua **log deploy trên Render** và
+> bảng **`_prisma_migrations`** trong DB production:
+>
+> ```sql
+> SELECT migration_name, finished_at, applied_steps_count
+> FROM _prisma_migrations
+> ORDER BY finished_at DESC
+> LIMIT 10;
+> ```
+>
+> Chừng nào chưa có bằng chứng đó thì trạng thái đúng là **"đã có trong code,
+> chưa xác minh production"** — xem [module-status](../04-implementation/module-status.md).
+
 ## Ghi chú
 
 - CI GitHub Actions (lint + build) đã có ở cả 2 repo — chạy tự động khi mở PR.
@@ -216,6 +294,11 @@ Sau khi có domain Vercel chính thức:
 
 ## Document history
 
+- **2026-08-22** — Batch 13E (docs-only): thêm mục **Hành vi migration khi deploy**
+  (cấu hình `render.yaml` hiện tại, cân nhắc vận hành của `&&` trong
+  `startCommand`, danh mục 16 migration đọc thẳng từ repo, và yêu cầu xác minh
+  production qua `_prisma_migrations`). Sửa "tạo 12 bảng" → 16 model. **Không**
+  sửa `render.yaml`.
 - **2026-08-10** — Chuyển `render.yaml` sang `plan: free` cho cả web service lẫn
   Postgres (deploy/kiểm thử ban đầu, không cần gắn thẻ): mục 1b nay ghi rõ trạng
   thái Free + bảng giới hạn (ngủ 15 phút, ~1 phút cold start, 750 giờ/tháng;

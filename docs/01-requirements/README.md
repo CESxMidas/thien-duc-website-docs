@@ -1,7 +1,7 @@
 # 01 — Requirements
 
 > **Trạng thái:** Đang dùng (index thư mục)
-> **Cập nhật:** 2026-07-16
+> **Cập nhật:** 2026-08-22
 
 Yêu cầu dự án và các câu hỏi còn chờ công ty xác nhận.
 
@@ -12,7 +12,7 @@ Yêu cầu dự án và các câu hỏi còn chờ công ty xác nhận.
 | [open-questions.md](open-questions.md) | Câu hỏi chờ công ty (còn câu mở — KHÔNG xóa) | Đang dùng |
 | [technical-proposal-pa2.docx](technical-proposal-pa2.docx) | Báo cáo phương án kỹ thuật PA2 (nguồn gốc) | Nguồn sự thật |
 | [business-requirements.md](business-requirements.md) | Yêu cầu nghiệp vụ | Khung |
-| [functional-requirements.md](functional-requirements.md) | Yêu cầu chức năng (YC-xx/ED-xx) | Khung |
+| [functional-requirements.md](functional-requirements.md) | Yêu cầu chức năng — xuất bản có hẹn giờ (YC-XB), cửa sổ hiển thị banner (YC-BN) | Đang dùng |
 | [non-functional-requirements.md](non-functional-requirements.md) | Hiệu năng/bảo mật/khả dụng (CL-xx) | Khung |
 
 ## Tài liệu liên quan

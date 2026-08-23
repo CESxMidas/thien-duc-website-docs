@@ -12,7 +12,7 @@ Kiến trúc hệ thống 3 tầng và các sơ đồ.
 | [system-architecture.md](system-architecture.md) | Sơ đồ 3 tầng, hợp đồng chung, module backend | Đang dùng |
 | [backend-architecture.md](backend-architecture.md) | Chi tiết backend NestJS | Khung |
 | [frontend-architecture.md](frontend-architecture.md) | Chi tiết frontend Next.js | Khung |
-| [database-design.md](database-design.md) | ERD 13 model, enum | Khung |
+| [database-design.md](database-design.md) | ERD 16 model, 5 enum | Khung |
 | [authentication-and-authorization.md](authentication-and-authorization.md) | JWT + RBAC | Khung |
 | [diagrams/](diagrams/) | 9 sơ đồ .drawio + .png (đăng nhập, form, upload, kiến trúc, DFD, ERD, duyệt tin) | Đang dùng |
 

@@ -1,7 +1,7 @@
 # 04 — Implementation
 
 > **Trạng thái:** Đang dùng (index thư mục)
-> **Cập nhật:** 2026-07-16
+> **Cập nhật:** 2026-08-22
 
 Kế hoạch triển khai theo sprint và trạng thái module.
 
@@ -11,7 +11,7 @@ Kế hoạch triển khai theo sprint và trạng thái module.
 |---|---|---|
 | [implementation-plan.md](implementation-plan.md) | Kế hoạch coding sống (Sprint 0–4 + phase nâng cấp) | Đang dùng |
 | [coding-guidelines.md](coding-guidelines.md) | Quy ước code (trỏ AGENTS.md) | Khung |
-| [module-status.md](module-status.md) | Trạng thái từng module | Khung |
+| [module-status.md](module-status.md) | Trạng thái từng module — tách "đã code" khỏi "đã xác minh production" | Đang dùng |
 | [modules/admin-authentication.md](modules/admin-authentication.md) | Module đăng nhập Admin | Khung |
 
 ## Tài liệu liên quan

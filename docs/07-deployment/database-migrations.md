@@ -9,7 +9,7 @@ Stack: **Prisma 7 + PostgreSQL 17**. Schema nguồn sự thật ở `thien-duc-w
 
 ## Trên production (Render)
 
-- Khi web service start, Render tự chạy **`prisma migrate deploy`** (cấu hình trong `render.yaml`) — áp mọi migration còn thiếu vào DB. Lần đầu tạo 12 bảng.
+- Khi web service start, Render tự chạy **`prisma migrate deploy`** (cấu hình trong `render.yaml`) — áp mọi migration còn thiếu vào DB. Schema hiện có **16 model**. Danh mục migration đầy đủ + lưu ý vận hành: [deployment-guide.md](deployment-guide.md#hành-vi-migration-khi-deploy).
 - Migration mới: commit vào `prisma/migrations/` → Render tự `migrate deploy` ở lần deploy kế tiếp.
 
 ### Recovery khi Prisma báo P3009
@@ -62,7 +62,16 @@ Local Postgres chạy Docker ở **port 5433** (`docker compose up -d`) — vì 
 `.env` của máy dev có thể đang trỏ `DATABASE_URL` vào **Render (production)**. Vì vậy:
 
 - Mọi lệnh `prisma migrate deploy` / `db execute` phải là **hành động có chủ ý**, xác nhận `DATABASE_URL` đang trỏ đúng đích trước khi chạy.
-- **Trạng thái hiện tại (2026-07-31):** toàn bộ **11 migration đã được áp lên production**; `prisma migrate status` trả *Database schema is up to date*. Ghi chú cũ rằng `20260710120000_add_fulltext_search` "mới chỉ kiểm chứng trên DB local" **không còn đúng**.
+- **Đã xác minh tới 2026-07-31:** **11 migration đầu tiên** đã được áp lên production; `prisma migrate status` khi đó trả *Database schema is up to date*. Ghi chú cũ rằng `20260710120000_add_fulltext_search` "mới chỉ kiểm chứng trên DB local" **không còn đúng**.
+- ⚠️ **Chưa xác minh (tính tới 2026-08-22):** 5 migration thêm vào **sau** mốc trên —
+  `20260811120000_news_category_index`,
+  `20260819120000_project_publication_schedule`,
+  `20260819130000_cooperation_publication_schedule`,
+  `20260819140000_page_publication_schedule`,
+  `20260821120000_banner_display_window`.
+  Chúng **đã có trong code** nhưng tài liệu này **không** khẳng định đã áp trên
+  production. Phải xác minh bằng log deploy Render + `_prisma_migrations` (hoặc
+  `prisma migrate status` trỏ đúng DB production) rồi mới cập nhật mục này.
 - Điều đó **không** có nghĩa mọi lần áp đều trót lọt: `20260731120000_search_unaccent` đã **thất bại một lần trên production** và chỉ trở lại sạch sau recovery có kiểm soát (mục "Recovery khi Prisma báo P3009" ở trên). Bài học: migration production **luôn** cần backup kiểm chứng được → inspection read-only → resolve có kiểm soát → deploy → xác minh sau deploy.
 
 ## Seed dữ liệu
