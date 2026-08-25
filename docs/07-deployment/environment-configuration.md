@@ -2,10 +2,25 @@
 
 > **Trạng thái:** Đang dùng
 > **Nhóm:** 07 — Deployment
-> **Cập nhật:** 2026-07-20
+> **Cập nhật:** 2026-08-25 (đồng bộ tài liệu Batch 13H — URL backend production + `NODE_ENV`)
 > **Tài liệu liên quan:** [deployment-guide.md](deployment-guide.md) · [database-migrations.md](database-migrations.md)
 
 > ⚠️ **Không lưu secret thật (mật khẩu, token, API secret, connection string thật) trong tài liệu này hay bất kỳ file nào trong Git.** Chỉ ghi *tên biến*, *nơi nhập*, *ý nghĩa*. Giá trị thật nhập trực tiếp ở dashboard Render/Vercel hoặc file `.env` (đã `.gitignore`).
+
+## URL backend production — origin vs API base
+
+Hai giá trị này **khác nhau một đoạn `/api`**, đặt nhầm là hỏng:
+
+| Dùng ở đâu | Giá trị đúng |
+|---|---|
+| Origin backend (host) | `https://thien-duc-website-backend-w1du.onrender.com` |
+| Biến API của Frontend/Admin (`NEXT_PUBLIC_API_URL`, `VITE_API_URL`) | `https://thien-duc-website-backend-w1du.onrender.com/api` |
+| Nguồn CSP `connect-src` của Frontend | `https://thien-duc-website-backend-w1du.onrender.com` — **origin, KHÔNG kèm `/api`** (CSP khớp theo origin, thêm path là sai) |
+| `CORS_ORIGIN` của backend | domain **Frontend/Admin**, không phải domain backend |
+
+> ⚠️ Hostname cũ `https://thien-duc-website-backend.onrender.com` **không còn dùng**.
+> Nếu còn sót trong biến môi trường ở Render/Vercel thì phải sửa và **redeploy**
+> (biến `NEXT_PUBLIC_*`/`VITE_*` nướng vào lúc build).
 
 ## Backend (Render — service `thien-duc-website-backend`)
 
@@ -16,6 +31,7 @@
 | `DATABASE_URL` | Render tự nối từ Postgres. ✅ không cần làm gì. | Nối từ ngoài Render **bắt buộc `?sslmode=require`** — xem cảnh báo bên dưới. |
 | `JWT_ACCESS_SECRET` | Render tự sinh ngẫu nhiên. ✅ | Secret chỉ nằm ở backend. |
 | `CORS_ORIGIN` | **Nhập tay** sau khi có domain Vercel thật (mặc định `https://thien-duc-website-frontend.vercel.app`). | Nhiều domain cách nhau bằng dấu phẩy, không khoảng trắng. Backend **từ chối khởi động** nếu thiếu — không fallback wildcard. |
+| `NODE_ENV` | **Không khai trong `render.yaml`** — runtime Node của Render tự đặt `production`. ✅ không cần làm gì. | Backend theo quy ước **fail-closed**: thiếu / rỗng / khoảng trắng đều được coi là `production`. Quyết định việc bật **Swagger** (`(nodeEnv?.trim() \|\| 'production') !== 'production'` trong `src/common/swagger.ts`), nạp module hỗ trợ test, và bắt buộc HTTPS cho `ADMIN_APP_URL`. **Đừng** đặt `development`/`test` trên Render — sẽ mở lại `/api/docs` ra Internet. |
 | `CLOUDINARY_CLOUD_NAME` | **`ksnntvmu`** — đã xác nhận 2026-08-10. Công khai (nằm trong URL ảnh), đã khai sẵn `value` trong `render.yaml` nên không phải nhập tay. | ✅ Khớp với allowlist ảnh của frontend (`next.config.ts` → `pathname: "/ksnntvmu/**"`, có test khoá ở `next.config.spec.ts`). Ghi chú cũ `thienduc` trong bảng này là **SAI** và đã bỏ. Đổi cloud sau này thì phải sửa **cả** `next.config.ts` + test, nếu không `next/image` trả **400** và ảnh không hiện. |
 | `CLOUDINARY_API_KEY` | **Nhập tay** ở Render Dashboard → service backend → Environment (`sync: false`). | Lấy tại Cloudinary Dashboard → API Keys, role **Master Admin**. |
 | `CLOUDINARY_API_SECRET` | **Nhập tay** (`sync: false`). | Role *Media Library User* KHÔNG gọi được Admin API → lệnh xóa ảnh thất bại. **Không bao giờ** đặt tiền tố client (`NEXT_PUBLIC_` / `VITE_`). |
@@ -32,7 +48,7 @@ Thêm cho cả 3 scope (Production / Preview / Development):
 
 | Key | Value | Ghi chú |
 |---|---|---|
-| `NEXT_PUBLIC_API_URL` | `https://thien-duc-website-backend.onrender.com/api` (URL Render + `/api`) | **Bắt buộc.** Frontend **không có mock mode**: thiếu biến này thì base URL rỗng làm mọi lời gọi API hỏng lúc chạy (`isApiConfigured=false` chỉ bỏ prerender SSG trong build không có API, không giả lập dữ liệu). Xem [deployment-guide.md](deployment-guide.md) mục 5. |
+| `NEXT_PUBLIC_API_URL` | `https://thien-duc-website-backend-w1du.onrender.com/api` (origin Render + `/api`) | **Bắt buộc.** Frontend **không có mock mode**: thiếu biến này thì base URL rỗng làm mọi lời gọi API hỏng lúc chạy (`isApiConfigured=false` chỉ bỏ prerender SSG trong build không có API, không giả lập dữ liệu). Xem [deployment-guide.md](deployment-guide.md) mục 5. |
 | `NEXT_PUBLIC_SITE_URL` | `https://thien-duc-website-frontend.vercel.app` (domain Vercel thật) | Dùng cho canonical/OG + JSON-LD. |
 | `NEXT_PUBLIC_SENTRY_DSN` | DSN project Sentry riêng của frontend (task →5), tùy chọn | DSN là khóa **ingest-only** — an toàn nằm trong bundle client, không phải secret. Thiếu = tắt tracking. |
 
@@ -58,7 +74,7 @@ Admin là **Vite SPA**, biến client dùng tiền tố `VITE_` và **nướng v
 
 | Key | Bắt buộc? | Value production | Ghi chú |
 |---|---|---|---|
-| `VITE_API_URL` | **Bắt buộc** | `https://<api-domain>/api` | URL gốc backend, **không** có dấu `/` ở cuối. Origin của admin phải nằm trong `CORS_ORIGIN` của backend. |
+| `VITE_API_URL` | **Bắt buộc** | `https://thien-duc-website-backend-w1du.onrender.com/api` | URL gốc backend, **không** có dấu `/` ở cuối. Origin của admin phải nằm trong `CORS_ORIGIN` của backend. Bundle Admin production hiện đã nhúng đúng giá trị này (kiểm chứng 13F-2A); backend trả JSON 401 cho `/api/auth/me` khi chưa đăng nhập và CORS đã cho phép origin Admin trên Vercel. |
 | `VITE_SITE_URL` | Nên có | `https://<domain-frontend>` | Dùng dựng URL ảnh xem trước (ảnh lưu dạng đường dẫn tương đối của web công khai). Thiếu → tab "Hình ảnh" hiện ô giữ chỗ. Tên biến đúng là `VITE_SITE_URL` (**không** phải `VITE_PUBLIC_SITE_URL`) — xác nhận trong `admin/src`. |
 | `VITE_SENTRY_DSN` | Tùy chọn | DSN project Sentry riêng của admin | Ingest-only, an toàn trong bundle client. |
 | `SENTRY_AUTH_TOKEN` / `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_RELEASE` | Tùy chọn | — | Build-only, **không** tiền tố `VITE_`. Cùng cổng "đủ cả ba" như frontend (`vite.config.ts`). |
@@ -145,6 +161,12 @@ Quy ước file env của cả ba repo:
 
 ## Document history
 
+- **2026-08-25** — Batch 13H (docs-only): sửa `NEXT_PUBLIC_API_URL` từ hostname cũ
+  `thien-duc-website-backend.onrender.com` sang **`thien-duc-website-backend-w1du.onrender.com/api`**;
+  thêm mục **URL backend production — origin vs API base** (phân biệt rõ origin,
+  API base có `/api`, và nguồn CSP `connect-src` **không** kèm `/api`); thêm dòng
+  `NODE_ENV` vào bảng biến backend kèm hành vi **fail-closed** quyết định việc bật
+  Swagger (xem Batch 13G, backend `202bee0`).
 - **2026-08-10** — Chuẩn bị bàn giao deploy: bổ sung mục **Admin CMS** (`VITE_API_URL`,
   `VITE_SITE_URL`, `VITE_SENTRY_DSN` — xác nhận tên biến trong `admin/src`, **không**
   phải `VITE_PUBLIC_SITE_URL`); bổ sung bảng **biến chỉ dùng lúc build** của frontend

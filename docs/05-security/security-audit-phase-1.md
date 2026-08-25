@@ -2,6 +2,7 @@
 
 > **Trạng thái:** Đang dùng (báo cáo hiện hành — Phase 1–2 fixes đã áp; Phase 3+ đang chờ)
 > **Ngày tạo:** 2026-07-14
+> **Cập nhật:** 2026-08-25 (Batch 13H — ghi nhận khắc phục Swagger public, mục [6B-1](#6b-1-swaggeropenapi-công-khai-trên-production--remediated--verified); phần WAF/DDoS của Finding 6B **vẫn mở**)
 > **Phạm vi:** Full-stack (Next.js frontend, NestJS backend, PostgreSQL, Render, Vercel)
 > **Phiên bản đánh giá:** mã nguồn tại 2026-07-14
 > **Người thực hiện:** AI Security Agent (OWASP Top 10 + CWE Top 25, manual code review)
@@ -407,13 +408,56 @@
   - Backend endpoint công khai → vulnerable tới:
     - Brute force (rate limiting mitigate, nhưng incomplete)
     - DDoS (no WAF to filter)
-    - Scan for vulnerability (Swagger doc public tại `/api/docs`)
+    - Scan for vulnerability (Swagger doc public tại `/api/docs`) — **đã khắc phục 2026-08-25, xem mục 6B-1 bên dưới**
 - **Recommended Remediation:**
   - Option 1: Add Cloudflare WAF in front (Render support)
   - Option 2: VPN/IP whitelist (Render IP restriction)
   - Option 3: API Gateway rate limiting (Render native không hỗ trợ)
-  - Monitor Swagger doc exposure: có leak info không
-- **Status:** NOT_IMPLEMENTABLE_IN_CURRENT_REPOSITORY (need Render/Cloudflare config outside)
+  - ~~Monitor Swagger doc exposure~~ → đã xử lý triệt để: tắt hẳn Swagger ở production (6B-1)
+- **Status:** PARTIALLY_ADDRESSED
+  - Phần **Swagger public** (6B-1): **IMPLEMENTED_AND_VERIFIED** (2026-08-25)
+  - Phần **WAF / DDoS / IP restriction / kiểm soát mạng của nhà cung cấp**:
+    vẫn **NOT_IMPLEMENTABLE_IN_CURRENT_REPOSITORY** (cần cấu hình Render/Cloudflare
+    bên ngoài repo) → **Finding 6B tổng thể vẫn MỞ**.
+
+##### 6B-1: Swagger/OpenAPI công khai trên production — REMEDIATED & VERIFIED
+
+- **Status:** IMPLEMENTED_AND_VERIFIED (2026-08-25, Batch 13G)
+- **Phân loại rủi ro:** *information exposure / mở rộng bề mặt tấn công*.
+  **KHÔNG** phải authentication bypass, **không** phải rò rỉ dữ liệu riêng tư,
+  **không** phải truy cập dữ liệu trái phép — mọi route được bảo vệ vẫn do
+  `JwtAuthGuard` + `RolesGuard` chặn trong suốt thời gian bị phơi bày.
+- **Trước khi vá (đã xác nhận trên production):**
+  - `GET /api/docs` → 200, Swagger UI
+  - `GET /api/docs-json` → 200, tài liệu OpenAPI 3.0.0 liệt kê **68 path** và
+    **40 schema DTO**, gồm cả route quản trị (`/api/users`,
+    `/api/users/invitations`, `/api/projects/admin`, `/api/news/admin`,
+    `/api/pages/admin`, …)
+- **Remediation:** backend commit
+  [`202bee0`](https://github.com/CESxMidas/thien-duc-website-backend/commit/202bee0c771d6d401936cc54690f61efc1a47300)
+  — *fix(security): disable swagger in production*. Khởi tạo Swagger tách khỏi
+  `main.ts` sang `src/common/swagger.ts` và **chỉ chạy ngoài production**. Điều
+  kiện `(nodeEnv?.trim() || 'production') !== 'production'` là **fail-closed**:
+  thiếu `NODE_ENV`, hoặc đặt hụt thành chuỗi rỗng/khoảng trắng, đều được coi là
+  production nên Swagger vẫn tắt. Không thêm biến môi trường mới, không thêm
+  Basic Auth (không có credential để quản lý = ít bề mặt tấn công hơn), không gỡ
+  gói `@nestjs/swagger`.
+- **Hồi quy:** 10 test tập trung ở `backend/src/common/swagger.spec.ts` khoá cả
+  hai chiều (production/thiếu env/rỗng → tắt; development/test → bật, giữ đường
+  dẫn `api/docs`). Toàn bộ 76 suite / 1264 test xanh.
+- **Ngoài production:** development/test vẫn có Swagger tại `/api/docs`
+  (OpenAPI JSON ở `/api/docs-json`) — tài liệu API cho lập trình viên không mất.
+  **Không** bật lại Swagger trên production dù chỉ tạm thời.
+
+**Xác minh trên production thật (2026-08-25, sau khi Render auto-deploy):**
+
+| Kiểm tra | Kết quả |
+|---|---|
+| `GET /api/docs` | **404** kèm envelope lỗi chuẩn của app |
+| `GET /api/docs-json` | **404** kèm envelope lỗi chuẩn của app |
+| `GET /api` (health) | 200 |
+| `GET /api/banners` · `/api/news` · `/api/projects` · `/api/pages` · `/api/cooperation` | 200 |
+| `GET /api/users` không token | **401** — authorization còn nguyên |
 
 #### Finding 6C: Frontend Public Access
 

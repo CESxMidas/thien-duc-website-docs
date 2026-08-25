@@ -2,7 +2,7 @@
 
 > **Trạng thái:** Đang dùng
 > **Nhóm:** 02 — Architecture
-> **Cập nhật:** 2026-08-22 (đồng bộ tài liệu Batch 13E)
+> **Cập nhật:** 2026-08-25 (đồng bộ tài liệu Batch 13H — Swagger tắt ở production)
 > **Nguồn:** tổng hợp từ `AGENTS.md` (hợp đồng chung), [audit-baseline](../08-audits-and-reports/current/2026-07-16-audit-baseline.md), [deployment-guide](../07-deployment/deployment-guide.md). Sơ đồ gốc trong [diagrams/](diagrams/).
 
 ## Sơ đồ 3 tầng
@@ -36,7 +36,7 @@ Nguồn sự thật đầy đủ: `AGENTS.md` (workspace root). Tóm tắt:
 
 ## Backend — module theo domain
 
-`auth`, `users`, `projects`, `news`, `pages`, `banners`, `cooperation`, `contact`, `media`, `search`. Global prefix `/api`; Swagger tại `/api/docs`. Bảo vệ bằng `JwtAuthGuard` + `RolesGuard` + `@Roles(...)`. Route công khai trả nội dung
+`auth`, `users`, `projects`, `news`, `pages`, `banners`, `cooperation`, `contact`, `media`, `search`. Global prefix `/api`; Swagger/OpenAPI **chỉ có ở development/test** tại `/api/docs` (JSON ở `/api/docs-json`) — ở **production Swagger cố ý KHÔNG được đăng ký**, nên hai route đó trả 404 (xem [Finding 6B](../05-security/security-audit-phase-1.md#finding-6b-backend-api-public-access)). Bảo vệ bằng `JwtAuthGuard` + `RolesGuard` + `@Roles(...)`. Route công khai trả nội dung
 **đủ điều kiện hiển thị xét lúc truy vấn** — KHÔNG chỉ `PUBLISHED`; xem
 [Ba lớp xuất bản](#ba-lớp-xuất-bản--news--project--cooperation--page) bên dưới.
 

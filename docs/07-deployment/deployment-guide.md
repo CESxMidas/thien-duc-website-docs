@@ -2,7 +2,7 @@
 
 > **Trạng thái:** Đang dùng
 > **Nhóm:** 07 — Deployment
-> **Cập nhật:** 2026-08-22 (đồng bộ tài liệu Batch 13E)
+> **Cập nhật:** 2026-08-25 (đồng bộ tài liệu Batch 13H — URL backend production + Swagger tắt ở production)
 > **Tài liệu liên quan:** [environment-configuration.md](environment-configuration.md) · [database-migrations.md](database-migrations.md) · [rollback-plan.md](rollback-plan.md)
 
 > 🟠 **Go-live readiness: BLOCKED / DEFERRED (2026-07-19, G7-M1).** Kiểm vận hành
@@ -42,7 +42,7 @@ còn `CORS_ORIGIN`/`ADMIN_APP_URL` chỉ biết được **sau khi** đã có do
 | 3 | Nhập biến môi trường backend | Checklist ở [environment-configuration.md](environment-configuration.md) |
 | 4 | Chạy migration production | `prisma migrate deploy` (đã nằm trong `startCommand`) — xem [database-migrations.md](database-migrations.md) |
 | 5 | Seed tài khoản quản trị đầu tiên | `npm run prisma:seed` với `ADMIN_EMAIL`/`ADMIN_PASSWORD`, **đổi mật khẩu ngay** sau lần đăng nhập đầu |
-| 6 | **Xác minh API sống** | `…/api` trả 200, `…/api/docs` mở được |
+| 6 | **Xác minh API sống** | `…/api` trả 200 + vài route công khai (`…/api/banners`, `…/api/news`) trả 200. **Không** dùng `…/api/docs` — Swagger tắt ở production |
 | 7 | Cấu hình Cloudinary | Cloud name phải **khớp** allowlist `next.config.ts` |
 | 8 | Test upload một ảnh trong Admin | Thiếu Cloudinary → 503 |
 | 9 | (Tùy chọn) Cấu hình Resend | Bỏ qua được ở lần deploy đầu |
@@ -68,8 +68,12 @@ Repo đã có sẵn `render.yaml` (Blueprint) — Render tự dựng cả web se
 2. Kết nối GitHub, chọn repo **`thien-duc-website-backend`**, nhánh `main`.
 3. Render đọc `render.yaml`, hiện: 1 database `thien-duc-db` + 1 web service `thien-duc-website-backend`. Bấm **Apply**.
 4. Chờ build (`npm ci && npm run build`) → khi start sẽ tự chạy `prisma migrate deploy` (áp toàn bộ migration; schema hiện có **16 model**). Xem [database-migrations.md](database-migrations.md) và mục [Hành vi migration khi deploy](#hành-vi-migration-khi-deploy) bên dưới.
-5. Xong sẽ có URL, dạng: `https://thien-duc-website-backend.onrender.com`.
-   - Kiểm tra: mở `…/api` → trả về "Hello World!"; mở `…/api/docs` → Swagger.
+5. Xong sẽ có URL do Render cấp. **URL production hiện tại:**
+   `https://thien-duc-website-backend-w1du.onrender.com` (API base = origin + `/api`).
+   - Kiểm tra: mở `…/api` → trả envelope `{"success":true,"data":"Hello World!"}`;
+     thử thêm vài route công khai `…/api/banners`, `…/api/news` → 200.
+   - ⚠️ **KHÔNG kiểm tra bằng `…/api/docs`** — Swagger cố ý bị tắt ở production
+     (trả 404). Xem [Swagger chỉ có ngoài production](#swagger-chỉ-có-ngoài-production).
 
 **Biến môi trường**: `render.yaml` đã set sẵn phần lớn; các giá trị cần nhập tay
 (Cloudinary secret, Resend…) xem [environment-configuration.md](environment-configuration.md).
@@ -190,7 +194,12 @@ Sau khi có domain Vercel chính thức:
 
 ## 4. Checklist sau deploy
 
-- [ ] `…/api/docs` mở được (Swagger).
+- [ ] `…/api` trả 200 (health), và các route công khai `…/api/banners`, `…/api/news`,
+      `…/api/projects`, `…/api/pages`, `…/api/cooperation` trả 200.
+- [ ] `…/api/users` **không** kèm token trả **401** (authorization còn nguyên).
+- [ ] `…/api/docs` và `…/api/docs-json` trả **404** — đúng như thiết kế, xác nhận
+      Swagger không lộ ra production. Nếu chúng trả 200 thì **là lỗi bảo mật**,
+      kiểm tra lại `NODE_ENV` của service trên Render.
 - [ ] Gửi form `/lien-he` trên Vercel → bản ghi xuất hiện trong DB (Render → Postgres → hoặc `npx prisma studio` với external `DATABASE_URL`).
 - [ ] Không có lỗi CORS trong Console trình duyệt khi gửi form.
 - [ ] `NEXT_PUBLIC_SITE_URL` đúng → breadcrumb JSON-LD sinh URL chuẩn.
@@ -284,6 +293,32 @@ Bốn migration in đậm là phần mới so với lần cập nhật tài li�
 > Chừng nào chưa có bằng chứng đó thì trạng thái đúng là **"đã có trong code,
 > chưa xác minh production"** — xem [module-status](../04-implementation/module-status.md).
 
+## Swagger chỉ có ngoài production
+
+Backend **cố ý không khởi tạo Swagger/OpenAPI ở production** (Batch 13G, commit
+backend `202bee0`). Đây là biện pháp **giảm bề mặt tấn công**: tài liệu công khai
+liệt kê toàn bộ API — gồm route quản trị và schema DTO — nên không để lộ ra
+Internet. *Không phải* lỗ hổng xác thực: authorization vẫn chặn dữ liệu như cũ.
+
+| Môi trường | `NODE_ENV` | `/api/docs` · `/api/docs-json` |
+|---|---|---|
+| Production (Render) | `production` | **404** — không đăng ký route |
+| Production, biến đặt hụt | thiếu / rỗng / khoảng trắng | **404** — fail-closed, mặc định coi là production |
+| Dev máy cá nhân | `development` | 200 — Swagger UI + OpenAPI JSON |
+| Test / e2e | `test` | 200 — Swagger UI + OpenAPI JSON |
+
+Điều kiện trong `backend/src/common/swagger.ts` là
+`(nodeEnv?.trim() || 'production') !== 'production'` — thiếu `NODE_ENV` vẫn TẮT
+Swagger, đúng quy ước fail-closed đã ghi ở `backend/.env.example`.
+
+**Hệ quả cho vận hành:**
+
+- Đừng dùng `…/api/docs` để kiểm tra backend production còn sống — dùng `…/api`.
+- Cần tra cứu hợp đồng API thì chạy backend ở **local/dev** (`npm run start:dev`)
+  rồi mở `http://localhost:3001/api/docs`.
+- **Không** bật tạm Swagger trên production để "xem cho nhanh" — làm vậy là mở lại
+  đúng lỗ hổng vừa vá.
+
 ## Ghi chú
 
 - CI GitHub Actions (lint + build) đã có ở cả 2 repo — chạy tự động khi mở PR.
@@ -294,6 +329,12 @@ Bốn migration in đậm là phần mới so với lần cập nhật tài li�
 
 ## Document history
 
+- **2026-08-25** — Batch 13H (docs-only): sửa URL backend production cũ
+  (`thien-duc-website-backend.onrender.com`) → **`thien-duc-website-backend-w1du.onrender.com`**;
+  thêm mục **Swagger chỉ có ngoài production**; thay mọi bước kiểm tra bằng
+  `…/api/docs` sang smoke an toàn cho production (`…/api` + route công khai + 401
+  ở route được bảo vệ). Phản ánh Batch 13G (backend `202bee0`) đã xác minh live:
+  `/api/docs` và `/api/docs-json` trả 404. **Không** đổi phần xác minh migration.
 - **2026-08-22** — Batch 13E (docs-only): thêm mục **Hành vi migration khi deploy**
   (cấu hình `render.yaml` hiện tại, cân nhắc vận hành của `&&` trong
   `startCommand`, danh mục 16 migration đọc thẳng từ repo, và yêu cầu xác minh

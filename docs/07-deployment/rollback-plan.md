@@ -47,7 +47,10 @@ chứng (log Render, screenshot, response lỗi) để truy vết sau.
    Deploy a specific commit** và chọn commit cũ).
 3. Cách khác qua Git: `git revert <commit hỏng>` rồi push `main` — `autoDeploy: true`
    sẽ tự deploy bản revert (chậm hơn vì build lại, nhưng giữ lịch sử Git sạch).
-4. Kiểm tra: `…/api` trả "Hello World!", `…/api/docs` mở được, gửi thử form.
+4. Kiểm tra: `…/api` trả "Hello World!", vài route công khai (`…/api/banners`,
+   `…/api/news`) trả 200, gửi thử form. **Không** dùng `…/api/docs` để kiểm tra —
+   Swagger cố ý tắt ở production (trả 404), xem
+   [deployment-guide → Swagger chỉ có ngoài production](deployment-guide.md#swagger-chỉ-có-ngoài-production).
 
 > ⚠️ **Bẫy migration khi rollback code:** `startCommand` chạy `prisma migrate deploy`
 > mỗi lần deploy. Rollback **code** không rollback **schema** — nếu bản hỏng đã áp

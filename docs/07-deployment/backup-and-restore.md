@@ -124,8 +124,12 @@ Backup chưa test = chưa có backup. Ít nhất một lần trước production
 
 - [ ] Tạo `pg_dump` từ DB thật (mục 3).
 - [ ] `pg_restore` vào một DB mới trống (Cách A).
-- [ ] Trỏ backend tạm vào DB khôi phục, mở `…/api/docs`, kiểm tra vài bản ghi
-      (`contact_submissions`, `projects`) đọc đúng.
+- [ ] Trỏ backend tạm vào DB khôi phục, kiểm tra vài bản ghi
+      (`contact_submissions`, `projects`) đọc đúng qua route công khai
+      (`…/api/projects`) hoặc `psql`/Prisma Studio.
+      *Chỉ khi backend tạm chạy ở chế độ dev (`NODE_ENV=development`)* mới mở được
+      `…/api/docs` — Swagger tắt ở production, xem
+      [deployment-guide → Swagger chỉ có ngoài production](deployment-guide.md#swagger-chỉ-có-ngoài-production).
 - [ ] Ghi thời gian khôi phục thực tế (RTO) vào nhật ký dưới.
 
 ---
