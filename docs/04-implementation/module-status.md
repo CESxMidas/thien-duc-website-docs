@@ -100,6 +100,34 @@ phải `contentStatus` — đó là phép đổi tên trường, không phải l
 không còn tham chiếu nào tới nó. `assertContentEditAllowed` là chốt quyền sửa
 nội dung duy nhất còn lại.
 
+## Múi giờ của SQL thời gian — kết luận audit Batch 13M
+
+Batch 13M (2026-08-26) rà toàn bộ `NOW()` / `CURRENT_TIMESTAMP` trong backend để
+kiểm lại nghi vấn `NOW()` trần trên cột `timestamp WITHOUT time zone`.
+
+| Nơi | Kết luận |
+|---|---|
+| Migration Dự án (`20260819120000`) | `NOW()` nằm trong **dòng comment**, không phải SQL chạy |
+| Migration Dự án hợp tác (`20260819130000`) | như trên |
+| Cả bốn migration lịch đăng + banner | chỉ `ADD COLUMN` NULL, **không backfill thời gian** |
+| Bốn reconciler runtime | đều `(NOW() AT TIME ZONE 'utc')`, có e2e ép phiên `Asia/Bangkok` canh gác |
+| Truy vấn hiển thị công khai | dùng `Date` của Node qua bind parameter — không phụ thuộc múi giờ phiên |
+
+**Không có rủi ro múi giờ nào đang diễn ra, và không cần migration sửa chữa.**
+
+Ghi nhận mức thấp, **không phải bug**: `DEFAULT CURRENT_TIMESTAMP` /
+`@default(now())` trên cột không mang múi giờ về nguyên tắc vẫn nhạy với `TimeZone`
+của phiên. Không mục nào trong số đó tham gia luật hiển thị công khai hay phân
+quyền, nên chưa cần xử lý.
+
+**Không sửa file trong `prisma/migrations/` — kể cả comment.** Prisma so checksum
+toàn file; đổi một ký tự trong migration đã áp dụng sẽ sinh drift lịch sử. Muốn
+đính chính thì viết migration mới hoặc ghi tài liệu, như batch này làm.
+
+Phạm vi đã kiểm là **repository**. Việc migration đã áp dụng tới đâu trên
+production **vẫn chưa xác minh trực tiếp** (chưa đọc `_prisma_migrations`) —
+Batch 13F giữ nguyên trạng thái đó.
+
 ## Banner — KHÔNG phải hẹn giờ xuất bản
 
 Banner cố ý **không** dùng lại mô hình trên. Thuật ngữ đúng là **"Thời gian hiển
