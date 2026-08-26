@@ -75,7 +75,7 @@ bản (version scheduling). Đăng lại theo lịch là nghiệp vụ khác, k�
 loạt câu hỏi (thứ tự trang, `lastModified` của sitemap, mốc nào dùng xếp hạng)
 mà schema hiện không trả lời được.
 
-## Dự án — ghi chú Batch 13D
+## Dọn trùng lặp helper hẹn giờ — ghi chú Batch 13D · 13I · 13K
 
 `projects.service.ts` trước đây giữ bản sao cục bộ của bảy đơn vị luật hẹn
 giờ/xuất bản. Batch 13D (2026-08-22) đã xoá bản sao đó; Dự án nay dùng thẳng
@@ -86,12 +86,19 @@ giờ/xuất bản. Batch 13D (2026-08-22) đã xoá bản sao đó; Dự án na
 
 Thuần dọn dẹp, **không đổi hành vi** — 75 suite / 1254 test giữ nguyên kết quả.
 
-**Còn nợ:** `news.service.ts` vẫn giữ bản sao cục bộ của cùng nhóm luật đó
-(`clearedSchedule`, `hasBeenPublic`, `isActiveFutureSchedule`,
-`hasHistoricalPublication`, `publishedAtFor` + `type SchedulableState`). Hai bản
-hiện khớp nhau từng nhánh, nhưng đó là nợ kỹ thuật đã biết. Ngoài ra
-`editorMayEditUnpublished` trong `src/common/content-editing.ts` **không còn caller
-production nào** (chỉ còn test riêng giữ nó lại) — dọn ở đợt sau.
+**Batch 13I** (2026-08-25, commit `4bb665a`) làm nốt phần còn lại cho
+`news.service.ts`: bản sao cục bộ (`clearedSchedule`, `hasBeenPublic`,
+`isActiveFutureSchedule`, `hasHistoricalPublication`, `publishedAtFor` +
+`type SchedulableState`) đã bị xoá. **Cả bốn module nội dung — Bài viết, Dự án,
+Trang, Dự án hợp tác — nay dùng chung một nguồn sự thật duy nhất** là
+`src/common/publication-schedule.ts`. Bài viết chỉ giữ lại một hàm chuyển kiểu
+mỏng (`toScheduleState`) vì cột bậc thang duyệt của nó tên `status` chứ không
+phải `contentStatus` — đó là phép đổi tên trường, không phải luật nghiệp vụ.
+
+**Batch 13K** (commit `de871d2`) xoá `editorMayEditUnpublished` khỏi
+`src/common/content-editing.ts` sau khi xác nhận không còn caller nào; backend
+không còn tham chiếu nào tới nó. `assertContentEditAllowed` là chốt quyền sửa
+nội dung duy nhất còn lại.
 
 ## Banner — KHÔNG phải hẹn giờ xuất bản
 
