@@ -2,7 +2,7 @@
 
 > **Trạng thái:** Đang dùng
 > **Nhóm:** 07 — Deployment
-> **Cập nhật:** 2026-08-25 (đồng bộ tài liệu Batch 13H — URL backend production + `NODE_ENV`)
+> **Cập nhật:** 2026-08-27 (Batch 15B — Admin phục vụ dưới `https://www.thienduccons.vn/admin`)
 > **Tài liệu liên quan:** [deployment-guide.md](deployment-guide.md) · [database-migrations.md](database-migrations.md)
 
 > ⚠️ **Không lưu secret thật (mật khẩu, token, API secret, connection string thật) trong tài liệu này hay bất kỳ file nào trong Git.** Chỉ ghi *tên biến*, *nơi nhập*, *ý nghĩa*. Giá trị thật nhập trực tiếp ở dashboard Render/Vercel hoặc file `.env` (đã `.gitignore`).
@@ -22,6 +22,39 @@ Hai giá trị này **khác nhau một đoạn `/api`**, đặt nhầm là hỏn
 > Nếu còn sót trong biến môi trường ở Render/Vercel thì phải sửa và **redeploy**
 > (biến `NEXT_PUBLIC_*`/`VITE_*` nướng vào lúc build).
 
+## URL công khai của Admin CMS — `/admin` (Batch 15B)
+
+Admin **không còn** ở gốc domain Vercel riêng. Kiến trúc hiện tại:
+
+| Vai trò | URL |
+|---|---|
+| Website công khai | `https://www.thienduccons.vn` |
+| **Admin CMS (URL chính thức)** | **`https://www.thienduccons.vn/admin`** |
+| Admin — URL chẩn đoán trực tiếp | `https://thien-duc-website-admin.vercel.app/admin/` |
+| Backend API (**không đổi**) | `https://thien-duc-website-backend-w1du.onrender.com/api` |
+
+Cách hoạt động — vẫn là **hai Vercel project tách riêng**:
+
+1. Admin (Vite SPA) build với `base: '/admin/'` + `outDir: 'dist/admin'`, nên
+   đường dẫn file trùng khớp đường dẫn URL (`/admin/assets/*` ↔
+   `dist/admin/assets/*`).
+2. Frontend (Next.js) rewrite `/admin` và `/admin/:path*` sang project Admin,
+   **giữ nguyên tiền tố**. Đây là rewrite phía server — thanh địa chỉ của trình
+   duyệt vẫn là `www.thienduccons.vn/admin/...`.
+3. `src/proxy.ts` của Frontend **loại trừ** `admin$|admin/` khỏi matcher định
+   tuyến locale (proxy chạy TRƯỚC rewrites; không loại trừ thì `/admin/...` bị
+   biến thành `/vi/admin/...` và trả 404).
+
+**DNS: KHÔNG đổi gì.** `www.thienduccons.vn` vốn đã trỏ vào Vercel project
+Frontend; `/admin` là định tuyến theo *path*, không phải theo host.
+
+> ⚠️ **Người dùng CMS phải đăng nhập lại MỘT lần sau khi cắt sang URL mới.**
+> Admin xác thực bằng **Bearer token lưu trong `localStorage`/`sessionStorage`**,
+> mà web storage gắn theo **origin**. Token cũ nằm ở origin
+> `thien-duc-website-admin.vercel.app` nên không đi theo sang
+> `www.thienduccons.vn`. Đây là hệ quả bình thường của việc đổi origin, không
+> phải lỗi — nhưng phải báo trước cho biên tập viên.
+
 ## Backend (Render — service `thien-duc-website-backend`)
 
 `render.yaml` (Blueprint) đã khai sẵn phần lớn biến. Bảng dưới nêu biến và cách xử lý:
@@ -39,6 +72,7 @@ Hai giá trị này **khác nhau một đoạn `/api`**, đặt nhầm là hỏn
 | `MAIL_FROM` | **Nhập tay** (`sync: false`). | Địa chỉ gửi, phải thuộc domain đã verify ở Resend. Thiếu → bỏ qua gửi mail, lead vẫn lưu. |
 | `CONTACT_NOTIFY_TO` | **Nhập tay** (`sync: false`). | Nơi nhận email báo lead mới. Thiếu → bỏ qua gửi mail, lead vẫn lưu. |
 | `SENTRY_DSN` | **Nhập tay** (`sync: false`), tùy chọn. | Error tracking backend (task →5) — DSN project Sentry riêng của backend. Thiếu = tắt tracking, app vẫn chạy. Xem [monitoring-and-alerting.md](monitoring-and-alerting.md). |
+| `ADMIN_APP_URL` | **Nhập tay** (`sync: false`). Giá trị sau cắt sang `/admin`: `https://www.thienduccons.vn/admin` | Gốc để dựng link trong email **mời tài khoản** + **đặt lại mật khẩu**. Bắt buộc **HTTPS** ở production. **Được phép chứa sub-path** (`/admin`) — `mail.service.ts` ghép path tương đối nên tiền tố được giữ nguyên (khoá bằng test từ Batch 15B). Backend **không** hardcode `/admin`: tiền tố hoàn toàn do biến này quyết định. |
 
 > ⚠️ **Nối DB từ ngoài Render bắt buộc có `?sslmode=require` trong `DATABASE_URL`.** `PrismaService` dùng adapter `@prisma/adapter-pg` (node-postgres), mà node-postgres mặc định **không** bật SSL → Render đóng kết nối và mọi route chạm DB trả `500` kèm thông báo đánh lạc hướng `User was denied access on the database`. Prisma CLI (`studio`, `db execute`, `migrate`) có engine riêng tự bật SSL nên vẫn chạy bình thường — **đừng lấy CLI làm bằng chứng rằng DB ổn**. Backend chạy trên Render dùng Internal URL nên không gặp lỗi này; chỉ `.env` máy dev (trỏ External URL) mới cần.
 
@@ -75,7 +109,7 @@ Admin là **Vite SPA**, biến client dùng tiền tố `VITE_` và **nướng v
 | Key | Bắt buộc? | Value production | Ghi chú |
 |---|---|---|---|
 | `VITE_API_URL` | **Bắt buộc** | `https://thien-duc-website-backend-w1du.onrender.com/api` | URL gốc backend, **không** có dấu `/` ở cuối. Origin của admin phải nằm trong `CORS_ORIGIN` của backend. Bundle Admin production hiện đã nhúng đúng giá trị này (kiểm chứng 13F-2A); backend trả JSON 401 cho `/api/auth/me` khi chưa đăng nhập và CORS đã cho phép origin Admin trên Vercel. |
-| `VITE_SITE_URL` | Nên có | `https://<domain-frontend>` | Dùng dựng URL ảnh xem trước (ảnh lưu dạng đường dẫn tương đối của web công khai). Thiếu → tab "Hình ảnh" hiện ô giữ chỗ. Tên biến đúng là `VITE_SITE_URL` (**không** phải `VITE_PUBLIC_SITE_URL`) — xác nhận trong `admin/src`. |
+| `VITE_SITE_URL` | Nên có | `https://www.thienduccons.vn` | Dùng dựng URL ảnh xem trước (ảnh lưu dạng đường dẫn tương đối của web công khai). Thiếu → tab "Hình ảnh" hiện ô giữ chỗ. Tên biến đúng là `VITE_SITE_URL` (**không** phải `VITE_PUBLIC_SITE_URL`) — xác nhận trong `admin/src`. |
 | `VITE_SENTRY_DSN` | Tùy chọn | DSN project Sentry riêng của admin | Ingest-only, an toàn trong bundle client. |
 | `SENTRY_AUTH_TOKEN` / `SENTRY_ORG` / `SENTRY_PROJECT` / `SENTRY_RELEASE` | Tùy chọn | — | Build-only, **không** tiền tố `VITE_`. Cùng cổng "đủ cả ba" như frontend (`vite.config.ts`). |
 
@@ -106,7 +140,7 @@ Nếu sau này đổi sang Cloudinary account/cloud khác thì phải sửa **đ
 - [ ] `DATABASE_URL` — REQUIRED (Blueprint tự nối; chỉ nhập tay nếu dựng thủ công)
 - [ ] `JWT_ACCESS_SECRET` — REQUIRED (Blueprint `generateValue: true`; nếu tự nhập: `openssl rand -base64 48`)
 - [ ] `CORS_ORIGIN` — REQUIRED (backend **không khởi động** nếu thiếu)
-- [ ] `ADMIN_APP_URL` — LATER (bắt buộc **HTTPS** ở production)
+- [ ] `ADMIN_APP_URL` — LATER (bắt buộc **HTTPS**). Sau Batch 15B: `https://www.thienduccons.vn/admin` — **có** đuôi `/admin`
 - [ ] `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` — REQUIRED nếu cần upload ảnh (thiếu → upload trả 503, app vẫn chạy)
 - [ ] `RESEND_API_KEY` / `MAIL_FROM` / `CONTACT_NOTIFY_TO` — OPTIONAL cho lần deploy đầu (thiếu → không gửi mail, lead vẫn lưu)
 - [ ] `SENTRY_DSN` — OPTIONAL
@@ -123,7 +157,7 @@ Nếu sau này đổi sang Cloudinary account/cloud khác thì phải sửa **đ
 **Vercel — Admin**
 
 - [ ] `VITE_API_URL` — REQUIRED
-- [ ] `VITE_SITE_URL` — REQUIRED (để ảnh xem trước hiện đúng)
+- [ ] `VITE_SITE_URL` — REQUIRED (để ảnh xem trước hiện đúng). Sau Batch 15B: `https://www.thienduccons.vn`
 - [ ] `VITE_SENTRY_DSN` — OPTIONAL
 
 ## Lấy giá trị ở đâu
@@ -133,7 +167,7 @@ Nếu sau này đổi sang Cloudinary account/cloud khác thì phải sửa **đ
 | `DATABASE_URL` | Render Dashboard → Postgres `thien-duc-db` → Connection (Internal URL cho service cùng region) |
 | `JWT_ACCESS_SECRET` | Tự sinh: `openssl rand -base64 48` — không lấy từ đâu, không dùng lại giá trị cũ |
 | `CORS_ORIGIN` | Suy ra từ domain frontend + admin đã deploy |
-| `ADMIN_APP_URL` | Domain admin trên Vercel (hoặc custom subdomain) |
+| `ADMIN_APP_URL` | URL công khai của Admin — sau Batch 15B là `https://www.thienduccons.vn/admin` (**kèm** sub-path `/admin`), không phải domain `*.vercel.app` |
 | `CLOUDINARY_CLOUD_NAME` / `API_KEY` / `API_SECRET` | Cloudinary Console → Dashboard / API Keys (role **Master Admin**) |
 | `RESEND_API_KEY` | Resend Dashboard → API Keys (cần verify domain gửi trước) |
 | `MAIL_FROM` | Địa chỉ thuộc domain đã verify ở Resend |
@@ -141,7 +175,7 @@ Nếu sau này đổi sang Cloudinary account/cloud khác thì phải sửa **đ
 | `SENTRY_DSN` / `NEXT_PUBLIC_SENTRY_DSN` / `VITE_SENTRY_DSN` | Sentry → Project Settings → Client Keys (DSN) — **mỗi app một project riêng** |
 | `SENTRY_AUTH_TOKEN` | Sentry → Settings → Auth Tokens (scope `project:releases`) |
 | `NEXT_PUBLIC_API_URL` / `VITE_API_URL` | URL Render (hoặc custom API domain) + `/api` |
-| `NEXT_PUBLIC_SITE_URL` / `VITE_SITE_URL` | Domain frontend cuối cùng trên Vercel |
+| `NEXT_PUBLIC_SITE_URL` / `VITE_SITE_URL` | Domain frontend cuối cùng (`https://www.thienduccons.vn`) — Admin cũng trỏ về đây vì ảnh dự án lưu đường dẫn tương đối của web công khai |
 
 ## `.env.example`
 
@@ -161,6 +195,14 @@ Quy ước file env của cả ba repo:
 
 ## Document history
 
+- **2026-08-27** — Batch 15B: Admin CMS chuyển sang phục vụ dưới
+  **`https://www.thienduccons.vn/admin`** (vẫn hai Vercel project tách riêng, FE
+  rewrite giữ nguyên tiền tố). Thêm mục **URL công khai của Admin CMS**; thêm
+  dòng `ADMIN_APP_URL` vào bảng biến backend kèm ghi chú **được phép chứa
+  sub-path**; chốt `VITE_SITE_URL` = `https://www.thienduccons.vn`. Ghi rõ **DNS
+  không đổi** và **người dùng CMS phải đăng nhập lại một lần** (token gắn theo
+  origin). Hai biến provider (`ADMIN_APP_URL` trên Render, `VITE_SITE_URL` trên
+  Vercel-Admin) **chưa** được đổi trong batch này — là bước thủ công khi cắt.
 - **2026-08-25** — Batch 13H (docs-only): sửa `NEXT_PUBLIC_API_URL` từ hostname cũ
   `thien-duc-website-backend.onrender.com` sang **`thien-duc-website-backend-w1du.onrender.com/api`**;
   thêm mục **URL backend production — origin vs API base** (phân biệt rõ origin,

@@ -2,7 +2,7 @@
 
 > **Trạng thái:** Đang dùng
 > **Nhóm:** 07 — Deployment
-> **Cập nhật:** 2026-08-25 (đồng bộ tài liệu Batch 13H — URL backend production + Swagger tắt ở production)
+> **Cập nhật:** 2026-08-27 (Batch 15B — Admin phục vụ dưới `www.thienduccons.vn/admin`)
 > **Tài liệu liên quan:** [environment-configuration.md](environment-configuration.md) · [database-migrations.md](database-migrations.md) · [rollback-plan.md](rollback-plan.md)
 
 > 🟠 **Go-live readiness: BLOCKED / DEFERRED (2026-07-19, G7-M1).** Kiểm vận hành
@@ -24,9 +24,26 @@ Tài liệu này mô tả **quy trình triển khai**. Chi tiết biến môi tr
 ## Kiến trúc & thứ tự triển khai
 
 ```
-[Vercel] Frontend  ──NEXT_PUBLIC_API_URL──►  [Render] Backend  ──DATABASE_URL──►  [Render] PostgreSQL
-                    ◄──────CORS_ORIGIN───────
+                    www.thienduccons.vn
+                            │
+        ┌───────────────────┴───────────────────┐
+        │ /                                     │ /admin/*   (rewrite, giữ tiền tố)
+        ▼                                       ▼
+[Vercel] Frontend (Next.js)          [Vercel] Admin (Vite SPA, project RIÊNG)
+        │                                       │
+        └──────────┬────────────────────────────┘
+                   │ NEXT_PUBLIC_API_URL / VITE_API_URL
+                   ▼
+          [Render] Backend  ──DATABASE_URL──►  [Render] PostgreSQL
+                   ◄──────CORS_ORIGIN───────
 ```
+
+**Admin CMS công khai tại `https://www.thienduccons.vn/admin`** (Batch 15B).
+Vẫn là **hai Vercel project tách riêng**: Frontend chỉ *rewrite* `/admin` và
+`/admin/:path*` sang project Admin và **giữ nguyên tiền tố** — thanh địa chỉ của
+trình duyệt không đổi. **DNS không cần đổi gì**: `/admin` là định tuyến theo
+*path* trên host sẵn có. URL chẩn đoán trực tiếp khi proxy có sự cố:
+`https://thien-duc-website-admin.vercel.app/admin/`.
 
 **Làm Backend trước** (để có URL API), rồi cấu hình Frontend trỏ vào.
 
@@ -48,10 +65,10 @@ còn `CORS_ORIGIN`/`ADMIN_APP_URL` chỉ biết được **sau khi** đã có do
 | 9 | (Tùy chọn) Cấu hình Resend | Bỏ qua được ở lần deploy đầu |
 | 10 | **Đánh thức `…/api`** rồi deploy Frontend lên Vercel | ⚠️ Bắt buộc nếu backend còn Free tier — tránh build đỏ ở `/sitemap.xml` |
 | 11 | Gắn custom domain cho Frontend | Chốt redirect `www` ↔ apex |
-| 12 | Deploy Admin lên Vercel | Preset Vite, output `dist`, `vercel.json` đã có sẵn |
-| 13 | Gắn subdomain admin | vd. `admin.example.com` |
+| 12 | Deploy Admin lên Vercel | Preset Vite, output `dist` (**giữ mặc định** — build ra `dist/admin/`), `vercel.json` đã có sẵn |
+| 13 | ~~Gắn subdomain admin~~ → **Không cần** | Từ Batch 15B, Admin đi qua `/admin` của domain frontend. Xác minh trực tiếp `https://thien-duc-website-admin.vercel.app/admin/` trước khi bật rewrite |
 | 14 | **Cập nhật `CORS_ORIGIN`** = domain frontend + admin thật | Không để lại origin localhost |
-| 15 | **Cập nhật `ADMIN_APP_URL`** = domain admin (HTTPS) | http bị từ chối khi `NODE_ENV=production` |
+| 15 | **Cập nhật `ADMIN_APP_URL`** = `https://www.thienduccons.vn/admin` | **Kèm sub-path `/admin`.** http bị từ chối khi `NODE_ENV=production`. Backend giữ nguyên sub-path khi dựng link email (Batch 15B) |
 | 16 | Redeploy backend | Để 14 + 15 có hiệu lực |
 | 17 | Cập nhật `NEXT_PUBLIC_SITE_URL` + redeploy Frontend | Biến `NEXT_PUBLIC_*` nướng lúc build |
 | 18 | Verify: web công khai, đăng nhập Admin, upload ảnh | |
@@ -167,20 +184,32 @@ Cấu hình khi import vào Vercel:
 | Output Directory | `dist` |
 | Install Command | `npm ci` (mặc định) |
 
-- **Host dự kiến:** README của admin ghi *"Vercel static — `admin.thienduc.vn`
-  (dự kiến)"*. Đây là **ý định**, chưa có bằng chứng cấu hình trong repo.
-- **Host thật đang chạy: ⚠️ cần xác nhận thủ công** ở dashboard (project/host nào
-  đang phục vụ Admin, domain thật). Repo không tự động hóa được bước này — xem
-  checklist G7-M1.
+- **URL công khai (đã chốt — Batch 15B): `https://www.thienduccons.vn/admin`.**
+  Không dùng subdomain `admin.*` nữa. Ý tưởng cũ trong README của admin
+  (`admin.thienduc.vn`) đã **lỗi thời**.
+- **URL chẩn đoán trực tiếp:** `https://thien-duc-website-admin.vercel.app/admin/`
+  — giữ lại làm kênh kiểm tra độc lập khi rewrite của Frontend gặp sự cố. Gốc `/`
+  của project này redirect (tạm) về `/admin/`.
+- **Kiến trúc:** Admin build với `base: '/admin/'` + `outDir: 'dist/admin'` nên
+  đường dẫn file trùng khớp đường dẫn URL; Frontend rewrite `/admin` và
+  `/admin/:path*` sang đây, **giữ nguyên tiền tố**. Output Directory trên Vercel
+  vẫn để mặc định `dist`.
 - **Biến môi trường** (build-time, "nướng" vào bundle — đặt xong phải build lại):
-  `VITE_API_URL` = URL Render + `/api`, `VITE_SITE_URL` = domain website công khai,
+  `VITE_API_URL` = URL Render + `/api`, `VITE_SITE_URL` = `https://www.thienduccons.vn`,
   `VITE_SENTRY_DSN` (tùy chọn). Chi tiết: [environment-configuration.md](environment-configuration.md).
-- **CORS:** origin thật của Admin **phải** được thêm vào `CORS_ORIGIN` của backend
-  trên Render (nhiều origin cách nhau bằng dấu phẩy), nếu không trình duyệt chặn
-  request đăng nhập/API.
+- **CORS: không cần đổi.** Sau khi đi qua `/admin`, origin trình duyệt gửi lên
+  backend là `https://www.thienduccons.vn` — origin này vốn đã nằm trong
+  `CORS_ORIGIN` (Frontend công khai vẫn dùng). Đã kiểm chứng bằng probe thật ở
+  Batch 15A. Origin `*.vercel.app` của Admin nên **giữ lại** trong `CORS_ORIGIN`
+  chừng nào còn dùng URL chẩn đoán trực tiếp.
+- **API base: không đổi.** Admin gọi backend bằng URL **tuyệt đối** từ
+  `VITE_API_URL`, không có lời gọi tương đối nào — nên không có nguy cơ
+  `/api/api` hay `www.thienduccons.vn/admin/api`.
+- ⚠️ **Người dùng CMS phải đăng nhập lại MỘT lần sau khi cắt.** Auth dùng Bearer
+  token lưu trong `localStorage`/`sessionStorage`, mà storage gắn theo **origin**
+  — token cũ ở `*.vercel.app` không đi theo sang `www.thienduccons.vn`.
 
 > Quyết định hosting tổng thể: [ADR-0001](../10-decisions/ADR-0001-hosting-vercel-render.md).
-> Nếu chốt được host + domain Admin thật, cập nhật lại mục này (thay "cần xác nhận").
 
 ---
 
@@ -204,6 +233,31 @@ Sau khi có domain Vercel chính thức:
 - [ ] Không có lỗi CORS trong Console trình duyệt khi gửi form.
 - [ ] `NEXT_PUBLIC_SITE_URL` đúng → breadcrumb JSON-LD sinh URL chuẩn.
 - [ ] (Khi có) domain thật → cấu hình ở Vercel (Domains) + cập nhật `CORS_ORIGIN`, `NEXT_PUBLIC_SITE_URL`.
+
+### Admin dưới `/admin` (Batch 15B)
+
+- [ ] `https://thien-duc-website-admin.vercel.app/admin/` trả 200 **trước khi**
+      bật rewrite ở Frontend (xác minh Admin tự đứng được).
+- [ ] `https://www.thienduccons.vn/admin` trả 200 — **không** 404. Nếu 404 mà
+      asset lại tải được thì gần như chắc chắn là `src/proxy.ts` chưa loại trừ
+      `admin$|admin/` khỏi matcher.
+- [ ] `https://www.thienduccons.vn/admin/dang-nhap` — **hard refresh (F5)** vẫn
+      200 (kiểm SPA fallback qua hai tầng proxy).
+- [ ] Đăng nhập được; ảnh logo + ảnh hero trang đăng nhập **hiện được** (kiểm
+      đường dẫn ảnh đã gắn base).
+- [ ] F12 → Network: `/admin/assets/*.js` trả `Content-Type: text/javascript`
+      (**không** phải `text/html` — đó là dấu hiệu fallback nuốt nhầm asset).
+- [ ] Mọi request API đi tới `…onrender.com/api/…`; **không** có request nào tới
+      `www.thienduccons.vn/admin/api/…`.
+- [ ] Xoá token trong DevTools → thao tác bất kỳ → phải nhảy tới
+      `www.thienduccons.vn/admin/dang-nhap`, **không** phải
+      `www.thienduccons.vn/dang-nhap`.
+- [ ] Đăng nhập bằng EDITOR → mở `/admin/tai-khoan` → ra `/admin/403`.
+- [ ] Response `/admin` có header `X-Robots-Tag: noindex, nofollow`.
+- [ ] Hồi quy web công khai: `/`, `/du-an`, `/tin-tuc`, `/en/du-an`,
+      `/vi/du-an` (→ 308), `/tin-tuc?q=abc` (→ 308 sang `/tim-kiem`).
+- [ ] Sau khi đổi `ADMIN_APP_URL`: gửi thử **một** lời mời tài khoản → link
+      trong email phải là `…/admin/thiet-lap-tai-khoan?token=…` (**có** `/admin`).
 
 ## 5. Xử lý sự cố thường gặp
 
