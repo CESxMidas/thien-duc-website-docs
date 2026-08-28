@@ -58,7 +58,7 @@ còn `CORS_ORIGIN`/`ADMIN_APP_URL` chỉ biết được **sau khi** đã có do
 | 2 | Tạo/deploy backend trên Render | `render.yaml` → New → Blueprint |
 | 3 | Nhập biến môi trường backend | Checklist ở [environment-configuration.md](environment-configuration.md) |
 | 4 | Chạy migration production | `prisma migrate deploy` (đã nằm trong `startCommand`) — xem [database-migrations.md](database-migrations.md) |
-| 5 | Seed tài khoản quản trị đầu tiên | `npm run prisma:seed` với `ADMIN_EMAIL`/`ADMIN_PASSWORD`, **đổi mật khẩu ngay** sau lần đăng nhập đầu |
+| 5 | Seed tài khoản quản trị đầu tiên | `npm run prisma:seed` với `ADMIN_EMAIL`/`ADMIN_PASSWORD`, rồi **đổi mật khẩu ngay** sau lần đăng nhập đầu tại `/admin/ho-so` → **Bảo mật** → **Đổi mật khẩu** (cần nhập lại mật khẩu seed) |
 | 6 | **Xác minh API sống** | `…/api` trả 200 + vài route công khai (`…/api/banners`, `…/api/news`) trả 200. **Không** dùng `…/api/docs` — Swagger tắt ở production |
 | 7 | Cấu hình Cloudinary | Cloud name phải **khớp** allowlist `next.config.ts` |
 | 8 | Test upload một ảnh trong Admin | Thiếu Cloudinary → 503 |

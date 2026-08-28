@@ -144,7 +144,7 @@ Nếu sau này đổi sang Cloudinary account/cloud khác thì phải sửa **đ
 - [ ] `CLOUDINARY_CLOUD_NAME` / `CLOUDINARY_API_KEY` / `CLOUDINARY_API_SECRET` — REQUIRED nếu cần upload ảnh (thiếu → upload trả 503, app vẫn chạy)
 - [ ] `RESEND_API_KEY` / `MAIL_FROM` / `CONTACT_NOTIFY_TO` — OPTIONAL cho lần deploy đầu (thiếu → không gửi mail, lead vẫn lưu)
 - [ ] `SENTRY_DSN` — OPTIONAL
-- [ ] `ADMIN_EMAIL` / `ADMIN_PASSWORD` — REQUIRED một lần, để chạy `npm run prisma:seed` tạo tài khoản đầu tiên (đổi mật khẩu ngay sau khi đăng nhập)
+- [ ] `ADMIN_EMAIL` / `ADMIN_PASSWORD` — REQUIRED một lần, để chạy `npm run prisma:seed` tạo tài khoản đầu tiên. Đăng nhập xong **đổi mật khẩu ngay** ở `/admin/ho-so` → **Bảo mật** → **Đổi mật khẩu**; từ lúc đó giá trị trong `ADMIN_PASSWORD` không còn mở được tài khoản nữa
 
 **Vercel — Frontend**
 
