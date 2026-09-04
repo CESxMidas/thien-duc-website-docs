@@ -16,4 +16,4 @@ Kế hoạch triển khai theo sprint và trạng thái module.
 
 ## Tài liệu liên quan
 
-Đặc tả prompt module: [prompts/development/](../../prompts/README.md).
+Đặc tả prompt module: [prompts/](../prompts/README.md).

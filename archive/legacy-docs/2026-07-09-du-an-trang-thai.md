@@ -2,7 +2,7 @@
 
 > **Status: Archived**
 > **Reason:** Ghi chú trạng thái ngắn ngày 2026-07-09, nội dung đã được gộp và mở rộng trong kế hoạch triển khai theo sprint. Giữ lại làm dấu vết lịch sử.
-> **Superseded by:** [docs/04-implementation/implementation-plan.md](../../docs/04-implementation/implementation-plan.md) (mục Sprint 1).
+> **Superseded by:** [docs/04-implementation/implementation-plan.md](../../04-implementation/implementation-plan.md) (mục Sprint 1).
 > **Nguồn (di chuyển từ):** `Du an/du an.md`
 
 Đã xong (2026-07-09):
@@ -14,4 +14,4 @@
 
 Mô hình dữ liệu: có **4 dự án**. Fancy Tower là **hạng mục con** (`project_items`) của Khu đô thị Hưng Phú, không phải dự án độc lập.
 
-Xem [implementation-plan](../../docs/04-implementation/implementation-plan.md) mục Sprint 1 để biết chi tiết. *(Bản gốc trỏ `KE-HOACH-CODING.md`.)*
+Xem [implementation-plan](../../04-implementation/implementation-plan.md) mục Sprint 1 để biết chi tiết. *(Bản gốc trỏ `KE-HOACH-CODING.md`.)*

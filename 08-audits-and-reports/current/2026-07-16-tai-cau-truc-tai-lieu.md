@@ -4,7 +4,13 @@
 > **Ngày tạo:** 2026-07-16
 > **Phạm vi:** Repository `thien-duc-website-docs` (+ cập nhật tham chiếu ở `AGENTS.md` và 3 README project)
 > **Người thực hiện:** AI agent (tái cấu trúc tài liệu)
-> **Tài liệu liên quan:** [../../../README.md](../../../README.md)
+> **Tài liệu liên quan:** [../../README.md](../../README.md)
+>
+> ⚠️ **Cập nhật 2026-09-04:** báo cáo này mô tả cấu trúc kho tài liệu tại thời điểm
+> 2026-07-16, khi tài liệu nằm dưới thư mục `docs/`. Nay các thư mục đánh số đã được
+> đưa thẳng lên gốc repository, và **tài liệu dự án Fancy Tower đã tách sang repository
+> riêng** `thien-duc-website-fancy-tower-docs`. Giữ nguyên nội dung bên dưới làm **hồ sơ
+> lịch sử**; cấu trúc hiện hành xem [README gốc](../../README.md).
 
 ## 1. Vấn đề ban đầu
 
@@ -20,7 +26,7 @@ thien-duc-website-docs/
 └── archive/legacy-docs/
 ```
 
-Chi tiết đầy đủ: [README trung tâm](../../../README.md).
+Chi tiết đầy đủ: [README trung tâm](../../README.md).
 
 ## 3. File đã DI CHUYỂN (giữ nguyên nội dung, dùng `git mv`)
 

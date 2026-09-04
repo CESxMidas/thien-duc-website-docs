@@ -10,7 +10,7 @@ Yêu cầu dự án và các câu hỏi còn chờ công ty xác nhận.
 | Tài liệu | Mô tả | Trạng thái |
 |---|---|---|
 | [open-questions.md](open-questions.md) | Câu hỏi chờ công ty (còn câu mở — KHÔNG xóa) | Đang dùng |
-| [technical-proposal-pa2.docx](technical-proposal-pa2.docx) | Báo cáo phương án kỹ thuật PA2 (nguồn gốc) | Nguồn sự thật |
+| [technical-proposal-pa2.docx](technical-proposal-pa2.docx) | Báo cáo phương án kỹ thuật PA2 — **báo cáo gốc** định nghĩa các mã yêu cầu `YC-xx`. ⚠️ Phần **số liệu tiến độ** trong đó đã lỗi thời; hiện trạng đúng xem [module-status](../04-implementation/module-status.md). | Nguồn sự thật (cho yêu cầu) |
 | [business-requirements.md](business-requirements.md) | Yêu cầu nghiệp vụ | Khung |
 | [functional-requirements.md](functional-requirements.md) | Yêu cầu chức năng — xuất bản có hẹn giờ (YC-XB), cửa sổ hiển thị banner (YC-BN) | Đang dùng |
 | [non-functional-requirements.md](non-functional-requirements.md) | Hiệu năng/bảo mật/khả dụng (CL-xx) | Khung |
