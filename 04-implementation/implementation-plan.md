@@ -1,7 +1,7 @@
 # Kế hoạch triển khai — Website Thiên Đức (PA2)
  
 > **Trạng thái:** Tài liệu sống — nguồn sự thật cho tiến độ coding.
-> **Nhóm:** 04 — Implementation · **Current as of: 2026-07-23**
+> **Nhóm:** 04 — Implementation · **Current as of: 2026-09-09**
 > **Tài liệu liên quan:** [open-questions](../01-requirements/open-questions.md) · [deployment-guide](../07-deployment/deployment-guide.md) · [security](../05-security/README.md) · [audit-baseline](../08-audits-and-reports/current/2026-07-16-audit-baseline.md)
 >
 > Cấu trúc: §0 hiện trạng · §1 tóm tắt đã xong · §2 code đang chờ làm · §3 manual/go-live · §4 deferred · §5 backlog nội dung · §6 backlog tùy chọn · §7 changelog/audit trail.
@@ -25,6 +25,12 @@
 - **5. Security / validation / roles** — 3 HIGH findings đóng (CORS, rate-limit, SQL-inj), HTTP security headers, `@MaxLength` toàn bộ DTO chữ, 3 cấp role, SUPER_ADMIN đăng ngay. (→3, SEC-*, ADMIN-SUPER-ADMIN-GLOBAL-APPROVAL-BYPASS-M1)
 - **6. Deployment / monitoring docs** — `render.yaml` khai plan trả phí; runbook backup-restore / rollback / monitoring-and-alerting; Sentry cả 3 app (errors-only, no-op khi thiếu DSN). (→2, →5)
 - **7. Testing / CI / process** — CI lint+build cả 3 repo + e2e backend; test FE (Jest) + Admin (Vitest); ENV cleanup, tách secret khỏi Git. (→8, SYS-P1-ADMIN-ROBUSTNESS, SMTP-REMOVAL-ENV-CLEANUP)
+  - **CI/CD-HANDOVER-HARDENING (2026-09-09)** — chuẩn hóa Node 22 + npm/lockfile;
+    thêm lint check/typecheck/Prisma validate tường minh; bổ sung CI Docs kiểm
+    whitespace + link nội bộ; viết README quick-start cho 3 app, nguồn sự thật
+    `07-deployment/ci-cd.md` và checklist tiếp nhận mới. CD giữ provider-native;
+    branch protection, provider env/branch, monitoring và backup vẫn là bước
+    dashboard thủ công cần xác minh.
   - **E2E full-stack Playwright (THIEN-DUC-FULL-STACK-PLAYWRIGHT-E2E-M1, 2026-07-27)** — 82 test Playwright (Chromium) phủ lời mời/thiết lập/đăng nhập/quên-đặt lại mật khẩu/phân quyền/bảo mật quản lý tài khoản/form liên hệ/nội dung công khai/token privacy/accessibility/responsive; host tại repo admin, `webServer` tự dựng 3 server, DB `thien_duc_test` có cầu chì an toàn, transport email GIẢ (gate `NODE_ENV=test + MAIL_FAKE_TRANSPORT=1`), route hỗ trợ test chặn cứng localhost/`@e2e.test`. Thêm integration PostgreSQL thật (backend, 7 test: claim nguyên tử tương tranh, unique tokenHash, rollback, cascade, thu hồi refresh). Admin coverage (Vitest v8, baseline + ngưỡng chống hồi quy). CI: coverage cho admin, `prisma validate` + integration cho backend, workflow `e2e-fullstack.yml` mới. Chi tiết: [2026-07-27-fullstack-playwright-e2e](../08-audits-and-reports/current/2026-07-27-fullstack-playwright-e2e.md). CI cross-repo cần `WORKSPACE_TOKEN` (bằng chứng hiện tại là chạy cục bộ).
   - **A11Y-CONTRAST-M2 (2026-07-27)** — xử lý trọn vẹn color-contrast: darken `--color-brand` #b06613→#9f5a0f (cả admin + frontend) + đổi panel `bg-brand-soft`+`text-white`→`bg-brand`; **0 vi phạm axe color-contrast** trên admin (login/forgot/reset/setup/users) + frontend (home/contact/news + du-an/gioi-thieu/cong-ty) × 375/768/1280. Rule KHÔNG bị tắt; helper nay chặn đầy đủ; bộ Playwright 82→91 test. Viền focus vẫn ≥3:1 (5.33 trắng / 3.31 sidebar).
 - **8. Media / Cloudinary / gallery** — Upload/optimize Cloudinary (WebP≤1200px, chống path-escape), hiển thị ảnh Cloudinary trên production, gallery lấy ảnh cấp dự án. (→ ED-05, PROJECT-IMAGES-UI-FIX-M1, PROJECT-GALLERY-IMAGES-FIX-M1)
@@ -89,6 +95,34 @@
 ## Section 7 — Changelog / audit trail
 
 > Ledger nén các việc đã hoàn tất, giữ mã truy vết + link báo cáo. **Không lặp mô tả dài đã tóm ở §1.** Dates chỉ giữ khi hữu ích cho lịch sử. Các mục con của một task được gộp thành một dòng.
+
+### Phiên 2026-09-09 — CI/CD và bàn giao (CI-CD-HANDOVER-HARDENING)
+
+- [x] Audit Git/CI/CD bốn repo từ trạng thái hiện tại; giữ nguyên các commit
+  local có sẵn và không chạm dữ liệu ngoài phạm vi.
+- [x] Backend/Admin/Frontend pin Node `22.x` bằng `.nvmrc` + `engines`; CI
+  dùng `npm ci`, lint chặn warning và typecheck tường minh. Backend thêm lint
+  read-only + Prisma validate.
+- [x] Docs có workflow kiểm whitespace commit + liên kết Markdown nội bộ.
+- [x] README ba app và tài liệu CI/CD/handover trả lời cài đặt, env, local,
+  test/build, deployment, migration, smoke, rollback, backup và monitoring.
+- [x] Sửa sai tên env E2E Admin (`VITE_SITE_URL`), bổ sung origin Admin và
+  sub-path `/admin` trong Backend `.env.example`; nâng Next 16.2.12 → 16.3.3
+  để đóng hai advisory RCE critical.
+- [x] Local validation: Backend 77 suite/1.329 test; Admin 59 file/897 test +
+  coverage; Frontend 37 suite/445 test + build Next 16.3.3; Docs kiểm 87 tệp
+  Markdown; cả 5 workflow parse YAML thành công.
+- [x] Production smoke chỉ-đọc: Home/Admin/API/Projects/News trả 200; Swagger
+  production 404; Users không token 401. Không gửi form, không deploy.
+- [ ] Backend/Admin full-stack E2E chưa chạy vì Docker daemon/PostgreSQL test
+  local không hoạt động; không dùng production DB để thay thế.
+- [ ] Dependency audit còn advisory chưa có bản sửa tương thích: Backend 23,
+  Admin 2, Frontend 20 (`--omit=dev`, không còn critical) — tách ticket nâng
+  dependency có regression test, không dùng `npm audit fix` tự động.
+- [ ] GitHub required checks/branch protection; Vercel/Render Git integration,
+  production branch và chính sách chờ CI — **manual dashboard**.
+- [ ] Plan production, backup/PITR/restore drill, Sentry và uptime —
+  **manual provider setup**, không được suy từ cấu hình repo.
 
 ### Phiên 2026-08-27 — Admin phục vụ dưới `/admin` (ADMIN-SUBPATH-DEPLOYMENT-15B)
 

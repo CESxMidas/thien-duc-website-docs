@@ -58,6 +58,7 @@ thien-duc-website-docs/
 | Trạng thái module | [04-implementation/module-status.md](04-implementation/module-status.md) |
 | Bảo mật | [05-security/](05-security/README.md) |
 | Kiểm thử | [06-testing/](06-testing/README.md) |
+| CI/CD & bàn giao deploy | [07-deployment/ci-cd.md](07-deployment/ci-cd.md) |
 | Triển khai | [07-deployment/deployment-guide.md](07-deployment/deployment-guide.md) |
 | Báo cáo & audit | [08-audits-and-reports/](08-audits-and-reports/README.md) |
 | Bàn giao | [09-handover/handover-checklist.md](09-handover/handover-checklist.md) |

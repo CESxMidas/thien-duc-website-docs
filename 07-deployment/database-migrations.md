@@ -5,7 +5,10 @@
 > **Cập nhật:** 2026-07-16
 > **Tài liệu liên quan:** [deployment-guide.md](deployment-guide.md) · [environment-configuration.md](environment-configuration.md)
 
-Stack: **Prisma 7 + PostgreSQL 17**. Schema nguồn sự thật ở `thien-duc-website-backend/prisma/schema.prisma`.
+Stack: **Prisma 7 + PostgreSQL**. Local Docker hiện dùng PostgreSQL 18; CI E2E
+dùng PostgreSQL 17. Phiên bản production phải xác minh trong Render Dashboard,
+không suy từ CI. Schema nguồn sự thật ở
+`thien-duc-website-backend/prisma/schema.prisma`.
 
 ## Trên production (Render)
 

@@ -1,7 +1,7 @@
 # 07 — Deployment
 
 > **Trạng thái:** Đang dùng (index thư mục)
-> **Cập nhật:** 2026-07-16
+> **Cập nhật:** 2026-09-09
 
 Triển khai production (Vercel + Render), cấu hình môi trường, migration, rollback.
 
@@ -9,6 +9,7 @@ Triển khai production (Vercel + Render), cấu hình môi trường, migration
 
 | Tài liệu | Mô tả | Trạng thái |
 |---|---|---|
+| [ci-cd.md](ci-cd.md) | Nguồn sự thật CI/CD, local setup và bàn giao deploy | Đang dùng |
 | [deployment-guide.md](deployment-guide.md) | Quy trình deploy + troubleshooting | Đang dùng |
 | [environment-configuration.md](environment-configuration.md) | Biến môi trường (KHÔNG chứa secret thật) | Đang dùng |
 | [database-migrations.md](database-migrations.md) | Migration Prisma + seed | Đang dùng |

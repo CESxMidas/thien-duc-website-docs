@@ -20,7 +20,8 @@ liệu ra ngoài Render.
 
 | Việc | Ở đâu | Được đảm bảo bởi |
 |---|---|---|
-| Khai báo plan Postgres trả phí | `backend/render.yaml` (`plan: basic-256mb`) | Repo (chỉ **khai báo ý định**) |
+| Khai báo Postgres hiện tại | `backend/render.yaml` (`plan: free`) | Repo; không chứng minh plan dashboard |
+| Nâng lên plan production | Render Dashboard/Blueprint | **Thủ công**; tên plan kiểm tra tại thời điểm nâng |
 | Bật/áp plan trả phí + thanh toán | Render Dashboard | **Thủ công** — `render.yaml` không tự thanh toán |
 | Backup tự động hằng ngày + PITR | Render Dashboard (Postgres trả phí) | **Thủ công xác nhận** — xem mục 1 |
 | Kiểm thử khôi phục | Thủ công theo runbook mục 3–5 | Con người |
@@ -155,7 +156,8 @@ tier riêng — có thể phải tạo instance mới). Khi đó:
 6. Nếu blueprint (`render.yaml`) vẫn quản lý database, đối chiếu tên/kết nối cho
    khớp — tránh Render tạo lại DB free khi sync blueprint.
 
-> Làm việc này **trước mốc 90 ngày** hết hạn của Postgres free để không mất dữ liệu.
+> Làm việc này **trước mốc 30 ngày** hết hạn của Postgres free; xác nhận lại
+> chính sách hiện hành trong Render Dashboard.
 
 ---
 
@@ -269,4 +271,6 @@ production (chỉ nhận đích `localhost` + tên DB kết thúc `_test`/`_veri
    người liên hệ), **không được** rời máy khi chưa mã hóa.
 4. Bật một lịch chạy trong `scheduler-examples.md`.
 5. **Diễn tập khôi phục từ backup production thật** — bắt buộc trước go-live (§5).
-6. Máy chạy backup phải có `pg_dump` **≥ 17** (production là PostgreSQL 17).
+6. Máy chạy backup phải có `pg_dump` cùng major hoặc mới hơn server production.
+   Xác minh phiên bản server trên Render trước khi cài; repo chỉ chứng minh local
+   Docker 18 và CI 17, không chứng minh phiên bản production.

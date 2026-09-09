@@ -1,7 +1,7 @@
 # 09 — Handover
 
 > **Trạng thái:** Đang dùng (index thư mục)
-> **Cập nhật:** 2026-07-16
+> **Cập nhật:** 2026-09-09
 
 Tài liệu bàn giao cho người/đội mới tiếp nhận.
 

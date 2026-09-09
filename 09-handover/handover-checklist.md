@@ -1,48 +1,101 @@
 # Checklist bàn giao — Website Thiên Đức
 
 > **Trạng thái:** Đang dùng
-> **Nhóm:** 09 — Handover
-> **Cập nhật:** 2026-07-16
+> **Cập nhật:** 2026-09-09
 
-Tài liệu điểm khởi đầu cho người/đội mới tiếp nhận. Đọc theo thứ tự dưới, tick khi đã nắm.
+Checklist ngắn cho người tiếp nhận. Nguồn chi tiết là
+[CI/CD](../07-deployment/ci-cd.md); không sao chép secret vào file này.
 
-## 1. Hiểu bối cảnh
+## 1. Máy mới và repository
 
-- [ ] [Tổng quan dự án](../00-overview/project-overview.md) — dự án là gì, công ty, danh mục dự án.
-- [ ] [Kiến trúc hệ thống](../02-architecture/system-architecture.md) — 3 tầng, hợp đồng chung.
-- [ ] `AGENTS.md` (workspace root) — quy ước code + hợp đồng chung 3 project (nguồn sự thật).
-- [ ] [Câu hỏi còn mở](../01-requirements/open-questions.md) — việc đang chờ công ty trả lời (đừng tự chế dữ liệu).
+- [ ] Cài Git, Node.js **22.x LTS**, npm và Docker Desktop/Compose.
+- [ ] Cài PostgreSQL client tương thích nếu phụ trách backup/restore.
+- [ ] Cài Playwright Chromium nếu chạy E2E full-stack.
+- [ ] Có quyền đọc bốn repo Backend, Admin, Frontend và Docs.
+- [ ] Clone bốn repo cạnh nhau; chạy `nvm use` và `npm ci` riêng trong từng app.
 
-## 2. Trạng thái & kế hoạch
+## 2. Environment
 
-- [ ] [Kế hoạch triển khai](../04-implementation/implementation-plan.md) — trạng thái từng sprint/module.
-- [ ] [Audit baseline 2026-07-16](../08-audits-and-reports/current/2026-07-16-audit-baseline.md) — điểm 60/100, khoảng trống, kế hoạch nâng cấp.
+- [ ] Copy `.env.example` thành `.env` (Backend/Admin) hoặc `.env.local`
+  (Frontend).
+- [ ] Giá trị local dùng localhost theo template.
+- [ ] Production env lấy từ password manager/người quản lý và nhập trực tiếp
+  vào Render/Vercel; không lấy từ Git.
+- [ ] Đối chiếu
+  [environment-configuration](../07-deployment/environment-configuration.md).
+- [ ] Không commit `.env`, DB URL, JWT, API token, private key hoặc backup dump.
 
-## 3. Vận hành & triển khai
+## 3. Chạy local
 
-- [ ] [Hướng dẫn deploy](../07-deployment/deployment-guide.md) — Vercel (FE) + Render (BE + Postgres).
-- [ ] [Cấu hình biến môi trường](../07-deployment/environment-configuration.md) — biến nào ở đâu, secret không vào Git.
-- [ ] [Migration DB](../07-deployment/database-migrations.md) + [Sao lưu/khôi phục](../07-deployment/backup-and-restore.md) + [Rollback](../07-deployment/rollback-plan.md).
-- [ ] [Hướng dẫn vận hành](operations-guide.md) + [Hướng dẫn bảo trì](maintenance-guide.md).
+```bash
+# Backend
+cd thien-duc-website-backend
+docker compose up -d
+npx prisma migrate dev
+npm run start:dev
 
-## 4. Bảo mật
+# Frontend
+cd ../thien-duc-website-frontend
+npm run dev
 
-- [ ] [Thư mục bảo mật](../05-security/README.md) — audit + findings + trạng thái khắc phục.
+# Admin
+cd ../thien-duc-website-admin
+npm run dev
+```
 
-## 5. Việc quan trọng còn treo (mốc 2026-07-16)
+- [ ] Backend `http://localhost:3001/api` trả 200.
+- [ ] Frontend `http://localhost:3000` gọi API thật.
+- [ ] Admin `http://localhost:5174/admin/` đăng nhập bằng tài khoản local.
 
-Trích từ audit baseline + kế hoạch — các mục **chặn/critical** trước production:
+## 4. Test và build
 
-- [ ] Cài email thông báo form liên hệ (hiện là TODO ở backend).
-- [ ] Nhập bản dịch tiếng Anh (mọi field `.en` còn trống — **chặn go-live song ngữ**).
-- [ ] Rời hạ tầng free-tier + backup DB tự động + monitoring.
-- [ ] Thêm `@MaxLength` cho DTO chữ tự do (contact).
-- [ ] Cron ngoài (UptimeRobot/cron-job.org) gọi `POST /api/news/publish-scheduled` vì Render free ngủ sau 15'.
+- [ ] Backend: `npm run lint:check`, `npm run typecheck`, `npm run test`,
+  `npm run build`, `npm run prisma:validate`.
+- [ ] Admin: `npm run lint`, `npm run typecheck`, `npm run test`,
+  `npm run build`.
+- [ ] Frontend: `npm run lint`, `npm run typecheck`, `npm run test`,
+  `npm run build`.
+- [ ] Docs: `node scripts/check-markdown-links.mjs` và `git diff --check`.
+- [ ] Chỉ chạy E2E với database local `thien_duc_test`; không dùng production.
 
-## 6. Quyết định đã chốt
+## 5. Push, deploy và migration
 
-- [ ] [Nhật ký quyết định (ADR)](../10-decisions/README.md) — hosting, RBAC 3 vai trò, một môi trường production, song ngữ + locale routing.
+- [ ] Push/PR `main` kích hoạt GitHub Actions của repo tương ứng.
+- [ ] Push `main` có thể kích hoạt Vercel/Render qua Git integration.
+- [ ] Xác minh thủ công branch protection, required checks và deploy policy.
+- [ ] Đọc [deployment guide](../07-deployment/deployment-guide.md).
+- [ ] Migration tạo bằng `prisma migrate dev` ở local, review SQL và commit.
+- [ ] Render chạy `prisma migrate deploy` trước khi start; không sửa migration cũ.
+- [ ] Có backup đã kiểm chứng trước migration rủi ro.
+- [ ] Chạy [smoke test](../07-deployment/ci-cd.md#16-smoke-test-sau-deploy).
 
-## 7. Bàn giao tài khoản & bí mật (NGOÀI tài liệu)
+## 6. Lỗi, rollback và backup
 
-> ⚠️ Secret/tài khoản (Render, Vercel, Cloudinary, DB, SMTP, GitHub) **không** nằm trong Git. Bàn giao qua kênh an toàn riêng — chỉ đối chiếu *danh sách biến* ở [environment-configuration](../07-deployment/environment-configuration.md).
+- [ ] Xem GitHub Actions, Vercel Logs và Render Events/Logs trước.
+- [ ] Chỉ coi Sentry/Uptime là active khi dashboard đã được xác minh.
+- [ ] Rollback app theo [rollback plan](../07-deployment/rollback-plan.md);
+  rollback code không rollback DB.
+- [ ] Backup/restore theo [runbook](../07-deployment/backup-and-restore.md);
+  ghi retention, vị trí lưu và lần restore gần nhất.
+
+## 7. Quyền cần bàn giao
+
+- [ ] GitHub: bốn repo, branch protection và Actions secrets cần thiết.
+- [ ] Vercel: hai project, domain và Environment Variables.
+- [ ] Render: Blueprint, web service, PostgreSQL, env, log và backup.
+- [ ] Cloudinary, Resend, Sentry và uptime provider nếu đang dùng.
+- [ ] DNS/domain registrar và hộp thư nhận cảnh báo.
+- [ ] Password manager/kênh secret riêng; bật MFA và thu hồi quyền người cũ.
+- [ ] AI agent/new developer mặc định chỉ cần quyền đọc repo và quyền ghi trong
+  workspace cho file đã được giao; quyền push, deploy, dashboard provider,
+  production secret hoặc production database chỉ cấp khi có phê duyệt rõ ràng.
+
+## 8. Việc thủ công còn phải xác minh
+
+- [ ] GitHub required checks và cấm force-push.
+- [ ] Vercel/Render production branch, Git integration và auto-deploy.
+- [ ] Render plan production, phiên bản PostgreSQL, backup/PITR.
+- [ ] Restore drill và rollback drill.
+- [ ] Ba Sentry project, source maps và alert rules.
+- [ ] Backend/frontend uptime monitors.
+- [ ] Kho off-site, mã hóa và lịch chạy backup.

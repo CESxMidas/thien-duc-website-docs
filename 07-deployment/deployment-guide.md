@@ -5,10 +5,11 @@
 > **Cập nhật:** 2026-08-27 (Batch 15B — Admin phục vụ dưới `www.thienduccons.vn/admin`)
 > **Tài liệu liên quan:** [environment-configuration.md](environment-configuration.md) · [database-migrations.md](database-migrations.md) · [rollback-plan.md](rollback-plan.md)
 
-> 🟠 **Go-live readiness: BLOCKED / DEFERRED (2026-07-19, G7-M1).** Kiểm vận hành
+> 🟠 **Site đã public nhưng operational handover vẫn INCOMPLETE.** Kiểm vận hành
 > thủ công mức cao cho thấy hạ tầng **còn Free tier / chưa xác nhận đầy đủ**:
 > backend Render còn Free (ngủ), Postgres còn Free, backup/PITR chưa xác nhận,
-> restore/rollback drill + Sentry + UptimeRobot chưa làm. **Chưa sẵn sàng go-live.**
+> restore/rollback drill + Sentry + UptimeRobot chưa có bằng chứng hoàn tất.
+> Website đang hoạt động không thay thế các cổng vận hành này.
 > Hoãn có chủ đích (chủ dự án chưa nâng hạ tầng). Nâng plan trả phí (mục 1b) +
 > monitoring là **bắt buộc trước go-live cuối**. Chi tiết:
 > [G7-M1 verification note](../08-audits-and-reports/current/2026-07-19-g7-m1-manual-ops-verification.md).
@@ -375,7 +376,8 @@ Swagger, đúng quy ước fail-closed đã ghi ở `backend/.env.example`.
 
 ## Ghi chú
 
-- CI GitHub Actions (lint + build) đã có ở cả 2 repo — chạy tự động khi mở PR.
+- GitHub Actions đã có ở Backend, Admin, Frontend và Docs; chi tiết check và
+  giới hạn CD xem [ci-cd.md](ci-cd.md).
 - Rate-limit form liên hệ: 5 request/IP/giờ (đã cấu hình ở backend).
 - Migration mới: xem [database-migrations.md](database-migrations.md).
 
