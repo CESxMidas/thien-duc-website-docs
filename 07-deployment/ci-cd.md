@@ -6,15 +6,26 @@
 
 ## 1. Tổng quan
 
-Luồng hiện tại:
+Luồng **có thể xảy ra hiện tại** sau một push trực tiếp lên `main`:
 
 ```text
-push/PR main
-  → GitHub Actions: install → lint → typecheck → test → build
-  → merge/push main
-  → Vercel tự deploy Frontend và Admin qua Git integration
-  → Render tự deploy Backend, chạy prisma migrate deploy rồi start
-  → kiểm tra smoke production
+push main
+  ├── GitHub Actions: install → lint → typecheck → test → build
+  ├── Vercel tạo production deployment qua Git integration
+  └── Render auto-deploy Backend, chạy prisma migrate deploy rồi start
+```
+
+Ba nhánh trên có thể bắt đầu **độc lập/song song**. Repo hiện không chứng minh
+Vercel/Render đợi GitHub CI xanh trước khi deploy hoặc promote production.
+Render Blueprint vẫn dùng `autoDeploy: true` (deploy theo commit), chưa dùng
+`autoDeployTrigger: checksPass`. Vercel chỉ được coi là có gate khi dashboard
+đã cấu hình required Deployment Checks/GitHub checks và kiểm chứng thực tế.
+
+Luồng mong muốn sau khi hoàn tất cấu hình thủ công:
+
+```text
+feature branch/PR → required GitHub checks xanh → merge main
+  → provider build/deploy có required checks → smoke production
 ```
 
 CI chủ yếu **xác thực mã**; không chứa credential deploy và không chạm database
@@ -41,11 +52,26 @@ Mỗi repository độc lập, có lockfile riêng và chạy lệnh trong chín
 - Nhánh production hiện tại: `main` ở cả bốn repository.
 - CI chạy khi push lên `main` và pull request nhắm `main`.
 - Không có `develop`/`staging`/`release`; không tự tạo thêm nhánh dài hạn.
-- Khuyến nghị thủ công trên GitHub: bảo vệ `main`, cấm force-push, yêu cầu review
-  và required status checks trước merge.
+- Khuyến nghị thủ công trên GitHub: bảo vệ `main`, cấm force-push/xóa nhánh và
+  cấu hình required status checks trước merge. Việc bắt buộc PR thay cho push
+  thẳng `main` là **MANAGEMENT / TEAM DECISION** vì làm đổi quy trình lịch sử.
 - Provider có thể bắt đầu auto-deploy ngay khi nhận push. Phải kiểm tra trong
   dashboard xem deployment có chờ GitHub checks hay không; repo không ép được
   điều này.
+
+Tên check cần cấu hình theo từng repository:
+
+| Repo | Required check đề xuất |
+|---|---|
+| Backend | `CI / lint-build-test`, `CI / e2e` |
+| Admin | `CI / lint-build`, `E2E Full-stack (Playwright) / e2e` |
+| Frontend | `CI / lint-build` |
+| Docs | `CI tài liệu / validate-docs` |
+
+Checklist GitHub thủ công: protect `main`; require các check đúng tên ở trên;
+block force push; prevent deletion; không cho bypass ngoài nhóm break-glass có
+kiểm soát. `Require a pull request before merging` chỉ bật sau quyết định của
+đội/management.
 
 ## 4. Điều kiện cài đặt local
 
@@ -169,6 +195,12 @@ whitespace commit. Link HTTP bên ngoài không được probe để tránh CI c
 
 Không có GitHub Action deploy; không cần Vercel/Render deploy token trong GitHub.
 
+**Không có bằng chứng CI gate trong repo.** Với cấu hình hiện có, push `main` có
+thể đồng thời kích hoạt GitHub Actions và provider deployment. “CI pass → CD” là
+mô hình đích, không phải thứ tự đang được cưỡng chế. Branch protection giúp chỉ
+đưa commit đã kiểm tra qua PR vào `main`; provider-side Deployment Checks vẫn
+phải được xác minh riêng nếu muốn chặn release/promote sau push.
+
 ## 10. Vercel — Frontend
 
 Thiết lập cần xác nhận:
@@ -179,6 +211,9 @@ Thiết lập cần xác nhận:
 - Env production: `NEXT_PUBLIC_API_URL` và `NEXT_PUBLIC_SITE_URL`.
 - Domain `www.thienduccons.vn` và redirect apex/www theo quyết định vận hành.
 - Push `main` kích hoạt deploy nếu Git integration đang bật.
+- Dashboard: xác minh required Deployment Checks/GitHub Actions checks. Nếu
+  chưa cấu hình, production deployment/promotion có thể chạy trong khi CI còn
+  đang thực thi.
 
 ## 11. Vercel — Admin
 
@@ -189,6 +224,8 @@ Thiết lập cần xác nhận:
 - `vercel.json` redirect gốc sang `/admin/`, SPA rewrite và security headers.
 - Frontend rewrite `/admin` sang
   `https://thien-duc-website-admin.vercel.app/admin`.
+- Dashboard: xác minh required Deployment Checks cho project Admin; không suy
+  gate từ workflow GitHub.
 
 Không đổi output thành `dist/admin` trong dashboard: Vercel phải publish `dist`
 để URL `/admin/*` ánh xạ tới thư mục con đúng.
@@ -207,6 +244,12 @@ Không đổi output thành `dist/admin` trong dashboard: Vercel phải publish 
 Dashboard vẫn phải xác minh: repo/branch thực sự được liên kết, plan hiện tại,
 auto-deploy đang bật, env có đủ, deploy hook không bị thay đổi và health check
 đang xanh.
+
+`autoDeploy: true` là kiểu deploy theo commit, không chứng minh Render đợi CI.
+Render hiện hỗ trợ `autoDeployTrigger: checksPass`, nhưng thay đổi Blueprint hoặc
+dashboard là thao tác provider ngoài batch này. Trước khi push production, người
+vận hành phải xác minh/chọn gate này hoặc chấp nhận rõ ràng rủi ro deploy song
+song với CI.
 
 ## 13. Ma trận biến môi trường
 
@@ -426,8 +469,9 @@ Không đưa request body, token hay dữ liệu lead vào ticket/log công khai
 | Admin CI | **IMPLEMENTED AND VERIFIED LOCALLY**: lint, typecheck, 59 file/897 test + coverage, build |
 | Frontend CI | **IMPLEMENTED AND VERIFIED LOCALLY**: lint, typecheck, 37 suite/445 test, build Next 16.3.3 |
 | Docs CI | **IMPLEMENTED AND VERIFIED LOCALLY**: `git diff --check`, 87 tệp Markdown hợp lệ |
-| Cú pháp workflow | **VERIFIED LOCALLY**: parse thành công cả 5 tệp YAML |
-| Backend/Admin full-stack E2E | **NOT RUN LOCALLY**: Docker daemon không chạy, không có PostgreSQL local/test; không dùng production DB để thay thế |
+| Cú pháp/workflow semantics | **VERIFIED LOCALLY**: `actionlint 1.7.12` đạt cả 5 workflow |
+| Backend E2E | **VERIFIED LOCALLY 2026-09-10**: PostgreSQL 17 tạm trên loopback, đúng DB `thien_duc_test`; 7/7 suite, 107/107 test; không dùng production DB |
+| Admin full-stack E2E | **FAILED LOCALLY 2026-09-10**: chạy đủ 189 test trên DB test mới đã migrate/seed theo CI; 150 pass, 39 fail |
 | Production smoke chỉ-đọc | **VERIFIED 2026-09-09**: Home/Admin/API/Projects/News 200; Swagger production 404; Users không token 401 |
 | CD Vercel/Render trong repo | **IMPLEMENTED BUT MANUAL PROVIDER SETUP REQUIRED** |
 | Branch protection/required checks | **DOCUMENTED ONLY** |
@@ -435,6 +479,7 @@ Không đưa request body, token hay dữ liệu lead vào ticket/log công khai
 | Render backup/PITR và restore drill | **DOCUMENTED ONLY / chưa có bằng chứng active** |
 | Backup off-site scheduler/storage | **NOT IMPLEMENTED ở provider; repo tooling sẵn** |
 | Staging branch/environment | **NOT APPLICABLE theo ADR hiện tại** |
+| Push trực tiếp `main` | **NOT READY**: Admin full-stack E2E còn 39 lỗi và chưa có bằng chứng Vercel/Render bị gate bởi CI |
 
 `npm audit --omit=dev` tại ngày audit còn báo Backend 23 advisory (7 moderate,
 16 high), Admin 2 high, Frontend 20 (1 moderate, 19 high). Hai advisory RCE

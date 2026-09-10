@@ -62,6 +62,8 @@ npm run dev
 
 - [ ] Push/PR `main` kích hoạt GitHub Actions của repo tương ứng.
 - [ ] Push `main` có thể kích hoạt Vercel/Render qua Git integration.
+- [ ] Không giả định thứ tự tuần tự: GitHub CI và provider auto-deploy có thể
+  bắt đầu độc lập sau push `main` nếu chưa có provider/branch gate.
 - [ ] Xác minh thủ công branch protection, required checks và deploy policy.
 - [ ] Đọc [deployment guide](../07-deployment/deployment-guide.md).
 - [ ] Migration tạo bằng `prisma migrate dev` ở local, review SQL và commit.
@@ -92,8 +94,19 @@ npm run dev
 
 ## 8. Việc thủ công còn phải xác minh
 
-- [ ] GitHub required checks và cấm force-push.
-- [ ] Vercel/Render production branch, Git integration và auto-deploy.
+- [ ] GitHub protect `main`, cấm force-push/xóa nhánh; required checks: Backend
+  `CI / lint-build-test` + `CI / e2e`; Admin `CI / lint-build` +
+  `E2E Full-stack (Playwright) / e2e`; Frontend `CI / lint-build`; Docs
+  `CI tài liệu / validate-docs`.
+- [ ] Quyết định cấp management/team: có bắt buộc PR trước merge hay tiếp tục
+  cho phép push trực tiếp `main`.
+- [ ] Vercel Frontend/Admin: production branch `main`, đúng repo/root/build/env;
+  required Deployment Checks/GitHub checks trước promote production.
+- [ ] Render: đúng repo/`main`, build/start/health/env; xác minh gate CI. Blueprint
+  hiện `autoDeploy: true`, chưa phải `autoDeployTrigger: checksPass`.
+- [x] Backend E2E local trên DB `thien_duc_test`: 7/7 suite, 107/107 test.
+- [ ] Admin full-stack E2E: còn 39/189 test fail; không push trước khi xử lý và
+  chạy lại xanh toàn bộ.
 - [ ] Render plan production, phiên bản PostgreSQL, backup/PITR.
 - [ ] Restore drill và rollback drill.
 - [ ] Ba Sentry project, source maps và alert rules.

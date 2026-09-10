@@ -167,7 +167,13 @@ Chỉ cần thêm **Environment Variables** (xem [environment-configuration.md](
 
 Admin là app **Vite + React** (build tĩnh `npm run build` → thư mục `dist/`), tách
 repo `thien-duc-website-admin`. **Không** nằm trong `render.yaml`, và CI
-(`.github/workflows/ci.yml`) chỉ lint + build (không tự deploy).
+(`.github/workflows/ci.yml`) chạy lint + typecheck + coverage + build; workflow
+riêng chạy Playwright full-stack. GitHub Actions **không tự deploy**.
+
+> ⚠️ Push `main` có thể làm GitHub CI và Vercel/Render auto-deploy bắt đầu độc
+> lập. Chỉ coi production đã được CI gate khi required checks/Deployment Checks
+> được xác minh trên GitHub và dashboard provider. Xem
+> [CI/CD — thứ tự CI và CD](ci-cd.md#1-tổng-quan).
 
 > ✅ **Cập nhật 2026-08-10:** repo admin **đã có `vercel.json`** (khác với ghi chú cũ
 > "không có"). File này khai sẵn **SPA rewrite** `/(.*) → /index.html` (bắt buộc cho

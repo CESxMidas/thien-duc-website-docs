@@ -23,7 +23,10 @@
 - **3. Frontend UI/UX** — Đồng nhất bố cục dự án theo chuẩn Hưng Phú, carousel hạng mục, gallery có điều kiện, cơ cấu lại trang chủ↔giới thiệu chống trùng lặp, redesign typography (Playfair + Be Vietnam Pro), footer. (FRONTEND-UI-POLISH-M1, PROJECT-GALLERY-IMAGES-FIX-M1)
 - **4. SEO / structured data / performance** — canonical + hreflang + sitemap/robots, JSON-LD Organization/NewsArticle/Breadcrumb, baseline đo production (Rich Results + Lighthouse), fix NO_FCP/NO_LCP. (→7, →13, YC-12)
 - **5. Security / validation / roles** — 3 HIGH findings đóng (CORS, rate-limit, SQL-inj), HTTP security headers, `@MaxLength` toàn bộ DTO chữ, 3 cấp role, SUPER_ADMIN đăng ngay. (→3, SEC-*, ADMIN-SUPER-ADMIN-GLOBAL-APPROVAL-BYPASS-M1)
-- **6. Deployment / monitoring docs** — `render.yaml` khai plan trả phí; runbook backup-restore / rollback / monitoring-and-alerting; Sentry cả 3 app (errors-only, no-op khi thiếu DSN). (→2, →5)
+- **6. Deployment / monitoring docs** — `render.yaml` hiện vẫn khai plan Free;
+  runbook mô tả bước nâng plan trả phí, backup-restore / rollback /
+  monitoring-and-alerting; Sentry cả 3 app (errors-only, no-op khi thiếu DSN).
+  (→2, →5)
 - **7. Testing / CI / process** — CI lint+build cả 3 repo + e2e backend; test FE (Jest) + Admin (Vitest); ENV cleanup, tách secret khỏi Git. (→8, SYS-P1-ADMIN-ROBUSTNESS, SMTP-REMOVAL-ENV-CLEANUP)
   - **CI/CD-HANDOVER-HARDENING (2026-09-09)** — chuẩn hóa Node 22 + npm/lockfile;
     thêm lint check/typecheck/Prisma validate tường minh; bổ sung CI Docs kiểm
@@ -52,7 +55,13 @@
 
 > Thao tác tay ngoài repo (Dashboard Render/Vercel/Sentry/UptimeRobot, DNS) — repo không làm thay được. **Go-live BLOCKED/DEFERRED cho tới khi xong.**
 
-- [ ] **Render paid plan + backup/PITR + restore drill + rollback drill** — áp plan trả phí (`render.yaml`: web `starter` always-on, Postgres `basic-256mb`) + thanh toán khi sync Blueprint; nếu không nâng tại chỗ → di trú theo runbook **trước mốc 90 ngày**; xác nhận backup daily/retention/PITR; kiểm thử khôi phục 1 lần; diễn tập rollback 1 lần. Runbook: [backup-and-restore](../07-deployment/backup-and-restore.md) · [rollback-plan](../07-deployment/rollback-plan.md). (→2)
+- [ ] **Render paid plan + backup/PITR + restore drill + rollback drill** —
+  `render.yaml` hiện vẫn là Free; nâng plan trong dashboard/Blueprint chỉ sau
+  khi xác nhận tên plan và chi phí hiện hành. Nếu không nâng tại chỗ, di trú
+  theo runbook trước hạn Free hiện hành; xác nhận backup daily/retention/PITR,
+  kiểm thử khôi phục và rollback. Runbook:
+  [backup-and-restore](../07-deployment/backup-and-restore.md) ·
+  [rollback-plan](../07-deployment/rollback-plan.md). (→2)
 - [ ] **Sentry DSN + UptimeRobot monitors** — tạo 3 project Sentry + dán 3 DSN (backend `SENTRY_DSN` / frontend `NEXT_PUBLIC_SENTRY_DSN` / admin `VITE_SENTRY_DSN`) vào Render/Vercel rồi redeploy; tạo 2 monitor UptimeRobot (`/api` + trang chủ). Checklist: [monitoring-and-alerting](../07-deployment/monitoring-and-alerting.md). (→5)
 - [ ] **ED-08 cron ngoài gọi `publish-scheduled`** — Render free ngủ sau 15′ nên `@Cron` nội bộ không đủ; đặt UptimeRobot/cron-job.org gọi `POST /api/news/publish-scheduled` (token ADMIN). Nếu đã always-on ở →2 thì cron nội bộ chạy — vẫn nên có cron ngoài.
 - [ ] **DNS / HTTPS / domain chính thức** — **(chờ input câu 10)**.
@@ -123,6 +132,20 @@
   production branch và chính sách chờ CI — **manual dashboard**.
 - [ ] Plan production, backup/PITR/restore drill, Sentry và uptime —
   **manual provider setup**, không được suy từ cấu hình repo.
+- [x] **PRE-PUSH-SAFETY-VERIFY** — fetch/preflight giữ đúng `main`, behind 0,
+  ahead 2; regression Node 22 xanh: Backend 77/1.329, Admin 59/897 + coverage,
+  Frontend 37/445 + build Next 16.3.3; `actionlint 1.7.12` đạt 5 workflow;
+  secret scan sạch.
+- [x] Backend E2E local: **PASS 7/7 suite, 107/107 test** trên PostgreSQL 17 tạm
+  chỉ bind `127.0.0.1`, đúng database `thien_duc_test`; không dùng production.
+- [ ] Admin Playwright full-stack: **FAIL 39/189, PASS 150/189** sau khi chạy lại
+  trên database test mới, đã migrate/seed theo CI. Nhóm lỗi tái lập gồm tương
+  phản, not-found/publication, phân trang/slider tin, reduced-motion và public
+  API trả 404; cần sửa regression trước khi push.
+- [ ] **PUSH READY: NO** cho push trực tiếp `main`: Render `autoDeploy: true` và
+  Vercel Git deployment có thể chạy song song GitHub CI; chưa có bằng chứng
+  provider required checks, đồng thời Admin Playwright full-stack đang đỏ.
+  Cần sửa regression và xác minh/cấu hình gate trước khi xin duyệt push.
 
 ### Phiên 2026-08-27 — Admin phục vụ dưới `/admin` (ADMIN-SUBPATH-DEPLOYMENT-15B)
 
@@ -392,7 +415,9 @@
 > Nguồn: [audit-baseline](../08-audits-and-reports/current/2026-07-16-audit-baseline.md). Điểm khởi đầu 60/100.
 
 - [x] **→1 Email báo lead** — `backend/src/mail/` (Nodemailer→Resend), lead lưu trước, gửi fire-and-forget nuốt lỗi, body HTML escape; 4 test. Production Resend PASS.
-- [x] **→2 Rời free-tier + backup DB** (phần repo) — `render.yaml` plan trả phí; runbook backup-restore / rollback / deployment-guide 1b. *Thao tác Dashboard → §3.*
+- [x] **→2 Rời free-tier + backup DB** (phần tài liệu/tooling) — runbook
+  backup-restore / rollback / deployment-guide 1b đã có; `render.yaml` hiện vẫn
+  Free và thao tác nâng plan thuộc Dashboard → §3.
 - [x] **→3 `@MaxLength` cho DTO chữ** — phủ 13 DTO (name 120/phone 30/email 200/message 5000/`TranslatedTextDto` 5000…), FE khớp `maxLength`; test DoS payload. (Finding #9) · **Sửa 2026-07-29:** nội dung dài (`content[]` của tin tức + trang) tách sang `LongTranslatedTextDto` trần **100.000** ký tự/đoạn — 5.000 chặn nhầm bài viết hợp lệ. Field ngắn giữ nguyên 5.000. Xem LONG-FORM-CONTENT-LIMIT-M1 (§7).
 - [x] **→4 Bản dịch EN** — HOÀN TẤT phạm vi production/audited: CMS batch 1–4 + i18n UI tĩnh (B-series) + loạt C data-model song ngữ + [EN-FULL 7-route](../08-audits-and-reports/current/2026-07-18-en-full-group2-closure.md) + [EN-SITE-WIDE 5-route](../08-audits-and-reports/current/2026-07-18-en-site-wide-follow-up.md) + [EN-PROJECT-ITEMS-P1](../08-audits-and-reports/current/2026-07-18-en-project-items-p1.md) + [ADMIN-ITEM-CONTENT-P2 A–F](../08-audits-and-reports/current/2026-07-19-admin-item-content-p2-batch-m1.md). VI byte-identical, 0 `[object Object]`. Dự án tương lai nhập EN trước publish → **§5**. (câu 19)
 - [x] **→5 Error tracking + uptime** (phần repo) — Sentry 3 app errors-only (no-op khi thiếu DSN, `beforeSend` xóa body/IP); doc `monitoring-and-alerting.md`. *DSN + UptimeRobot → §3.*
@@ -432,5 +457,10 @@
 ### Hiện trạng kỹ thuật (tham chiếu)
 
 - Deploy production: FE→Vercel, BE+Postgres→Render (`render.yaml`). Form liên hệ chạy thật end-to-end (`POST /api/contact` 201).
-- Backend NestJS 11 + Prisma 7 + Postgres 17 (local Docker port **5433**). Admin CMS nối API thật 100% (`src/data/` mock đã xóa). `tsc`+`eslint` sạch, CI ở cả 3 repo.
-- ⚠️ `.env` dev trỏ `DATABASE_URL` vào Render — trước go-live phải `prisma migrate deploy` có chủ ý (§3). Render free ngủ sau 15′, Postgres free hết hạn 90 ngày. Thời gian lưu UTC, hiển thị quy đổi VN (UTC+7) qua `formatDateTime`.
+- Backend NestJS 11 + Prisma 7; PostgreSQL local Docker 18 ở port **5433**,
+  CI dùng PostgreSQL 17. Admin CMS nối API thật 100% (`src/data/` mock đã xóa).
+  `tsc`+`eslint` sạch, CI ở cả 3 repo.
+- `.env` local hiện trỏ PostgreSQL cục bộ `localhost:5433`; không commit file
+  này. Render web Free có thể ngủ; hạn/plan PostgreSQL phải kiểm tra dashboard
+  và tài liệu provider hiện hành. Thời gian lưu UTC, hiển thị quy đổi VN
+  (UTC+7) qua `formatDateTime`.
