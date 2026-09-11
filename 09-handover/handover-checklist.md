@@ -103,10 +103,11 @@ npm run dev
 - [ ] Vercel Frontend/Admin: production branch `main`, đúng repo/root/build/env;
   required Deployment Checks/GitHub checks trước promote production.
 - [ ] Render: đúng repo/`main`, build/start/health/env; xác minh gate CI. Blueprint
-  hiện `autoDeploy: true`, chưa phải `autoDeployTrigger: checksPass`.
+  local đã dùng `autoDeployTrigger: checksPass`; còn phải push/sync và xác nhận
+  Dashboard hiển thị **After CI Checks Pass**.
 - [x] Backend E2E local trên DB `thien_duc_test`: 7/7 suite, 107/107 test.
-- [ ] Admin full-stack E2E: còn 39/189 test fail; không push trước khi xử lý và
-  chạy lại xanh toàn bộ.
+- [x] Admin full-stack E2E: 189/189 pass, 0 fail, 0 skip trên DB test cô lập
+  (2026-09-11).
 - [ ] Render plan production, phiên bản PostgreSQL, backup/PITR.
 - [ ] Restore drill và rollback drill.
 - [ ] Ba Sentry project, source maps và alert rules.

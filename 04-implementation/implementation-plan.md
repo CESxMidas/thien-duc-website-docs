@@ -123,8 +123,8 @@
   Markdown; cả 5 workflow parse YAML thành công.
 - [x] Production smoke chỉ-đọc: Home/Admin/API/Projects/News trả 200; Swagger
   production 404; Users không token 401. Không gửi form, không deploy.
-- [ ] Backend/Admin full-stack E2E chưa chạy vì Docker daemon/PostgreSQL test
-  local không hoạt động; không dùng production DB để thay thế.
+- [x] Backend/Admin full-stack E2E đã chạy trên PostgreSQL 17 test cô lập:
+  Backend 107/107 và Admin Playwright 189/189; không dùng production DB.
 - [ ] Dependency audit còn advisory chưa có bản sửa tương thích: Backend 23,
   Admin 2, Frontend 20 (`--omit=dev`, không còn critical) — tách ticket nâng
   dependency có regression test, không dùng `npm audit fix` tự động.
@@ -138,14 +138,13 @@
   secret scan sạch.
 - [x] Backend E2E local: **PASS 7/7 suite, 107/107 test** trên PostgreSQL 17 tạm
   chỉ bind `127.0.0.1`, đúng database `thien_duc_test`; không dùng production.
-- [ ] Admin Playwright full-stack: **FAIL 39/189, PASS 150/189** sau khi chạy lại
-  trên database test mới, đã migrate/seed theo CI. Nhóm lỗi tái lập gồm tương
-  phản, not-found/publication, phân trang/slider tin, reduced-motion và public
-  API trả 404; cần sửa regression trước khi push.
-- [ ] **PUSH READY: NO** cho push trực tiếp `main`: Render `autoDeploy: true` và
-  Vercel Git deployment có thể chạy song song GitHub CI; chưa có bằng chứng
-  provider required checks, đồng thời Admin Playwright full-stack đang đỏ.
-  Cần sửa regression và xác minh/cấu hình gate trước khi xin duyệt push.
+- [x] Admin Playwright full-stack: **PASS 189/189, FAIL 0, SKIP 0** trên database
+  test mới đã migrate/seed theo CI (2026-09-11).
+- [x] **CODE PUSH READY: YES** theo validation local.
+- [ ] **PRODUCTION-GATED PUSH READY: NO**: Render Blueprint local đã chuyển sang
+  `autoDeployTrigger: checksPass`, nhưng chưa push/sync/kiểm chứng; GitHub required
+  checks và hai Vercel Deployment Checks chưa có bằng chứng active. Không push mã
+  ứng dụng cho tới khi báo cáo gating được con người duyệt.
 
 ### Phiên 2026-08-27 — Admin phục vụ dưới `/admin` (ADMIN-SUBPATH-DEPLOYMENT-15B)
 

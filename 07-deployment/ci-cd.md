@@ -1,7 +1,7 @@
 # CI/CD và bàn giao triển khai — Website Thiên Đức
 
 > **Trạng thái:** Nguồn sự thật chi tiết cho CI/CD
-> **Cập nhật:** 2026-09-09
+> **Cập nhật:** 2026-09-11
 > **Phạm vi:** Chỉ hệ thống Thiên Đức tại `https://www.thienduccons.vn`.
 
 ## 1. Tổng quan
@@ -15,11 +15,11 @@ push main
   └── Render auto-deploy Backend, chạy prisma migrate deploy rồi start
 ```
 
-Ba nhánh trên có thể bắt đầu **độc lập/song song**. Repo hiện không chứng minh
-Vercel/Render đợi GitHub CI xanh trước khi deploy hoặc promote production.
-Render Blueprint vẫn dùng `autoDeploy: true` (deploy theo commit), chưa dùng
-`autoDeployTrigger: checksPass`. Vercel chỉ được coi là có gate khi dashboard
-đã cấu hình required Deployment Checks/GitHub checks và kiểm chứng thực tế.
+Ba nhánh trên vẫn phải được coi là có thể bắt đầu **độc lập/song song** cho tới
+khi cấu hình provider được áp dụng và kiểm chứng. Render Blueprint local đã đổi
+sang `autoDeployTrigger: checksPass`, nhưng commit này chưa push/sync Blueprint;
+Vercel chỉ được coi là có gate khi dashboard đã cấu hình required Deployment
+Checks/GitHub checks và kiểm chứng thực tế bằng một commit CI lỗi không được promote.
 
 Luồng mong muốn sau khi hoàn tất cấu hình thủ công:
 
@@ -189,17 +189,17 @@ whitespace commit. Link HTTP bên ngoài không được probe để tránh CI c
 
 | Thành phần | Repo-configured | Manual dashboard |
 |---|---|---|
-| Backend | `render.yaml`: branch/build/start/health/autoDeploy/env declarations | Kết nối GitHub, Apply Blueprint, plan, secret/env, deploy policy |
+| Backend | `render.yaml`: branch/build/start/health/`autoDeployTrigger: checksPass`/env declarations | Kết nối GitHub, Apply Blueprint, plan, secret/env, deploy policy |
 | Frontend | Next.js config và workflow kiểm tra | Import repo, Production Branch `main`, env, domain, Git/CI protection |
 | Admin | `vite.config.ts` base/output + `vercel.json` rewrite/headers | Import repo, Production Branch `main`, env, output `dist` |
 
 Không có GitHub Action deploy; không cần Vercel/Render deploy token trong GitHub.
 
-**Không có bằng chứng CI gate trong repo.** Với cấu hình hiện có, push `main` có
-thể đồng thời kích hoạt GitHub Actions và provider deployment. “CI pass → CD” là
-mô hình đích, không phải thứ tự đang được cưỡng chế. Branch protection giúp chỉ
-đưa commit đã kiểm tra qua PR vào `main`; provider-side Deployment Checks vẫn
-phải được xác minh riêng nếu muốn chặn release/promote sau push.
+Repo Backend đã **khai báo gate dự kiến** bằng `autoDeployTrigger: checksPass`,
+nhưng repo không chứng minh cấu hình đó đã được Render sync. Hai project Vercel
+vẫn chưa có bằng chứng Deployment Checks. Branch protection/required checks và
+provider-side gates đều phải được xác minh trên dashboard; không suy trạng thái
+production chỉ từ file local.
 
 ## 10. Vercel — Frontend
 
@@ -234,22 +234,22 @@ Không đổi output thành `dist/admin` trong dashboard: Vercel phải publish 
 
 `render.yaml` là bằng chứng cấu hình repo:
 
-- branch `main`, `autoDeploy: true`;
+- branch `main`, `autoDeployTrigger: checksPass`;
 - build `npm ci && npm run build`;
 - start `npx prisma migrate deploy && npm run start:prod`;
 - health `/api`, region `singapore`, Node `22`;
 - `DATABASE_URL` nối từ Render Postgres; JWT do Render sinh;
 - các env `sync: false` phải nhập tay.
 
-Dashboard vẫn phải xác minh: repo/branch thực sự được liên kết, plan hiện tại,
-auto-deploy đang bật, env có đủ, deploy hook không bị thay đổi và health check
-đang xanh.
+Dashboard vẫn phải xác minh: repo/branch thực sự được liên kết, Blueprint mới đã
+sync, Auto-Deploy hiển thị **After CI Checks Pass**, env có đủ và health check
+đang xanh. Theo hợp đồng này, Render không deploy khi không phát hiện CI check
+hoặc có check fail. Vì `startCommand` chứa `prisma migrate deploy`, migration
+production chỉ được chạy sau khi gate cho phép bắt đầu deployment.
 
-`autoDeploy: true` là kiểu deploy theo commit, không chứng minh Render đợi CI.
-Render hiện hỗ trợ `autoDeployTrigger: checksPass`, nhưng thay đổi Blueprint hoặc
-dashboard là thao tác provider ngoài batch này. Trước khi push production, người
-vận hành phải xác minh/chọn gate này hoặc chấp nhận rõ ràng rủi ro deploy song
-song với CI.
+Trạng thái hiện tại: **CONFIGURED IN LOCAL BLUEPRINT, NOT APPLIED OR TESTED**.
+Không được coi gate Render đã active trước khi push/sync và chạy phép thử CI lỗi
+trên nhánh/commit không được deploy production.
 
 ## 13. Ma trận biến môi trường
 
@@ -471,15 +471,15 @@ Không đưa request body, token hay dữ liệu lead vào ticket/log công khai
 | Docs CI | **IMPLEMENTED AND VERIFIED LOCALLY**: `git diff --check`, 87 tệp Markdown hợp lệ |
 | Cú pháp/workflow semantics | **VERIFIED LOCALLY**: `actionlint 1.7.12` đạt cả 5 workflow |
 | Backend E2E | **VERIFIED LOCALLY 2026-09-10**: PostgreSQL 17 tạm trên loopback, đúng DB `thien_duc_test`; 7/7 suite, 107/107 test; không dùng production DB |
-| Admin full-stack E2E | **FAILED LOCALLY 2026-09-10**: chạy đủ 189 test trên DB test mới đã migrate/seed theo CI; 150 pass, 39 fail |
+| Admin full-stack E2E | **VERIFIED LOCALLY 2026-09-11**: 189/189 pass, 0 fail, 0 skip trên PostgreSQL test cô lập |
 | Production smoke chỉ-đọc | **VERIFIED 2026-09-09**: Home/Admin/API/Projects/News 200; Swagger production 404; Users không token 401 |
-| CD Vercel/Render trong repo | **IMPLEMENTED BUT MANUAL PROVIDER SETUP REQUIRED** |
+| CD Vercel/Render trong repo | **RENDER GATE PREPARED LOCALLY; VERCEL MANUAL PROVIDER SETUP REQUIRED** |
 | Branch protection/required checks | **DOCUMENTED ONLY** |
 | Sentry/Uptime dashboard | **IMPLEMENTED BUT MANUAL PROVIDER SETUP REQUIRED** |
 | Render backup/PITR và restore drill | **DOCUMENTED ONLY / chưa có bằng chứng active** |
 | Backup off-site scheduler/storage | **NOT IMPLEMENTED ở provider; repo tooling sẵn** |
 | Staging branch/environment | **NOT APPLICABLE theo ADR hiện tại** |
-| Push trực tiếp `main` | **NOT READY**: Admin full-stack E2E còn 39 lỗi và chưa có bằng chứng Vercel/Render bị gate bởi CI |
+| Push mã ứng dụng | **CODE PUSH READY** sau validation local; **PRODUCTION-GATED PUSH NOT READY** vì GitHub/Vercel/Render chưa được cấu hình và chứng minh trên provider |
 
 `npm audit --omit=dev` tại ngày audit còn báo Backend 23 advisory (7 moderate,
 16 high), Admin 2 high, Frontend 20 (1 moderate, 19 high). Hai advisory RCE
