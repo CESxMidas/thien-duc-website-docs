@@ -1,7 +1,7 @@
 # CI/CD và bàn giao triển khai — Website Thiên Đức
 
 > **Trạng thái:** Nguồn sự thật chi tiết cho CI/CD
-> **Cập nhật:** 2026-09-11
+> **Cập nhật:** 2026-09-14
 > **Phạm vi:** Chỉ hệ thống Thiên Đức tại `https://www.thienduccons.vn`.
 
 ## 1. Tổng quan
@@ -16,10 +16,11 @@ push main
 ```
 
 Ba nhánh trên vẫn phải được coi là có thể bắt đầu **độc lập/song song** cho tới
-khi cấu hình provider được áp dụng và kiểm chứng. Render Blueprint local đã đổi
-sang `autoDeployTrigger: checksPass`, nhưng commit này chưa push/sync Blueprint;
-Vercel chỉ được coi là có gate khi dashboard đã cấu hình required Deployment
-Checks/GitHub checks và kiểm chứng thực tế bằng một commit CI lỗi không được promote.
+khi cấu hình provider được kiểm chứng. Commit Backend chứa
+`autoDeployTrigger: checksPass` đã lên `main` ngày 2026-09-11, nhưng chính push đó
+vẫn kích hoạt hai Render web deployment trước khi có bằng chứng gate; cả hai fail
+và một deployment database báo success. Vercel chỉ được coi là có gate khi
+dashboard đã cấu hình Deployment Checks và kiểm chứng bằng CI lỗi không được promote.
 
 Luồng mong muốn sau khi hoàn tất cấu hình thủ công:
 
@@ -195,11 +196,11 @@ whitespace commit. Link HTTP bên ngoài không được probe để tránh CI c
 
 Không có GitHub Action deploy; không cần Vercel/Render deploy token trong GitHub.
 
-Repo Backend đã **khai báo gate dự kiến** bằng `autoDeployTrigger: checksPass`,
-nhưng repo không chứng minh cấu hình đó đã được Render sync. Hai project Vercel
-vẫn chưa có bằng chứng Deployment Checks. Branch protection/required checks và
-provider-side gates đều phải được xác minh trên dashboard; không suy trạng thái
-production chỉ từ file local.
+Repo Backend đã **khai báo gate dự kiến** bằng `autoDeployTrigger: checksPass` và
+commit đã được Render nhận, nhưng chưa có push tiếp theo để chứng minh CI fail bị
+chặn. Hai project Vercel vẫn chưa có bằng chứng Deployment Checks. Branch
+protection/required checks và provider-side gates đều phải được xác minh trên
+dashboard; không suy trạng thái production chỉ từ file trong repo.
 
 ## 10. Vercel — Frontend
 
@@ -247,9 +248,11 @@ sync, Auto-Deploy hiển thị **After CI Checks Pass**, env có đủ và healt
 hoặc có check fail. Vì `startCommand` chứa `prisma migrate deploy`, migration
 production chỉ được chạy sau khi gate cho phép bắt đầu deployment.
 
-Trạng thái hiện tại: **CONFIGURED IN LOCAL BLUEPRINT, NOT APPLIED OR TESTED**.
-Không được coi gate Render đã active trước khi push/sync và chạy phép thử CI lỗi
-trên nhánh/commit không được deploy production.
+Trạng thái hiện tại: **CONFIGURED BUT NOT TESTED**. GitHub Deployments API ghi
+nhận hai production web deployment Render đều fail và một database deployment
+success cho chính commit đổi Blueprint. Không có log dashboard nên chưa xác định
+web deployment dừng trước hay sau `prisma migrate deploy`; tác động database là
+**NOT VERIFIED**. Không được thử lại bằng push `main` trước khi review dashboard.
 
 ## 13. Ma trận biến môi trường
 
@@ -467,14 +470,14 @@ Không đưa request body, token hay dữ liệu lead vào ticket/log công khai
 |---|---|
 | Backend CI | **IMPLEMENTED AND VERIFIED LOCALLY**: lint, typecheck, 77 suite/1.329 unit test, build, Prisma validate |
 | Admin CI | **IMPLEMENTED AND VERIFIED LOCALLY**: lint, typecheck, 59 file/897 test + coverage, build |
-| Frontend CI | **IMPLEMENTED AND VERIFIED LOCALLY**: lint, typecheck, 37 suite/445 test, build Next 16.3.3 |
+| Frontend CI | **REMOTE FAIL** tại `typecheck` do runner sạch chưa sinh `PageProps`; bản sửa local dùng `next typegen && tsc --noEmit`, đã pass Node 22 cùng lint, 37 suite/445 test và build |
 | Docs CI | **IMPLEMENTED AND VERIFIED LOCALLY**: `git diff --check`, 87 tệp Markdown hợp lệ |
 | Cú pháp/workflow semantics | **VERIFIED LOCALLY**: `actionlint 1.7.12` đạt cả 5 workflow |
 | Backend E2E | **VERIFIED LOCALLY 2026-09-10**: PostgreSQL 17 tạm trên loopback, đúng DB `thien_duc_test`; 7/7 suite, 107/107 test; không dùng production DB |
 | Admin full-stack E2E | **VERIFIED LOCALLY 2026-09-11**: 189/189 pass, 0 fail, 0 skip trên PostgreSQL test cô lập |
 | Production smoke chỉ-đọc | **VERIFIED 2026-09-09**: Home/Admin/API/Projects/News 200; Swagger production 404; Users không token 401 |
-| CD Vercel/Render trong repo | **RENDER GATE PREPARED LOCALLY; VERCEL MANUAL PROVIDER SETUP REQUIRED** |
-| Branch protection/required checks | **DOCUMENTED ONLY** |
+| CD Vercel/Render trong repo | **RENDER CONFIGURED BUT NOT TESTED; VERCEL MANUAL PROVIDER SETUP REQUIRED** |
+| Check availability | **VERIFIED**: đủ 6 check name đã xuất hiện; branch protection/required selection vẫn **UNKNOWN** vì cần quyền dashboard/API |
 | Sentry/Uptime dashboard | **IMPLEMENTED BUT MANUAL PROVIDER SETUP REQUIRED** |
 | Render backup/PITR và restore drill | **DOCUMENTED ONLY / chưa có bằng chứng active** |
 | Backup off-site scheduler/storage | **NOT IMPLEMENTED ở provider; repo tooling sẵn** |

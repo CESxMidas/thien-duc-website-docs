@@ -142,9 +142,16 @@
   test mới đã migrate/seed theo CI (2026-09-11).
 - [x] **CODE PUSH READY: YES** theo validation local.
 - [ ] **PRODUCTION-GATED PUSH READY: NO**: Render Blueprint local đã chuyển sang
-  `autoDeployTrigger: checksPass`, nhưng chưa push/sync/kiểm chứng; GitHub required
-  checks và hai Vercel Deployment Checks chưa có bằng chứng active. Không push mã
-  ứng dụng cho tới khi báo cáo gating được con người duyệt.
+  `autoDeployTrigger: checksPass` và đã lên `main`, nhưng chưa kiểm chứng bằng CI
+  fail; GitHub required checks và hai Vercel Deployment Checks chưa có bằng chứng
+  active. Push này đã tạo hai Render web deployment fail và một database deployment
+  success; chưa có log để xác định tác động migration. Không push mã ứng dụng cho
+  tới khi báo cáo gating được con người duyệt.
+- [ ] **FRONTEND-CI-CLEAN-TYPEGEN-M1** — GitHub CI của SHA `0f48898` fail tại
+  `typecheck` với `Cannot find name 'PageProps'`: runner sạch chạy `tsc` trước
+  `next build`. Bản sửa local đổi script thành `next typegen && tsc --noEmit`
+  đúng hướng dẫn Next.js 16; đã pass từ cache `.next` trống bằng Node 22.23.2,
+  cùng lint, 37/37 Jest suite (445/445) và build. Chưa push/chưa có CI remote xanh.
 
 ### Phiên 2026-08-27 — Admin phục vụ dưới `/admin` (ADMIN-SUBPATH-DEPLOYMENT-15B)
 

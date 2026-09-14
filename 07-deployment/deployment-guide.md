@@ -175,6 +175,12 @@ riêng chạy Playwright full-stack. GitHub Actions **không tự deploy**.
 > được xác minh trên GitHub và dashboard provider. Xem
 > [CI/CD — thứ tự CI và CD](ci-cd.md#1-tổng-quan).
 
+> **Cập nhật gating 2026-09-14:** Backend `render.yaml` trên `main` đã dùng
+> `autoDeployTrigger: checksPass`, nhưng chưa có phép thử chứng minh gate. Lần push
+> áp cấu hình vẫn tạo hai web deployment fail và một database deployment success;
+> phải kiểm tra Render logs trước mọi push tiếp theo. GitHub/Vercel gates vẫn cần
+> xác minh dashboard.
+
 > ✅ **Cập nhật 2026-08-10:** repo admin **đã có `vercel.json`** (khác với ghi chú cũ
 > "không có"). File này khai sẵn **SPA rewrite** `/(.*) → /index.html` (bắt buộc cho
 > React Router: thiếu nó thì F5 ở route con trả 404) và các security header
