@@ -9,6 +9,7 @@
 
 | Tài liệu | Mô tả | Trạng thái |
 |---|---|---|
+| [redesign-handoff-2026-09-15.md](redesign-handoff-2026-09-15.md) | Handoff redesign theo brief Word 2026-09: Contemporary Architectural Luxury | �ang d�ng |
 | [ui-ux-handoff.md](ui-ux-handoff.md) | Hand-off spec: hero, form, nav, breadcrumb, filter, a11y | Đang dùng |
 | [design-system.md](design-system.md) | Token màu, typography, spacing | Khung |
 | [responsive-guidelines.md](responsive-guidelines.md) | Quy tắc responsive | Khung |

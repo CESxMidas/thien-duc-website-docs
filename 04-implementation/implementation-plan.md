@@ -103,6 +103,12 @@
 
 ## Section 7 — Changelog / audit trail
 
+### Phi�n 2026-09-15 � Redesign giao di?n public theo brief Word
+
+- [x] **PUBLIC-UI-REDESIGN-2026-M1** � �p d?ng hu?ng Contemporary Architectural Luxury cho frontend public: token m�u Warm Ivory/Charcoal/Warm Grey/Earth Brown/Deep Olive, typography Cormorant Garamond + Manrope, header 5 m?c ch�nh, hero ?nh th?t overlay ph?ng, facts x�c th?c, intro editorial, featured projects d�ng d? �n th?t t? API, footer/contact b? Zalo test v� d�ng Google Maps directions. Kh�ng d�ng s? mock 16+/20+/1000+/50+.
+- [x] **Docs ngu?n** � chu?n h�a file Word ngu?n v�o `03-ui-ux/references/y-tuong-thiet-ke-lai-website-thien-duc-2026-09-09.docx`; handoff m?i: `03-ui-ux/redesign-handoff-2026-09-15.md`.
+- Ki?m d?nh frontend: `npm run lint`, `npx tsc --noEmit`, `npm run test -- --runInBand` xanh tru?c khi build.
+
 > Ledger nén các việc đã hoàn tất, giữ mã truy vết + link báo cáo. **Không lặp mô tả dài đã tóm ở §1.** Dates chỉ giữ khi hữu ích cho lịch sử. Các mục con của một task được gộp thành một dòng.
 
 ### Phiên 2026-09-09 — CI/CD và bàn giao (CI-CD-HANDOVER-HARDENING)
