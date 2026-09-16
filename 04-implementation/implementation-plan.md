@@ -109,6 +109,13 @@
 - [x] **Docs ngu?n** � chu?n h�a file Word ngu?n v�o `03-ui-ux/references/y-tuong-thiet-ke-lai-website-thien-duc-2026-09-09.docx`; handoff m?i: `03-ui-ux/redesign-handoff-2026-09-15.md`.
 - Ki?m d?nh frontend: `npm run lint`, `npx tsc --noEmit`, `npm run test -- --runInBand` xanh tru?c khi build.
 
+### Phiên 2026-09-16 — Hoàn thiện redesign và reduced motion
+
+- [x] **PUBLIC-UI-REDESIGN-2026-M2** — kiểm tra trực quan 5 route public chính ở desktop/mobile theo brief Word; không có tràn ngang. Sửa `stagger-list` bị ẩn khi bật `prefers-reduced-motion: reduce` (gây khoảng trắng lớn trên Giới thiệu, Tin tức, Tuyển dụng và các trang dùng cùng pattern), bổ sung test chống hồi quy; tên dự án nổi bật dùng đúng Cormorant Garamond qua `font-display`. Trì hoãn khởi tạo reveal observer tới sau hydration để loại bỏ cảnh báo lệch `className` trên các Suspense boundary.
+- [x] **PUBLIC-UI-REDESIGN-2026-M3** — chỉnh `HomeFacts` theo mockup facts strip sáng trong brief: dải nền Warm Ivory, 4 chỉ số `16+ / 20+ / 1000+ / 50+`, vạch chia mảnh, số lớn dùng `font-display` màu Earth Brown và tagline "Giá trị kiến tạo bằng thời gian"; thêm Jest test khóa nền sáng, đủ số liệu và copy song ngữ.
+- [x] **PUBLIC-UI-REDESIGN-2026-M4** — chỉnh `HomeIntroStrip` theo mockup giới thiệu mới: panel logo thương hiệu bên trái, headline editorial "Hơn một công trình...", quote motto bên phải và dải `Lĩnh vực hoạt động` 3 ô ảnh đánh số; giữ link giới thiệu/dự án và thêm test khóa layout mới.
+- [x] **PUBLIC-UI-REDESIGN-2026-M5** — chỉnh header desktop theo mockup: logo lớn bên trái, nav phẳng 7 mục (`Trang chủ`, `Giới thiệu`, `Lĩnh vực`, `Dự án`, `Tin tức`, `Nhân sự`, `Liên hệ`), underline active mảnh, icon search và cụm `VI | EN`; thêm anchor `#linh-vuc-hoat-dong` cho mục Lĩnh vực và cập nhật test header.
+
 > Ledger nén các việc đã hoàn tất, giữ mã truy vết + link báo cáo. **Không lặp mô tả dài đã tóm ở §1.** Dates chỉ giữ khi hữu ích cho lịch sử. Các mục con của một task được gộp thành một dòng.
 
 ### Phiên 2026-09-09 — CI/CD và bàn giao (CI-CD-HANDOVER-HARDENING)
