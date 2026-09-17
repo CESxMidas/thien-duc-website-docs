@@ -115,6 +115,8 @@
 - [x] **PUBLIC-UI-REDESIGN-2026-M3** — chỉnh `HomeFacts` theo mockup facts strip sáng trong brief: dải nền Warm Ivory, 4 chỉ số `16+ / 20+ / 1000+ / 50+`, vạch chia mảnh, số lớn dùng `font-display` màu Earth Brown và tagline "Giá trị kiến tạo bằng thời gian"; thêm Jest test khóa nền sáng, đủ số liệu và copy song ngữ.
 - [x] **PUBLIC-UI-REDESIGN-2026-M4** — chỉnh `HomeIntroStrip` theo mockup giới thiệu mới: panel logo thương hiệu bên trái, headline editorial "Hơn một công trình...", quote motto bên phải và dải `Lĩnh vực hoạt động` 3 ô ảnh đánh số; giữ link giới thiệu/dự án và thêm test khóa layout mới.
 - [x] **PUBLIC-UI-REDESIGN-2026-M5** — chỉnh header desktop theo mockup: logo lớn bên trái, nav phẳng 7 mục (`Trang chủ`, `Giới thiệu`, `Lĩnh vực`, `Dự án`, `Tin tức`, `Nhân sự`, `Liên hệ`), underline active mảnh, icon search và cụm `VI | EN`; thêm anchor `#linh-vuc-hoat-dong` cho mục Lĩnh vực và cập nhật test header.
+- [x] **PUBLIC-UI-REDESIGN-2026-M6** — tinh chỉnh header gần mockup hơn: grid full-width để logo neo trái và nav cân giữa; xử lý logic search từ link tĩnh sang nút mở form GET thật (`/tim-kiem?q=...`, locale-aware, focus input, đóng bằng nút/ESC), không nhân bản form trong drawer mobile; cập nhật test search header.
+- [x] **PUBLIC-UI-REDESIGN-2026-M7** — chỉnh bố cục nội dung banner trang chủ theo mockup: khối chữ neo trái/cao hơn, headline display uppercase, overlay tối theo trục trái, CTA chính dạng viền, CTA phụ chữ, cụm số slide đáy trái kèm vạch ngang; cập nhật test carousel theo layout mới.
 
 > Ledger nén các việc đã hoàn tất, giữ mã truy vết + link báo cáo. **Không lặp mô tả dài đã tóm ở §1.** Dates chỉ giữ khi hữu ích cho lịch sử. Các mục con của một task được gộp thành một dòng.
 
