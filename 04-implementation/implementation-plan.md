@@ -1,7 +1,7 @@
 # Kế hoạch triển khai — Website Thiên Đức (PA2)
  
 > **Trạng thái:** Tài liệu sống — nguồn sự thật cho tiến độ coding.
-> **Nhóm:** 04 — Implementation · **Current as of: 2026-09-09**
+> **Nhóm:** 04 — Implementation · **Current as of: 2026-09-23**
 > **Tài liệu liên quan:** [open-questions](../01-requirements/open-questions.md) · [deployment-guide](../07-deployment/deployment-guide.md) · [security](../05-security/README.md) · [audit-baseline](../08-audits-and-reports/current/2026-07-16-audit-baseline.md)
 >
 > Cấu trúc: §0 hiện trạng · §1 tóm tắt đã xong · §2 code đang chờ làm · §3 manual/go-live · §4 deferred · §5 backlog nội dung · §6 backlog tùy chọn · §7 changelog/audit trail.
@@ -103,6 +103,13 @@
 
 ## Section 7 — Changelog / audit trail
 
+### Phien 2026-09-23 - Sua hydration/CSP warning va UX logo thuong hieu (BRANDING-HYDRATION-UX-M1)
+
+- [x] **BRANDING-HYDRATION-UX-M1** - sua loi production console React minified `#418` do text phu thuoc thoi gian trong footer: nam ban quyen nay tinh theo moc UTC+7 on dinh (`getVietnamCurrentYear`) thay vi `new Date().getFullYear()` theo timezone runtime, kem test giao thua VN.
+- [x] **CSP Report-Only cleanup** - go `upgrade-insecure-requests` khoi `Content-Security-Policy-Report-Only` de het canh bao trinh duyet "directive ignored when delivered in report-only policy"; chua chuyen CSP sang enforce, task ->6 van hoan theo Section 2.
+- [x] **Admin branding UX** - `ImagePickerField` co che do `previewFit="contain"` cho logo; trang Cai dat thuong hieu dung khung preview gon, khong cat/phong logo qua muc, URL preview duoc rut gon bang `truncate` nhung van xem duoc qua `title`. Khong dung thay doi dang co o `admin/src/lib/asset-url.ts`.
+- **Kiem dinh**: frontend targeted Jest 24/24 xanh (`format`, `site-chrome`, `next.config`), frontend lint/typecheck xanh, frontend build xanh khi tro API kha dung; admin lint xanh, admin build xanh. Lan build frontend dau voi `.env` local that bai vi `NEXT_PUBLIC_API_URL=http://localhost:3001/api` nhung backend local khong chay; chay lai voi API Render hien co thi hoan tat 44/44 route.
+
 ### Phi�n 2026-09-15 � Redesign giao di?n public theo brief Word
 
 - [x] **PUBLIC-UI-REDESIGN-2026-M1** � �p d?ng hu?ng Contemporary Architectural Luxury cho frontend public: token m�u Warm Ivory/Charcoal/Warm Grey/Earth Brown/Deep Olive, typography Cormorant Garamond + Manrope, header 5 m?c ch�nh, hero ?nh th?t overlay ph?ng, facts x�c th?c, intro editorial, featured projects d�ng d? �n th?t t? API, footer/contact b? Zalo test v� d�ng Google Maps directions. Kh�ng d�ng s? mock 16+/20+/1000+/50+.
@@ -117,6 +124,9 @@
 - [x] **PUBLIC-UI-REDESIGN-2026-M5** — chỉnh header desktop theo mockup: logo lớn bên trái, nav phẳng 7 mục (`Trang chủ`, `Giới thiệu`, `Lĩnh vực`, `Dự án`, `Tin tức`, `Nhân sự`, `Liên hệ`), underline active mảnh, icon search và cụm `VI | EN`; thêm anchor `#linh-vuc-hoat-dong` cho mục Lĩnh vực và cập nhật test header.
 - [x] **PUBLIC-UI-REDESIGN-2026-M6** — tinh chỉnh header gần mockup hơn: grid full-width để logo neo trái và nav cân giữa; xử lý logic search từ link tĩnh sang nút mở form GET thật (`/tim-kiem?q=...`, locale-aware, focus input, đóng bằng nút/ESC), không nhân bản form trong drawer mobile; cập nhật test search header.
 - [x] **PUBLIC-UI-REDESIGN-2026-M7** — chỉnh bố cục nội dung banner trang chủ theo mockup: khối chữ neo trái/cao hơn, headline display uppercase, overlay tối theo trục trái, CTA chính dạng viền, CTA phụ chữ, cụm số slide đáy trái kèm vạch ngang; cập nhật test carousel theo layout mới.
+- [x] **PUBLIC-UI-REDESIGN-2026-M8** -- Chinh khoi Du an tieu bieu theo mockup editorial: intro canh trai, du an chinh anh lon + panel noi dung, ba the du an phu dang anh ngang overlay; test rieng home-featured-projects xanh.
+- [x] **CMS-BRANDING-LOGO-PREVIEW-M1** -- Sua admin helper resolveAssetUrl: khi dev local chua dat VITE_SITE_URL, anh public /images/... tu ghep sang http://localhost:3000 thay vi browser resolve vao localhost:5174 gay 404 cho logo mac dinh. Ghi nhan POST /api/media/upload tra 503 la dung thiet ke khi backend thieu CLOUDINARY_*; can cau hinh Cloudinary de upload logo qua CMS chay that.
+- [x] **DOMAIN-CANONICAL-THIENDUCCONS-M1** -- Chuan hoa domain production ve https://www.thienduccons.vn trong env example, docs deploy, report helper, diagram; allowlist anh legacy them www.thienduccons.vn; seed/import tin cu chuyen URL nguon sang www; test site-url/next-config/mail link khoa domain that va Admin sub-path /admin.
 
 > Ledger nén các việc đã hoàn tất, giữ mã truy vết + link báo cáo. **Không lặp mô tả dài đã tóm ở §1.** Dates chỉ giữ khi hữu ích cho lịch sử. Các mục con của một task được gộp thành một dòng.
 

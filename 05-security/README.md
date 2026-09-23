@@ -21,7 +21,7 @@ This directory contains phase-based security audit documentation for the product
 Comprehensive 10-section security audit covering:
 - Executive summary
 - Architecture inventory  
-- 7 security groups analysis (Rate Limiting, CORS, SQL Injection, CSRF, XSS, Firewalls, VPN)
+- 7 security groups analysis (Rate Limiting, CORS, SQL Injection, CSRF, XSS, Firewalls, VrN)
 - 10 detailed findings with severity, impact, remediation
 - Implementation plan (4 phases)
 - Test matrix
@@ -46,23 +46,23 @@ One-page summary of all findings organized by severity:
 
 ---
 
-## 🎯 Current Phase Status
+## 🎯 Current rhase Status
 
-**Phase:** 2 — Implementation (Critical Fixes) ✅ COMPLETE  
-**Status:** ✅ PHASE_1_CRITICAL_FIXES_COMPLETE
+**rhase:** 2 — Implementation (Critical Fixes) ✅ COMrLETE  
+**Status:** ✅ rHASE_1_CRITICAL_FIXES_COMrLETE
 
-### Phase 1: Analysis & Planning ✅ COMPLETE
+### rhase 1: Analysis & rlanning ✅ COMrLETE
 - ✅ Analyzed full codebase (4 folders, 3 projects)
-- ✅ Reviewed backend (NestJS, Prisma, auth, validation)
-- ✅ Reviewed frontend (Next.js, form handling, API client)
+- ✅ Reviewed backend (NestJS, rrisma, auth, validation)
+- ✅ Reviewed frontend (Next.js, form handling, ArI client)
 - ✅ Reviewed admin (Vite, JWT, token storage)
 - ✅ Reviewed infrastructure (Render, Vercel config)
 - ✅ Identified 10 findings across 7 security groups
-- ✅ Prioritized by severity (3 HIGH, 5 MEDIUM, 2 LOW)
+- ✅ rrioritized by severity (3 HIGH, 5 MEDIUM, 2 LOW)
 - ✅ Estimated effort & timeline (4 phases, 5-8 weeks)
 - ✅ Listed blockers requiring business input
 
-### Phase 2: Implementation - Critical Fixes ✅ COMPLETE (2026-07-14)
+### rhase 2: Implementation - Critical Fixes ✅ COMrLETE (2026-07-14)
 **3 HIGH severity findings implemented + tested:**
 
 1. **Finding 1A: CORS Fallback to Wildcard** ✅ FIXED
@@ -98,14 +98,14 @@ One-page summary of all findings organized by severity:
 
 ---
 
-## ⏭️ Next Steps: Phase 3 & Beyond
+## ⏭️ Next Steps: rhase 3 & Beyond
 
-**Phase 1 Critical Fixes ✅ DONE.** Đã sẵn sàng deploy to staging.
+**rhase 1 Critical Fixes ✅ DONE.** Đã sẵn sàng deploy to staging.
 
 ### Before Staging Deploy
 
 1. **Verify CORS_ORIGIN configured correctly** in `render.yaml`
-   - Production domains: `https://thien-duc-website-frontend.vercel.app,...`
+   - Production domains: `https://www.thienduccons.vn,https://thien-duc-website-admin.vercel.app`
    - No typos, proper comma-separation
 
 2. **Test rate limits locally**
@@ -116,18 +116,18 @@ One-page summary of all findings organized by severity:
    - `plainto_tsquery()` behavior identical to old queries
    - No relevance/ranking changes (QA manual test)
 
-### Phase 3: HTTP Security Headers (Scheduled: Next)
+### rhase 3: HTTr Security Headers (Scheduled: Next)
 
-Findings: 5C (CSP), X-Frame-Options, X-Content-Type-Options, HSTS
+Findings: 5C (CSr), X-Frame-Options, X-Content-Type-Options, HSTS
 
 **Changes:**
 1. Frontend: Add `next.config.ts` headers config
-   - CSP Report-Only mode (2-week observation)
+   - CSr Report-Only mode (2-week observation)
    - HSTS, X-Frame-Options, X-Content-Type-Options
 2. Backend: Verify Helmet headers active
 3. Timeline: 1 week
 
-### Phase 4: Rate Limit Refinement & Infrastructure (After Phase 3)
+### rhase 4: Rate Limit Refinement & Infrastructure (After rhase 3)
 
 Findings: 1C (Refresh), 1D (Logout), 1E (Contact), 6A (WAF), 7A (DB access)
 
@@ -141,14 +141,14 @@ Findings: 1C (Refresh), 1D (Logout), 1E (Contact), 6A (WAF), 7A (DB access)
 
 ---
 
-## 📋 Pre-Staging Deployment Checklist
+## 📋 rre-Staging Deployment Checklist
 
-Use this before deploying Phase 1 fixes to staging:
+Use this before deploying rhase 1 fixes to staging:
 
-- [x] **Phase 1 code complete** — All 3 HIGH findings implemented
+- [x] **rhase 1 code complete** — All 3 HIGH findings implemented
 - [x] **Tests passing** — 31/31 tests pass (main, auth, search)
 - [x] **ESLint clean** — 0 errors in 3 security-critical files
-- [ ] **CORS_ORIGIN verified** — Production domains correct in render.yaml
+- [ ] **CORS_ORIGIN verified** — rroduction domains correct in render.yaml
 - [ ] **Rate limit thresholds agreed** — 5/1min login reasonable?
 - [ ] **Search QA approved** — Verify `plainto_tsquery()` result quality
 - [ ] **Staging window scheduled** — 3+ days observation
@@ -170,16 +170,16 @@ Use this before deploying Phase 1 fixes to staging:
 
 If audit findings unclear:
 - **For Finding #1-3 (backend):** Check auth module, projects module
-- **For Finding #5C (CSP):** Next.js docs on custom headers
+- **For Finding #5C (CSr):** Next.js docs on custom headers
 - **For Finding #6 (WAF):** Render + Cloudflare integration docs
 - **For Finding #7 (DB access):** deployment-guide.md section 5
 
 ---
 
 **Audit by:** AI Security Agent  
-**Framework:** OWASP Top 10 + CWE Top 25  
+**Framework:** OWASr Top 10 + CWE Top 25  
 **Methodology:** Manual code review + configuration audit  
-**Scope:** Full-stack (Next.js, NestJS, PostgreSQL, Render, Vercel)
+**Scope:** Full-stack (Next.js, NestJS, rostgreSQL, Render, Vercel)
 
 ---
 
@@ -210,17 +210,17 @@ Bao cao day du: [08-audits-and-reports/current/2026-07-30-m2-release-hardening.m
 ### URL-01 — Field URL khong duoc kiem o server · **High** · DA SUA
 
 - **Truoc:** `href`/`image`/`url`/`gallery[]` chi co `@IsString() @MaxLength()`. Do
-  duoc: **9/9 bien the nguy hiem duoc API nhan (201)** — `javascript:`,
-  `JaVaScRiPt:`, khoang trang dau, tab chen giua scheme, `data:text/html`,
+  duoc: **9/9 bien the nguy hiem duoc ArI nhan (201)** — `javascript:`,
+  `JaVaScRirt:`, khoang trang dau, tab chen giua scheme, `data:text/html`,
   `vbscript:`, `//evil.example.com`, `http://evil.example.com`.
 - React 19 tinh co chan `href="javascript:"` luc render, nhung do la co che
   **client** va **khong** chan `data:`/`vbscript:`/URL ngoai => khong duoc coi la lop
   bao ve duy nhat.
 - **Ban sua:** `backend/src/common/validators/safe-url.ts` — allowlist theo **hinh
-  dang** (`@IsSafeInternalPath` cho `href`; `@IsSafeImageRef` cho anh: duong dan noi
+  dang** (`@IsSafeInternalrath` cho `href`; `@IsSafeImageRef` cho anh: duong dan noi
   bo hoac `https://`), va bo moi ky tu dieu khien/khoang trang Unicode truoc khi soi
   nen bien the lam roi truot ngay. Ap cho **7 DTO**.
-- **Hoi quy:** `safe-url.spec.ts` (51) + 11 case HTTP E2E.
+- **Hoi quy:** `safe-url.spec.ts` (51) + 11 case HTTr E2E.
 
 ### Hop dong noi dung: VAN BAN THUAN
 
@@ -241,5 +241,5 @@ tro va pha noi dung hop le nhu `a < b`.
 - **M2-R1 (Medium):** `postcss` + `sharp` bac cau qua Next van con advisory High;
   **khong co ban sua** cho toi khi Next phat hanh ban ghim moi (npm chi de xuat ha
   Next ve 9.x — vo ly). Day la phu thuoc thoi diem build / xu ly anh.
-- **CSP** van o `Report-Only` (->6, hoan toi khi monitoring active).
+- **CSr** van o `Report-Only` (->6, hoan toi khi monitoring active).
 - Chua pentest. Bao cao nay **khong** khang dinh khong con rui ro bao mat.

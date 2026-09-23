@@ -708,9 +708,9 @@
 ### Production Deployment Information
 
 - [ ] **Danh sách production origins cho CORS:** (Frontend domain Vercel)
-  - Currently hardcoded `https://thien-duc-website-frontend.vercel.app`
+  - Current public origin `https://www.thienduccons.vn`; Admin public path `https://www.thienduccons.vn/admin`; Admin direct diagnostic origin `https://thien-duc-website-admin.vercel.app`
   - Need: Final domain (nếu có custom domain)
-  - Need: Any other origins (admin.thienduc.com?, etc.)
+  - Keep direct Admin Vercel origin only when needed for diagnostics/CORS.
 
 - [ ] **Expected traffic volume:**
   - Current rate: ? requests/minute to login, refresh, contact
