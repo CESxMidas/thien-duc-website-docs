@@ -2,12 +2,12 @@
 
 > **Trạng thái:** Đang dùng
 > **Nhóm:** 07 — Deployment
-> **Cập nhật:** 2026-07-16
+> **Cập nhật:** 2026-10-19
 > **Tài liệu liên quan:** [deployment-guide.md](deployment-guide.md) · [environment-configuration.md](environment-configuration.md)
 
-Stack: **Prisma 7 + PostgreSQL**. Local Docker hiện dùng PostgreSQL 18; CI E2E
-dùng PostgreSQL 17. Phiên bản production phải xác minh trong Render Dashboard,
-không suy từ CI. Schema nguồn sự thật ở
+Stack: **Prisma 7 + PostgreSQL**. Production đã xác minh dùng PostgreSQL 18;
+CI E2E vẫn có thể dùng PostgreSQL service riêng theo workflow. Không suy trạng
+thái production từ CI. Schema nguồn sự thật ở
 `thien-duc-website-backend/prisma/schema.prisma`.
 
 ## Trên production (Render)
@@ -60,13 +60,13 @@ Local Postgres chạy Docker ở **port 5433** (`docker compose up -d`) — vì 
 - Đổi schema: `npx prisma migrate dev --name <tên>` rồi `npm run prisma:generate`.
 - Xem dữ liệu: `npx prisma studio`.
 
-## ⚠️ Cảnh báo áp migration lên production một cách có chủ ý
+##  Cảnh báo áp migration lên production một cách có chủ ý
 
 `.env` của máy dev có thể đang trỏ `DATABASE_URL` vào **Render (production)**. Vì vậy:
 
 - Mọi lệnh `prisma migrate deploy` / `db execute` phải là **hành động có chủ ý**, xác nhận `DATABASE_URL` đang trỏ đúng đích trước khi chạy.
 - **Đã xác minh tới 2026-07-31:** **11 migration đầu tiên** đã được áp lên production; `prisma migrate status` khi đó trả *Database schema is up to date*. Ghi chú cũ rằng `20260710120000_add_fulltext_search` "mới chỉ kiểm chứng trên DB local" **không còn đúng**.
-- ⚠️ **Chưa xác minh (tính tới 2026-08-22):** 5 migration thêm vào **sau** mốc trên —
+-  **Chưa xác minh (tính tới 2026-08-22):** 5 migration thêm vào **sau** mốc trên —
   `20260811120000_news_category_index`,
   `20260819120000_project_publication_schedule`,
   `20260819130000_cooperation_publication_schedule`,

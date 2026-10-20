@@ -1,7 +1,7 @@
 # 07 — Deployment
 
 > **Trạng thái:** Đang dùng (index thư mục)
-> **Cập nhật:** 2026-09-09
+> **Cập nhật:** 2026-10-19
 
 Triển khai production (Vercel + Render), cấu hình môi trường, migration, rollback.
 

@@ -1,7 +1,7 @@
 # Kế hoạch triển khai — Website Thiên Đức (PA2)
  
 > **Trạng thái:** Tài liệu sống — nguồn sự thật cho tiến độ coding.
-> **Nhóm:** 04 — Implementation · **Current as of: 2026-09-23**
+> **Nhóm:** 04 — Implementation · **Current as of: 2026-10-19**
 > **Tài liệu liên quan:** [open-questions](../01-requirements/open-questions.md) · [deployment-guide](../07-deployment/deployment-guide.md) · [security](../05-security/README.md) · [audit-baseline](../08-audits-and-reports/current/2026-07-16-audit-baseline.md)
 >
 > Cấu trúc: §0 hiện trạng · §1 tóm tắt đã xong · §2 code đang chờ làm · §3 manual/go-live · §4 deferred · §5 backlog nội dung · §6 backlog tùy chọn · §7 changelog/audit trail.
@@ -10,7 +10,12 @@
 ## Section 0 — Current status summary
 
 - **Tính năng website + CMS: gần như hoàn tất.** FE public (Next.js/Vercel), Admin CMS (Vite), Backend (NestJS/Prisma/Postgres trên Render) đã chạy thật end-to-end; toàn bộ Admin đã nối API thật, song ngữ VI/EN cho nội dung production/audited đã xong. Chi tiết: **§1** + ledger **§7**.
-- **Production-readiness: CHƯA hoàn tất — cố ý hoãn.** 🟠 **Cổng go-live BLOCKED/DEFERRED** (G7-M1, [note](../08-audits-and-reports/current/2026-07-19-g7-m1-manual-ops-verification.md)): hạ tầng còn Free/chưa xác nhận (backend + Postgres Free; backup/PITR + restore + monitoring chưa bật). Nâng plan trả phí + monitoring **bắt buộc trước go-live cuối**. Checklist: **§3**.
+- **Production-readiness: ĐÃ XÁC MINH.** Frontend/Admin/Backend production hoạt
+  động; CI và Admin full-stack E2E đạt; hydration mismatch đã xử lý. Backend vẫn
+  dùng Render Free và có cold start. PostgreSQL 18 dùng plan trả phí, managed
+  PITR active với recovery window 3 ngày. Restore drill được owner chấp nhận
+  hoãn sau bàn giao. Xem
+  [báo cáo readiness cuối](../08-audits-and-reports/current/2026-10-19-final-release-readiness.md).
 - **Số checkbox mở ≠ số việc code đang mở.** Nhiều `[ ]` mở là *manual ops / deferred / backlog*, không phải hàng đợi coding (di sản của lần chuyển văn xuôi→checkbox, xem [CHECKBOX-AUDIT-M1](#section-7--changelog--audit-trail)).
 - **Việc code đang mở thật sự: 1** — **→6 Enforce CSP** (§2, **HOÃN** tới khi monitoring active). **Retire `POST /users` ĐÃ XONG** (CMS-RETIRE-DIRECT-USER-CREATE-M1, §7): route tạo tài khoản kèm mật khẩu đã gỡ hẳn, lời mời là lối cấp tài khoản duy nhất. **Forgot Password ĐÃ XONG** trọn luồng backend + Admin UI + a11y (CMS-AUTH-FORGOT-PASSWORD PHASE1/PHASE2/PHASE2B, §7) — chỉ còn UAT thủ công §3. Đợt hardening phân quyền/bảo mật 2026-07-22 đã đóng: R1 media-delete, R2 banner governance, R3 users read-only lock-in, TRUSTED-PROXY-RATE-LIMIT-FIX-M1, ADMIN-SPA-SECURITY-HEADERS-M1 (ledger §7). Coding/security còn lại đều deferred: CSP enforce (§2, chờ monitoring) + Auth HttpOnly (§4, post-launch). Các mục mở khác: manual/go-live (§3), deferred infra (§4), backlog tùy chọn (§6). Backlog nội dung (§5) phần code/CMS đã xong, chỉ chờ công ty nhập liệu.
 
@@ -23,17 +28,19 @@
 - **3. Frontend UI/UX** — Đồng nhất bố cục dự án theo chuẩn Hưng Phú, carousel hạng mục, gallery có điều kiện, cơ cấu lại trang chủ↔giới thiệu chống trùng lặp, redesign typography (Playfair + Be Vietnam Pro), footer. (FRONTEND-UI-POLISH-M1, PROJECT-GALLERY-IMAGES-FIX-M1)
 - **4. SEO / structured data / performance** — canonical + hreflang + sitemap/robots, JSON-LD Organization/NewsArticle/Breadcrumb, baseline đo production (Rich Results + Lighthouse), fix NO_FCP/NO_LCP. (→7, →13, YC-12)
 - **5. Security / validation / roles** — 3 HIGH findings đóng (CORS, rate-limit, SQL-inj), HTTP security headers, `@MaxLength` toàn bộ DTO chữ, 3 cấp role, SUPER_ADMIN đăng ngay. (→3, SEC-*, ADMIN-SUPER-ADMIN-GLOBAL-APPROVAL-BYPASS-M1)
-- **6. Deployment / monitoring docs** — `render.yaml` hiện vẫn khai plan Free;
-  runbook mô tả bước nâng plan trả phí, backup-restore / rollback /
-  monitoring-and-alerting; Sentry cả 3 app (errors-only, no-op khi thiếu DSN).
-  (→2, →5)
+- **6. Deployment / monitoring docs** — trạng thái dashboard production đã được
+  đối chiếu: backend Render Free; PostgreSQL trả phí `0.1c-256mb`, PostgreSQL 18,
+  managed PITR 3 ngày. Runbook bao phủ backup-restore, rollback và monitoring.
+  Sentry Admin có cấu hình build; Frontend/Backend chưa bật trong evidence env đã
+  cung cấp. (→2, →5)
 - **7. Testing / CI / process** — CI lint+build cả 3 repo + e2e backend; test FE (Jest) + Admin (Vitest); ENV cleanup, tách secret khỏi Git. (→8, SYS-P1-ADMIN-ROBUSTNESS, SMTP-REMOVAL-ENV-CLEANUP)
   - **CI/CD-HANDOVER-HARDENING (2026-09-09)** — chuẩn hóa Node 22 + npm/lockfile;
     thêm lint check/typecheck/Prisma validate tường minh; bổ sung CI Docs kiểm
     whitespace + link nội bộ; viết README quick-start cho 3 app, nguồn sự thật
     `07-deployment/ci-cd.md` và checklist tiếp nhận mới. CD giữ provider-native;
-    branch protection, provider env/branch, monitoring và backup vẫn là bước
-    dashboard thủ công cần xác minh.
+    branch protection và monitoring vẫn là bước dashboard cần theo dõi; provider
+    env, production deployment, database và managed recovery đã được xác minh
+    ngày 2026-10-19.
   - **E2E full-stack Playwright (THIEN-DUC-FULL-STACK-PLAYWRIGHT-E2E-M1, 2026-07-27)** — 82 test Playwright (Chromium) phủ lời mời/thiết lập/đăng nhập/quên-đặt lại mật khẩu/phân quyền/bảo mật quản lý tài khoản/form liên hệ/nội dung công khai/token privacy/accessibility/responsive; host tại repo admin, `webServer` tự dựng 3 server, DB `thien_duc_test` có cầu chì an toàn, transport email GIẢ (gate `NODE_ENV=test + MAIL_FAKE_TRANSPORT=1`), route hỗ trợ test chặn cứng localhost/`@e2e.test`. Thêm integration PostgreSQL thật (backend, 7 test: claim nguyên tử tương tranh, unique tokenHash, rollback, cascade, thu hồi refresh). Admin coverage (Vitest v8, baseline + ngưỡng chống hồi quy). CI: coverage cho admin, `prisma validate` + integration cho backend, workflow `e2e-fullstack.yml` mới. Chi tiết: [2026-07-27-fullstack-playwright-e2e](../08-audits-and-reports/current/2026-07-27-fullstack-playwright-e2e.md). CI cross-repo cần `WORKSPACE_TOKEN` (bằng chứng hiện tại là chạy cục bộ).
   - **A11Y-CONTRAST-M2 (2026-07-27)** — xử lý trọn vẹn color-contrast: darken `--color-brand` #b06613→#9f5a0f (cả admin + frontend) + đổi panel `bg-brand-soft`+`text-white`→`bg-brand`; **0 vi phạm axe color-contrast** trên admin (login/forgot/reset/setup/users) + frontend (home/contact/news + du-an/gioi-thieu/cong-ty) × 375/768/1280. Rule KHÔNG bị tắt; helper nay chặn đầy đủ; bộ Playwright 82→91 test. Viền focus vẫn ≥3:1 (5.33 trắng / 3.31 sidebar).
 - **8. Media / Cloudinary / gallery** — Upload/optimize Cloudinary (WebP≤1200px, chống path-escape), hiển thị ảnh Cloudinary trên production, gallery lấy ảnh cấp dự án. (→ ED-05, PROJECT-IMAGES-UI-FIX-M1, PROJECT-GALLERY-IMAGES-FIX-M1)
@@ -53,18 +60,20 @@
 
 ## Section 3 — Manual production / go-live tasks
 
-> Thao tác tay ngoài repo (Dashboard Render/Vercel/Sentry/UptimeRobot, DNS) — repo không làm thay được. **Go-live BLOCKED/DEFERRED cho tới khi xong.**
+> Thao tác tay ngoài repo. Các cổng release bắt buộc đã được xác minh; checkbox
+> mở dưới đây là follow-up vận hành hoặc cải tiến, không phải blocker code.
 
-- [ ] **Render paid plan + backup/PITR + restore drill + rollback drill** —
-  `render.yaml` hiện vẫn là Free; nâng plan trong dashboard/Blueprint chỉ sau
-  khi xác nhận tên plan và chi phí hiện hành. Nếu không nâng tại chỗ, di trú
-  theo runbook trước hạn Free hiện hành; xác nhận backup daily/retention/PITR,
-  kiểm thử khôi phục và rollback. Runbook:
+- [x] **PostgreSQL production + backup/PITR** — PostgreSQL 18, plan
+  `0.1c-256mb`, 1 GB, managed PITR active, recovery window 3 ngày; logical export
+  giữ ít nhất 7 ngày. Backend vẫn Free và có cold start. **Restore drill chưa
+  hoàn thành:** owner đã chấp nhận hoãn sau bàn giao. Runbook:
   [backup-and-restore](../07-deployment/backup-and-restore.md) ·
   [rollback-plan](../07-deployment/rollback-plan.md). (→2)
 - [ ] **Sentry DSN + UptimeRobot monitors** — tạo 3 project Sentry + dán 3 DSN (backend `SENTRY_DSN` / frontend `NEXT_PUBLIC_SENTRY_DSN` / admin `VITE_SENTRY_DSN`) vào Render/Vercel rồi redeploy; tạo 2 monitor UptimeRobot (`/api` + trang chủ). Checklist: [monitoring-and-alerting](../07-deployment/monitoring-and-alerting.md). (→5)
 - [ ] **ED-08 cron ngoài gọi `publish-scheduled`** — Render free ngủ sau 15′ nên `@Cron` nội bộ không đủ; đặt UptimeRobot/cron-job.org gọi `POST /api/news/publish-scheduled` (token ADMIN). Nếu đã always-on ở →2 thì cron nội bộ chạy — vẫn nên có cron ngoài.
-- [ ] **DNS / HTTPS / domain chính thức** — **(chờ input câu 10)**.
+- [x] **DNS / HTTPS / domain chính thức** — `thienduccons.vn` do Công ty TNHH
+  Phương Nam Vina quản lý, `www` phục vụ qua Vercel, hết hạn 25/03/2029.
+  Auto-renew không hiển thị trên dashboard.
 - [x] **Áp migration production có chủ ý** — **COMPLETE**. Sau sự cố migration `20260731120000_search_unaccent`, production recovery đã hoàn tất và Prisma xác nhận *Database schema is up to date*. Toàn bộ **11 migration** hiện được ghi nhận là đã áp dụng, gồm `20260710120000_add_fulltext_search` và `20260711120000_add_cooperation_projects` vốn còn tồn đọng trước đó. **Không phải mọi lần áp đều trót lọt**: production đã có **một lần áp thất bại** (`P3009`) và chỉ trở lại sạch sau recovery có kiểm soát. **Bài học bắt buộc cho mọi migration production về sau**: backup kiểm chứng được → inspection read-only trước khi resolve → `migrate resolve` có kiểm soát → `migrate deploy` → xác minh sau deploy. Seed chỉ chạy lại khi cần, có chốt `SEED_CONFIRM_PRODUCTION=yes`. Xem [incident 2026-07-31](../08-audits-and-reports/current/2026-07-31-production-unaccent-migration-incident.md) · runbook [database-migrations](../07-deployment/database-migrations.md).
 - [ ] **UAT thủ công** — Editor + Admin thật trên toàn luồng (đăng nhập, soạn bài, duyệt, form liên hệ, upload ảnh), gồm bấm tay `BannerFormDialog` / `PageFormDialog` / `BilingualField`.
 - [ ] **Chạy checklist nghiệm thu go-live đầy đủ** (mục 3.3 báo cáo / mục 4 `ke-hoach-thien-duc.md`).
@@ -111,10 +120,10 @@
 - [x] **HOME-CONTACT-CTA-FOOTER-SEPARATION-M1** - doi section lien he trang chu tu nen olive trung footer sang nen ivory sang dong bo header; them border phan tach, CTA earth/ivory va cac dong phone/email/dia chi dang panel sang co icon de de scan, khong lam doi footer toi.
 - **Kiem dinh**: frontend targeted Jest 24/24 xanh (`format`, `site-chrome`, `next.config`), frontend lint/typecheck xanh, frontend build xanh khi tro API kha dung; admin lint xanh, admin build xanh. Lan build frontend dau voi `.env` local that bai vi `NEXT_PUBLIC_API_URL=http://localhost:3001/api` nhung backend local khong chay; chay lai voi API Render hien co thi hoan tat 44/44 route.
 
-### Phi�n 2026-09-15 � Redesign giao di?n public theo brief Word
+### Phiên 2026-09-15 — Redesign giao di?n public theo brief Word
 
-- [x] **PUBLIC-UI-REDESIGN-2026-M1** � �p d?ng hu?ng Contemporary Architectural Luxury cho frontend public: token m�u Warm Ivory/Charcoal/Warm Grey/Earth Brown/Deep Olive, typography Cormorant Garamond + Manrope, header 5 m?c ch�nh, hero ?nh th?t overlay ph?ng, facts x�c th?c, intro editorial, featured projects d�ng d? �n th?t t? API, footer/contact b? Zalo test v� d�ng Google Maps directions. Kh�ng d�ng s? mock 16+/20+/1000+/50+.
-- [x] **Docs ngu?n** � chu?n h�a file Word ngu?n v�o `03-ui-ux/references/y-tuong-thiet-ke-lai-website-thien-duc-2026-09-09.docx`; handoff m?i: `03-ui-ux/redesign-handoff-2026-09-15.md`.
+- [x] **PUBLIC-UI-REDESIGN-2026-M1** — áp d?ng hu?ng Contemporary Architectural Luxury cho frontend public: token màu Warm Ivory/Charcoal/Warm Grey/Earth Brown/Deep Olive, typography Cormorant Garamond + Manrope, header 5 m?c chính, hero ?nh th?t overlay ph?ng, facts xác th?c, intro editorial, featured projects dùng d? án th?t t? API, footer/contact b? Zalo test và dùng Google Maps directions. Không dùng s? mock 16+/20+/1000+/50+.
+- [x] **Docs ngu?n** — chu?n hóa file Word ngu?n vào `03-ui-ux/references/y-tuong-thiet-ke-lai-website-thien-duc-2026-09-09.docx`; handoff m?i: `03-ui-ux/redesign-handoff-2026-09-15.md`.
 - Ki?m d?nh frontend: `npm run lint`, `npx tsc --noEmit`, `npm run test -- --runInBand` xanh tru?c khi build.
 
 ### Phiên 2026-09-16 — Hoàn thiện redesign và reduced motion
@@ -154,10 +163,10 @@
 - [ ] Dependency audit còn advisory chưa có bản sửa tương thích: Backend 23,
   Admin 2, Frontend 20 (`--omit=dev`, không còn critical) — tách ticket nâng
   dependency có regression test, không dùng `npm audit fix` tự động.
-- [ ] GitHub required checks/branch protection; Vercel/Render Git integration,
-  production branch và chính sách chờ CI — **manual dashboard**.
-- [ ] Plan production, backup/PITR/restore drill, Sentry và uptime —
-  **manual provider setup**, không được suy từ cấu hình repo.
+- [ ] GitHub required checks/branch protection và chính sách chờ CI — theo dõi
+  quản trị repository. Vercel/Render production deployment đã được xác minh.
+- [x] Plan production và backup/PITR đã được xác minh từ dashboard. Restore drill
+  được owner chấp nhận hoãn sau bàn giao; Sentry/uplink monitoring vẫn là follow-up.
 - [x] **PRE-PUSH-SAFETY-VERIFY** — fetch/preflight giữ đúng `main`, behind 0,
   ahead 2; regression Node 22 xanh: Backend 77/1.329, Admin 59/897 + coverage,
   Frontend 37/445 + build Next 16.3.3; `actionlint 1.7.12` đạt 5 workflow;
@@ -167,12 +176,10 @@
 - [x] Admin Playwright full-stack: **PASS 189/189, FAIL 0, SKIP 0** trên database
   test mới đã migrate/seed theo CI (2026-09-11).
 - [x] **CODE PUSH READY: YES** theo validation local.
-- [ ] **PRODUCTION-GATED PUSH READY: NO**: Render Blueprint local đã chuyển sang
-  `autoDeployTrigger: checksPass` và đã lên `main`, nhưng chưa kiểm chứng bằng CI
-  fail; GitHub required checks và hai Vercel Deployment Checks chưa có bằng chứng
-  active. Push này đã tạo hai Render web deployment fail và một database deployment
-  success; chưa có log để xác định tác động migration. Không push mã ứng dụng cho
-  tới khi báo cáo gating được con người duyệt.
+- [x] **PRODUCTION-GATED PUSH — SUPERSEDED 2026-10-19**: trạng thái chặn dưới đây
+  là chronology của đợt hardening tháng 9. Các release commit cuối đã qua CI,
+  production deployment và product QA; xem báo cáo readiness cuối. GitHub required
+  checks vẫn là follow-up quản trị repository, không làm thay đổi evidence release.
 - [ ] **FRONTEND-CI-CLEAN-TYPEGEN-M1** — GitHub CI của SHA `0f48898` fail tại
   `typecheck` với `Cannot find name 'PageProps'`: runner sạch chạy `tsc` trước
   `next build`. Bản sửa local đổi script thành `next typegen && tsc --noEmit`
@@ -204,7 +211,7 @@
   - **Schema.org — rà xong, KHÔNG sửa.** Hàng rào "cố ý không có" `sameAs`/`openingHours`/`geo`/`priceRange` vẫn nguyên và đúng chỗ; không có khoảng trống thật. Không thêm loại nào, không bịa dữ liệu. Giữ **BLOCKED BY BUSINESS DATA**.
   - **Kiểm định**: Admin **306** test (+29) / coverage functions **48,20%** (ngưỡng 38) · Frontend **200** test (+11) · Backend unit **491 / 37 suite** (không sửa mã TS backend) · backup **20/20**. Lint: frontend 0/0, admin 0 lỗi + 1 cảnh báo có sẵn, backend 0 lỗi + **5 cảnh báo** (xem gạch đầu dòng cuối). `tsc` sạch cả 3 (frontend **phải build trước** vì Next 16 sinh kiểu `PageProps` vào `.next/types`). Mọi build xanh. `prisma validate` hợp lệ. **Không chạm database, không chạm production.**
   - **Hoãn có chủ đích (không phải thất bại)**: backend E2E, diễn tập dump/restore cục bộ, profiling TBT 5 trang, Playwright full-stack — đều cần DB mà máy phiên này không có (`psql`/`pg_dump` ngoài PATH, `.env` rỗng, không đoán credential). Upload Sentry thật, upload off-site, drill production, PSI/Lighthouse/Rich Results — ngoài repo.
-  - **⚠ Phát hiện ngoài phạm vi → ĐÃ KHẮC PHỤC cùng phiên (được duyệt riêng).** Công backend của phiên CI 2026-07-31 (lint 5→0, healthcheck `-d`, Actions v5, `destroyStatusOf`, `loadInstrument`) **không tồn tại trong repo backend** — frontend và admin đã nhận commit, backend thì chưa (vẫn ở `28abb81`), nên con số "backend lint 0 cảnh báo / 492 test" trong tài liệu là **SAI so với repo** (thực tế 5 cảnh báo / 491 test). **Đã cài thật** trong reconciliation dưới đây; báo cáo CI 2026-07-31 và ma trận test-case đã gắn đính chính, **không viết lại lịch sử**.
+  - ** Phát hiện ngoài phạm vi → ĐÃ KHẮC PHỤC cùng phiên (được duyệt riêng).** Công backend của phiên CI 2026-07-31 (lint 5→0, healthcheck `-d`, Actions v5, `destroyStatusOf`, `loadInstrument`) **không tồn tại trong repo backend** — frontend và admin đã nhận commit, backend thì chưa (vẫn ở `28abb81`), nên con số "backend lint 0 cảnh báo / 492 test" trong tài liệu là **SAI so với repo** (thực tế 5 cảnh báo / 491 test). **Đã cài thật** trong reconciliation dưới đây; báo cáo CI 2026-07-31 và ma trận test-case đã gắn đính chính, **không viết lại lịch sử**.
   - **Reconciliation CI backend (phạm vi hẹp, chỉ backend)** — **lint 5 cảnh báo → 0 mà không tắt luật**: `cloudinary.uploader.destroy()` trả `any` → nhận `unknown` + type guard thật `destroyStatusOf()` (nay phân biệt "thất bại có lý do" với "không hiểu phản hồi", thay vì âm thầm báo `thất bại: undefined`); bốn matcher `expect.objectContaining`/`not.objectContaining`/`anything` trả `any` → ba hàm bọc trả `unknown`, hành vi lúc chạy không đổi. Lint tự bắt một assertion **thừa** do chính bản sửa tạo ra (`in` đã thu hẹp kiểu) — đã bỏ. **Healthcheck**: `pg_isready -U thienduc_ci` → thêm `-d thien_duc_test` (khớp `POSTGRES_DB` + `DATABASE_URL` cùng file); thiếu `-d` thì thăm dò DB trùng tên user, sinh `FATAL … does not exist` mỗi 5 giây và che mất lỗi DB thật. **Actions**: `checkout`/`setup-node` v4 → **v5** trong **một** workflow backend (mô tả cũ "4 workflow + upload-artifact" là tính gộp cả frontend/admin — backend không dùng `upload-artifact`). **Nhiễu `Thiếu SENTRY_DSN`**: sửa **hoàn toàn ở test**, `instrument.ts` không đổi một dòng — `loadInstrument()` đặt env, `resetModules`, thu `console.warn` vào **mảng** rồi trả lại ngay. Bản đầu trả spy còn sống thì spy ở thân `describe` chồng lên spy của test → cảnh báo **bị đếm hai lần**; dùng `jest.requireActual` thay `require` trần nên **không cần** `eslint-disable` nào. **Unit 491 → 492 do một test THẬT** (khẳng định cảnh báo thiếu DSN), không ép số. **Kiểm định backend**: lint **0/0** · `tsc` sạch · build xanh · unit **492/492, 37 suite**, hết nhiễu DSN · backup **20/20** · `prisma validate` hợp lệ. **E2E KHÔNG chạy** (không có `DATABASE_URL` dùng-một-lần được duyệt); không chạm 5432, không migration, không production.
 
 ### Phiên 2026-07-31 — Recovery migration unaccent trên production (THIEN-DUC-PRODUCTION-UNACCENT-MIGRATION-RECOVERY-M1)
@@ -221,7 +228,7 @@
 ### Phiên 2026-07-31 — Dọn nốt chất lượng CI (THIEN-DUC-CI-FLAKY-AND-WARNINGS-CLEANUP-M1)
 
 - [x] **THIEN-DUC-CI-FLAKY-AND-WARNINGS-CLEANUP-M1** — đóng 4 test Playwright chập chờn + 5 cảnh báo lint + nhiễu log CI. Báo cáo: [2026-07-31-ci-flaky-and-warnings-cleanup](../08-audits-and-reports/current/2026-07-31-ci-flaky-and-warnings-cleanup.md).
-  - > **⚠ ĐÍNH CHÍNH 2026-08-02** — **phần backend của phiên này chưa từng được commit.** Frontend và admin đã nhận đầy đủ; backend vẫn ở `28abb81` và **không** có: lint 5→0, `pg_isready -d`, Actions v5, `destroyStatusOf`, `loadInstrument`. Thực tế đo được ngày 2026-08-02: backend **0 lỗi / 5 cảnh báo**, unit **491**. Các mục backend đó **đã được cài thật** trong phiên `THIEN-DUC-OPTIONAL-BACKLOG-CODING-COMPLETION-M2` cùng ngày (xem mục kế tiếp) — từ thời điểm đó con số backend mới đúng: lint **0/0**, unit **492**. Các gạch đầu dòng backend bên dưới vì vậy mô tả **trạng thái đạt được ngày 2026-08-02**, không phải 2026-07-31.
+  - > ** ĐÍNH CHÍNH 2026-08-02** — **phần backend của phiên này chưa từng được commit.** Frontend và admin đã nhận đầy đủ; backend vẫn ở `28abb81` và **không** có: lint 5→0, `pg_isready -d`, Actions v5, `destroyStatusOf`, `loadInstrument`. Thực tế đo được ngày 2026-08-02: backend **0 lỗi / 5 cảnh báo**, unit **491**. Các mục backend đó **đã được cài thật** trong phiên `THIEN-DUC-OPTIONAL-BACKLOG-CODING-COMPLETION-M2` cùng ngày (xem mục kế tiếp) — từ thời điểm đó con số backend mới đúng: lint **0/0**, unit **492**. Các gạch đầu dòng backend bên dưới vì vậy mô tả **trạng thái đạt được ngày 2026-08-02**, không phải 2026-07-31.
   - **4 test chập chờn — nguyên nhân gốc là CỔNG HYDRATE, đã tái hiện 100% chứ không đoán.** Chạy lại trên máy dev **không** tái hiện được (file 26/26 xanh cả khi đã xoá sạch `.next`; toàn bộ 187 test xanh với `--retries=0`). Tái hiện tất định bằng CDP `Emulation.setCPUThrottlingRate` **20×** trong một file repro tạm (đã xoá sau khi lấy bằng chứng): **đúng 4 test đó đỏ, không thừa test nào**; thêm cổng hydrate thì **4/4 xanh**. Làm chậm MẠNG không tái hiện được vì `page.goto` mặc định đã chờ `load` — cửa sổ nguy hiểm nằm **sau** `load`, lúc JS còn đang chạy và React chưa gắn handler. Hệ quả đo được: nút slider bấm vào khoảng trống thì không handler nào nhận (thẻ đứng yên → `expect.poll` hết hạn 10s); link `next/link` bấm đúng lúc giao thời thì điều hướng không xảy ra hoặc **cùng cú bấm bị xử lý hai lần** → hai mục lịch sử cho cùng `?page=2` → một lần `goBack()` không quay về được trang 1.
   - **Bản sửa — chỉ ở tầng test, KHÔNG thêm thuộc tính test nào vào mã production.** Helper mới `e2e/helpers/hydration.ts` chờ `<next-route-announcer>` — phần tử App Router tự chèn vào `document.body` trong `useEffect` của `AppRouterAnnouncer`, đã kiểm chứng **không có** trong HTML server render. Kèm theo: chờ **đúng** URL lấy từ `href` thật của thẻ (`waitUntil: 'commit'` vì điều hướng client không phát `load` mới), chốt `aria-current` của trang hiện tại **trước** khi bấm và **trước** khi `goBack()`, thêm khẳng định `previous` `toBeEnabled` sau khi bấm next. Cùng cổng hydrate được thêm cho 4 test cùng lớp rủi ro tuy chưa từng đỏ. **Không** `waitForTimeout`, **không** tăng `retries`, **không** bỏ/nới test nào. Một defect do chính bản sửa gây ra đã bị bắt ở lần xác minh đầu và sửa ngay: so chuỗi URL nguyên không khớp vì link phân trang có kèm neo `#danh-sach-tin` → đổi sang so `pathname` + `searchParams`.
   - **Lint backend 5 cảnh báo → 0.** `cloudinary.uploader.destroy()` trả `any` → nhận `unknown` + type guard thật (shape lạ nay ném lỗi thay vì âm thầm so `undefined !== 'ok'`); `expect.objectContaining`/`anything` trả `any` → ba hàm bọc trả `unknown`. Không tắt luật, không `eslint-disable` diện rộng.
@@ -302,11 +309,11 @@
   - **Chưa đạt FULLY GREEN vì**: (a) còn **1 quan sát chập chờn chưa giải thích được** (`forgot-reset` "mật khẩu quá ngắn"); (b) **không có bằng chứng CI xanh** (chạy cục bộ, không push); (c) **27 case chưa có test**, đáng lo nhất là **sanitize rich content + URL scheme độc hại (D7)**; (d) **Lighthouse không chạy**, 5/8 viewport chưa kiểm, axe chưa phủ nhiều route; (e) **`next@16.2.6` còn 9 advisory (3 High)**, một cái là *middleware/proxy bypass App Router single locale* — trùng đúng kiến trúc `src/proxy.ts`; bản sửa **16.2.12** (patch) **chưa áp**.
   - **Defect còn mở, cố ý KHÔNG tự sửa** (cần quyết định chủ dự án): **D5** tiêu đề rỗng/chỉ khoảng trắng vẫn tạo được (thay đổi quy tắc nghiệp vụ); **D6** thiếu `@ArrayMaxSize` cho `content[]`; **D7** khoảng trống test sanitize/URL scheme; **D8** `images.qualities` lệch (`quality={100}` vs `[75,90]`); **D9** 8 lint warning tồn đọng + script `lint` của backend có `--fix` (tự ghi file).
   - **An toàn**: chỉ `localhost`/`127.0.0.1`; DB `thien_duc_test` (cầu chì 2 tầng); transport email GIẢ, không email thật; không Resend/Cloudinary/Sentry/Gmail; không chạm DB production; không in secret/token; **không commit, không push**; không skip test, không tắt rule axe, không nới timeout, không thêm sleep, không `overflow-x:hidden` toàn cục.
-  - ⚠️ **Bài học đo lường**: lượt Playwright đầu chạy qua `| tail` nên **exit code bị `tail` che** (báo 0 dù suite đỏ) — phải đọc dòng tổng kết, không tin exit code của pipeline. Và phân loại "flaky" chỉ được kết luận **sau khi chạy lặp**: D4 thoạt trông như flake nhưng thực ra đỏ 6/6.
+  -  **Bài học đo lường**: lượt Playwright đầu chạy qua `| tail` nên **exit code bị `tail` che** (báo 0 dù suite đỏ) — phải đọc dòng tổng kết, không tin exit code của pipeline. Và phân loại "flaky" chỉ được kết luận **sau khi chạy lặp**: D4 thoạt trông như flake nhưng thực ra đỏ 6/6.
 
 ### Phiên 2026-07-29 — Slider tin trang chủ + phân trang /tin-tuc (NEWS-SLIDER-AND-PAGINATION-M1)
 
-- [~] **THIEN-DUC-NEWS-SLIDER-AND-PAGINATION-M1** — Trang chủ đổi 3 thẻ tin tĩnh thành **slider** (mobile 1 / tablet 2 / desktop 3 thẻ, trượt 1 thẻ/lần, **không autoplay**), viết theo pattern `ProjectItemsCarousel` sẵn có — **không thêm thư viện**. `/tin-tuc` có **phân trang thật, 9 bài/trang**, trang hiện tại nằm trong URL (`?page=2`); `?page=` sai/0/âm/chữ/1 → redirect URL sạch, vượt trang cuối → redirect về trang cuối có thật. Backend `GET /news` thêm `page`/`limit` **tùy chọn** (giữ mảng phẳng khi không có → không breaking), trần `limit` 50, chỉ PUBLISHED, sắp **tất định** `publishedAt desc, id desc` (khoá phụ `id` sửa lỗi thứ tự không tất định của bài trùng `publishedAt`), `count`+`findMany` trong một transaction. Canonical mỗi trang tự trỏ chính nó (không noindex). **54 unit test mới** xanh (BE 10 / FE 44). ⚠️ **22 spec Playwright + axe đã viết nhưng CHƯA chạy** — thiếu `.env` cục bộ ở cả 3 repo nên backend không boot được; chưa có bằng chứng đo được cho a11y/overflow/Back-Forward. Chi tiết + cách chạy: [news-slider-and-pagination-m1](../08-audits-and-reports/current/2026-07-29-news-slider-and-pagination-m1.md).
+- [~] **THIEN-DUC-NEWS-SLIDER-AND-PAGINATION-M1** — Trang chủ đổi 3 thẻ tin tĩnh thành **slider** (mobile 1 / tablet 2 / desktop 3 thẻ, trượt 1 thẻ/lần, **không autoplay**), viết theo pattern `ProjectItemsCarousel` sẵn có — **không thêm thư viện**. `/tin-tuc` có **phân trang thật, 9 bài/trang**, trang hiện tại nằm trong URL (`?page=2`); `?page=` sai/0/âm/chữ/1 → redirect URL sạch, vượt trang cuối → redirect về trang cuối có thật. Backend `GET /news` thêm `page`/`limit` **tùy chọn** (giữ mảng phẳng khi không có → không breaking), trần `limit` 50, chỉ PUBLISHED, sắp **tất định** `publishedAt desc, id desc` (khoá phụ `id` sửa lỗi thứ tự không tất định của bài trùng `publishedAt`), `count`+`findMany` trong một transaction. Canonical mỗi trang tự trỏ chính nó (không noindex). **54 unit test mới** xanh (BE 10 / FE 44).  **22 spec Playwright + axe đã viết nhưng CHƯA chạy** — thiếu `.env` cục bộ ở cả 3 repo nên backend không boot được; chưa có bằng chứng đo được cho a11y/overflow/Back-Forward. Chi tiết + cách chạy: [news-slider-and-pagination-m1](../08-audits-and-reports/current/2026-07-29-news-slider-and-pagination-m1.md).
 
 ### Phiên 2026-07-29 — Nâng trần nội dung dài (LONG-FORM-CONTENT-LIMIT-M1)
 
@@ -343,7 +350,7 @@
   - **Test mới**: backend `src/banners/banner-content.spec.ts` (8 test — validate qua đúng `CreateBannerDto`, song ngữ đủ, độ dài, `href` đối chiếu route tĩnh + slug trong `seed-projects.js`, `objectPosition`, thứ tự); frontend `src/lib/api/banners.test.ts` (4 test — `mapBanner` VI/EN + fallback); admin `src/pages/BannersPage.test.tsx` (6 test — danh sách, ảnh xem trước, bật/tắt, form nạp VI/EN + payload khớp DTO, validate `href`); E2E `admin/e2e/public/banner-content.e2e.ts` (**21 test** — API công khai chỉ lộ banner bật, trang chủ VI/EN, ảnh tải được + alt, bàn phím, route CTA mở được ở cả hai locale, responsive 375/768/1280, axe khối banner, `prefers-reduced-motion`).
   - Helper `admin/e2e/helpers/a11y.ts` thêm tham số `include` **tùy chọn** để giới hạn phạm vi quét axe — **không tắt/hạ mức rule nào**.
   - **Kiểm định**: Backend `prisma validate` · `tsc` · `lint` (0 lỗi) · `jest 306/306` · `build` xanh. Admin `tsc` · `lint` (0 lỗi) · `vitest 126/126` · `build` xanh. Frontend `tsc` · `lint` (0 lỗi/0 warning) · `jest 53/53` · `next build` xanh (prerender cả `/vi/du-an/khu-do-thi-hung-phu/fancy-tower` → route CTA có thật). E2E full-stack **111/112** cục bộ — nhưng lần chạy **CI** thật của cùng bộ test cho **109 passed · 1 failed · 2 flaky**; xem đính chính ở mục E2E-CI-RED-FIX-M1 bên dưới.
-  - **Tồn đọng — KHÔNG do banner**: (a) `admin/e2e/admin/accessibility.e2e.ts` "Admin quản lý tài khoản: axe" fail `color-contrast` (badge `text-green-700` trên `bg-green-50` = 4.3:1; `text-slate` #7a8287 trên trắng = 3.91:1) — **đã xác minh có sẵn trước thay đổi này** (stash helper a11y, chạy lại, vẫn fail); (b) trang chủ ngoài khối banner còn 1 vi phạm `color-contrast` ở CTA liên hệ (`text-gold` trên `bg-brand` = 3.52:1). ➡️ **Cả hai đã đóng ngày 2026-07-29** ở E2E-CI-RED-FIX-M1.
+  - **Tồn đọng — KHÔNG do banner**: (a) `admin/e2e/admin/accessibility.e2e.ts` "Admin quản lý tài khoản: axe" fail `color-contrast` (badge `text-green-700` trên `bg-green-50` = 4.3:1; `text-slate` #7a8287 trên trắng = 3.91:1) — **đã xác minh có sẵn trước thay đổi này** (stash helper a11y, chạy lại, vẫn fail); (b) trang chủ ngoài khối banner còn 1 vi phạm `color-contrast` ở CTA liên hệ (`text-gold` trên `bg-brand` = 3.52:1).  **Cả hai đã đóng ngày 2026-07-29** ở E2E-CI-RED-FIX-M1.
   - **Chưa chạy trên production** — seed mới chỉ chạy trên DB test cục bộ `localhost/thien_duc_test`. Muốn lên production phải chạy `SEED_CONFIRM_PRODUCTION=yes npm run prisma:seed:banners` có chủ ý.
 
 ### Phiên 2026-08-11 — Quản lý chuyên mục tin (NEWS-CATEGORY-MANAGEMENT)
@@ -387,7 +394,7 @@
   - **Backend** — `POST /api/auth/change-password`, `JwtAuthGuard` + `@ApiBearerAuth()`, throttle **5 lần / 15 phút** (bằng `reset-password` / `forgot-password`; để rơi về mức toàn cục 100/60s là quá lỏng cho việc dò `currentPassword`). DTO `ChangePasswordDto` (`currentPassword` / `newPassword` / `confirmPassword`, 8–128 ký tự khớp `ResetPasswordDto`) **không có `userId`** — danh tính lấy từ `@CurrentUser()`, `forbidNonWhitelisted` reject 400 nếu client gửi kèm. **Mọi vai trò** đổi được mật khẩu của chính mình; **SUPER_ADMIN vẫn KHÔNG** đặt được mật khẩu người khác (nguyên tắc cũ nguyên vẹn).
   - **Mã lỗi có chủ đích** — sai `currentPassword` trả **400**, KHÔNG dùng 401/403: Admin CMS đã gán sẵn ngữ nghĩa cho hai mã đó (401 → xoá token + về trang đăng nhập; 403 → toast "không có quyền" / `/403`), trả nhầm sẽ **đăng xuất người chỉ gõ sai mật khẩu**. Mật khẩu mới trùng mật khẩu cũ (so bằng bcrypt với hash) → 400.
   - **Phiên** — cập nhật `passwordHash` + **thu hồi toàn bộ refresh token** trong **cùng một transaction** (không gọi `revokeAllTokens()` vì nó dùng `this.prisma` ngoài tx nên không rollback cùng — cùng lý do đã ghi ở `resetPassword`). Không cấp token thay thế. Admin dọn token ở **cả** `localStorage` lẫn `sessionStorage` rồi điều hướng cứng về `withBase('/dang-nhap')` → `/admin/dang-nhap` (giữ tiền tố base của Batch 15B; gán thẳng `/dang-nhap` sẽ rơi ra 404 của website công khai).
-  - ⚠️ **Giới hạn đã biết, không che giấu**: không có `tokenVersion` trong schema nên **access token trên thiết bị khác vẫn sống tới khi hết hạn tự nhiên** (`JWT_ACCESS_EXPIRES_IN`, mặc định 15 phút). Thu hồi refresh token chặn gia hạn nên cửa sổ tối đa đúng 15 phút. Cắt tức thì cần đổi schema — **cố ý không làm** trong batch này.
+  -  **Giới hạn đã biết, không che giấu**: không có `tokenVersion` trong schema nên **access token trên thiết bị khác vẫn sống tới khi hết hạn tự nhiên** (`JWT_ACCESS_EXPIRES_IN`, mặc định 15 phút). Thu hồi refresh token chặn gia hạn nên cửa sổ tối đa đúng 15 phút. Cắt tức thì cần đổi schema — **cố ý không làm** trong batch này.
   - **Admin UI** — `/ho-so` thêm thẻ **"Bảo mật"** + nút "Đổi mật khẩu" mở `ChangePasswordDialog` (SplitModal + RHF/Zod, schema tách file theo quy ước `*-schema.ts`). Đặt **NGOÀI** `<form>` hồ sơ một cách có chủ đích: hồ sơ đi `PATCH /users/me` (EDITOR phải **chờ duyệt** qua `ProfileChangeRequest`), mật khẩu đi `/auth/change-password` (**hiệu lực ngay, không ai duyệt**) — gộp chung là trộn hai vòng đời và kéo quản trị viên vào quy trình mật khẩu người khác.
   - **Test** — backend +15 test service / +6 test controller (77 suites · 1329 test, từ 1308); Admin +12 test dialog / +6 test ProfilePage (59 file · 897 test). Thêm `e2e/admin/change-password.e2e.ts` (2 test) dùng **tài khoản fixture `@e2e.test` dùng-một-lần**, không đụng tài khoản seed dùng chung, dọn sạch ở `afterAll` — **đã được Playwright nhận diện nhưng CHƯA chạy thật** (cần swap `.env` backend sang env E2E, việc thuộc local machine, để batch sau).
   - **Không** đổi schema, **không** migration, **không** đổi CORS / API base / mô hình auth. Frontend công khai **không đụng**.

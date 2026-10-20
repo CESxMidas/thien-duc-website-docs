@@ -1,7 +1,7 @@
 # Checklist bàn giao — Website Thiên Đức
 
 > **Trạng thái:** Đang dùng
-> **Cập nhật:** 2026-09-09
+> **Cập nhật:** 2026-10-19
 
 Checklist ngắn cho người tiếp nhận. Nguồn chi tiết là
 [CI/CD](../07-deployment/ci-cd.md); không sao chép secret vào file này.
@@ -88,11 +88,11 @@ npm run dev
 - [ ] Cloudinary, Resend, Sentry và uptime provider nếu đang dùng.
 - [ ] DNS/domain registrar và hộp thư nhận cảnh báo.
 - [ ] Password manager/kênh secret riêng; bật MFA và thu hồi quyền người cũ.
-- [ ] AI agent/new developer mặc định chỉ cần quyền đọc repo và quyền ghi trong
-  workspace cho file đã được giao; quyền push, deploy, dashboard provider,
-  production secret hoặc production database chỉ cấp khi có phê duyệt rõ ràng.
+- [ ] Thành viên mới mặc định chỉ cần quyền đọc repo; quyền push, deploy,
+  dashboard provider, production secret hoặc production database chỉ cấp khi có
+  phê duyệt rõ ràng.
 
-## 8. Việc thủ công còn phải xác minh
+## 8. Trạng thái xác minh khi bàn giao
 
 - [ ] GitHub protect `main`, cấm force-push/xóa nhánh; required checks: Backend
   `CI / lint-build-test` + `CI / e2e`; Admin `CI / lint-build` +
@@ -102,18 +102,29 @@ npm run dev
   cho phép push trực tiếp `main`.
 - [ ] Vercel Frontend/Admin: production branch `main`, đúng repo/root/build/env;
   required Deployment Checks/GitHub checks trước promote production.
-- [ ] Render: đúng repo/`main`, build/start/health/env; xác minh gate CI. Blueprint
-  trên `main` đã dùng `autoDeployTrigger: checksPass`; còn phải xác nhận Dashboard
-  hiển thị **After CI Checks Pass** và thử gate. Push áp cấu hình đã tạo hai web
-  deployment fail cùng một database deployment success; phải review Render logs.
+- [x] Render Backend: đúng repo/`main`, region Singapore, Auto-Deploy, service
+  Live và release gần nhất thành công.
 - [x] Backend E2E local trên DB `thien_duc_test`: 7/7 suite, 107/107 test.
 - [x] Admin full-stack E2E: 189/189 pass, 0 fail, 0 skip trên DB test cô lập
   (2026-09-11).
-- [ ] Frontend GitHub CI: SHA `0f48898` fail ở `typecheck` vì runner sạch thiếu
-  generated `PageProps`; bản sửa local `next typegen && tsc --noEmit` đã pass
-  Node 22 nhưng chưa push/chạy lại CI.
-- [ ] Render plan production, phiên bản PostgreSQL, backup/PITR.
-- [ ] Restore drill và rollback drill.
+- [x] Frontend GitHub CI: commit
+  `8f9d5bcb443274294bbe9d97280e0059d8581ae0` đạt lint, typecheck, test và build;
+  production `/` và `/en` không còn hydration mismatch.
+- [x] Render plan production và PostgreSQL 18 đã xác minh; managed PITR active,
+  recovery window 3 ngày, logical export giữ ít nhất 7 ngày.
+- [ ] Restore drill: owner đã chấp nhận hoãn sang vận hành sau bàn giao; phải chạy
+  ở đích cô lập và ghi RPO/RTO. Rollback drill vẫn là follow-up vận hành.
 - [ ] Ba Sentry project, source maps và alert rules.
 - [ ] Backend/frontend uptime monitors.
-- [ ] Kho off-site, mã hóa và lịch chạy backup.
+- [ ] Kho off-site, mã hóa và lịch chạy backup nếu tổ chức yêu cầu lớp backup bổ
+  sung ngoài Render managed recovery.
+
+## 9. Production ownership đã xác minh
+
+- [x] Production environment bắt buộc hiện diện trên Vercel/Render; chỉ bàn giao
+  giá trị qua password manager hoặc dashboard.
+- [x] Domain `thienduccons.vn` do Công ty TNHH Phương Nam Vina quản lý; tổ chức
+  chịu trách nhiệm là Công ty TNHH Đầu tư Xây dựng Thương mại Thiên Đức.
+- [x] Domain hết hạn 25/03/2029; `www` định tuyến tới Vercel.
+- [ ] Auto-renew không hiển thị trên dashboard; owner cần xác nhận trước kỳ gia hạn.
+- [ ] Rà soát rule PostgreSQL `0.0.0.0/0`; chưa được coi là đã khắc phục.

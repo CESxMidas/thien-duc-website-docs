@@ -52,7 +52,7 @@ chứng (log Render, screenshot, response lỗi) để truy vết sau.
    Swagger cố ý tắt ở production (trả 404), xem
    [deployment-guide → Swagger chỉ có ngoài production](deployment-guide.md#swagger-chỉ-có-ngoài-production).
 
-> ⚠️ **Bẫy migration khi rollback code:** `startCommand` chạy `prisma migrate deploy`
+>  **Bẫy migration khi rollback code:** `startCommand` chạy `prisma migrate deploy`
 > mỗi lần deploy. Rollback **code** không rollback **schema** — nếu bản hỏng đã áp
 > migration mới, code cũ chạy trên schema mới. Thường vẫn ổn (thêm bảng/cột mới
 > không phá code cũ), nhưng nếu migration **đổi/xóa** cột thì code cũ có thể lỗi →
@@ -81,12 +81,13 @@ Chi tiết vận hành migration: [database-migrations.md](database-migrations.m
 
 Toàn bộ runbook nằm ở [backup-and-restore.md](backup-and-restore.md):
 
-- **PITR** (nếu plan có): Render Dashboard → database → Recovery → chọn mốc thời
+- **PITR** (đã xác minh active, recovery window 3 ngày): Render Dashboard →
+  database → Recovery → chọn mốc thời
   gian ngay **trước** sự cố → repoint `DATABASE_URL`.
 - **Daily backup / dump thủ công**: `pg_restore` vào DB mới (Cách A) → xác minh →
   repoint `DATABASE_URL`.
 
-> ⚠️ Mọi dữ liệu ghi **sau** mốc khôi phục sẽ mất (lead mới, bài viết mới). Trước
+>  Mọi dữ liệu ghi **sau** mốc khôi phục sẽ mất (lead mới, bài viết mới). Trước
 > khi restore, nếu DB còn đọc được, `pg_dump` bản hiện tại để cứu dữ liệu chênh
 > lệch (diff tay bảng `contact_submissions` nếu cần).
 
@@ -95,15 +96,16 @@ Toàn bộ runbook nằm ở [backup-and-restore.md](backup-and-restore.md):
 ## Điều kiện tiên quyết để kế hoạch này có hiệu lực
 
 - [x] Quy trình rollback bằng văn bản (file này — task →2).
-- [ ] **Postgres plan trả phí + backup đã bật** — không có backup thì lớp 3 vô nghĩa
+- [x] **Postgres plan trả phí + managed PITR đã bật** — dashboard xác minh ngày
+      2026-10-19, recovery window 3 ngày
       (xem [backup-and-restore.md](backup-and-restore.md) mục 6).
-- [ ] **Diễn tập một lần trước go-live**: rollback FE + BE bản vô hại, restore thử
-      DB (checklist ở [backup-and-restore.md](backup-and-restore.md) mục 5), xác
-      nhận tên menu Dashboard còn đúng.
+- [ ] **Restore drill sau bàn giao:** owner đã chấp nhận waiver cho việc hoãn
+      diễn tập. PITR vẫn active; lần diễn tập phải dùng đích cô lập và ghi RPO/RTO.
 - [ ] Staging để thử migration trước production — **ngoài phạm vi task →2** (xem
       task →10, [ADR-0003](../10-decisions/ADR-0003-single-production-environment.md)
       hiện chốt một môi trường duy nhất).
-- [ ] Monitoring/alert phát hiện sự cố sớm — **task →5**, chưa làm.
+- [ ] Monitoring/alert phát hiện sự cố sớm — chỉ coi active sau khi dashboard và
+      test event/alert được xác minh.
 
 ---
 

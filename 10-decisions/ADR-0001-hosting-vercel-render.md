@@ -16,6 +16,26 @@ Cần chọn hạ tầng cho 3 thành phần: frontend Next.js, backend NestJS, 
 
 ## Hệ quả
 
-- ✅ Deploy tái lập được (IaC qua `render.yaml`), CI lint+build ở cả 2 repo.
-- ⚠️ Free-tier: backend ngủ sau 15 phút (request đầu 30–50s), Postgres free hết hạn 90 ngày → cần cron ngoài (UptimeRobot) và **nâng plan trước go-live** (ngân sách: câu 13, còn mở).
-- ⚠️ Chưa có backup/monitoring/staging (xem [audit-baseline](../08-audits-and-reports/current/2026-07-16-audit-baseline.md) mục 7).
+- Deploy tái lập được (IaC qua `render.yaml`), CI lint+build ở cả 2 repo.
+- Tại thời điểm quyết định ban đầu, Free-tier làm backend ngủ sau 15 phút và
+  PostgreSQL Free có thời hạn; vì vậy kế hoạch yêu cầu nâng database trước go-live.
+- Tại thời điểm quyết định ban đầu chưa có bằng chứng backup/monitoring/staging
+  (xem [audit-baseline](../08-audits-and-reports/current/2026-07-16-audit-baseline.md) mục 7).
+
+## Cập nhật trạng thái production — 2026-10-19
+
+Quyết định nền tảng không thay đổi, nhưng trạng thái vận hành đã khác giai đoạn
+đầu:
+
+- Backend vẫn chạy Render Free; cold start là giới hạn đã biết.
+- PostgreSQL production đã chuyển sang plan trả phí `0.1c-256mb` (6 USD/tháng
+  theo dashboard tại thời điểm xác minh), PostgreSQL 18, Singapore, storage 1 GB.
+- Render managed PITR active với recovery window 3 ngày; logical export được giữ
+  ít nhất 7 ngày.
+- Restore drill được owner chấp nhận hoãn sang vận hành sau bàn giao.
+- Frontend/Admin production environment và domain `thienduccons.vn` đã được xác
+  minh bằng dashboard.
+
+Phần mô tả Free-tier phía trên được giữ để phản ánh quyết định ban đầu. Trạng
+thái hiện hành xem
+[báo cáo readiness cuối](../08-audits-and-reports/current/2026-10-19-final-release-readiness.md).

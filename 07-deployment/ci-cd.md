@@ -1,7 +1,7 @@
 # CI/CD và bàn giao triển khai — Website Thiên Đức
 
 > **Trạng thái:** Nguồn sự thật chi tiết cho CI/CD
-> **Cập nhật:** 2026-09-14
+> **Cập nhật:** 2026-10-19
 > **Phạm vi:** Chỉ hệ thống Thiên Đức tại `https://www.thienduccons.vn`.
 
 ## 1. Tổng quan
@@ -196,11 +196,10 @@ whitespace commit. Link HTTP bên ngoài không được probe để tránh CI c
 
 Không có GitHub Action deploy; không cần Vercel/Render deploy token trong GitHub.
 
-Repo Backend đã **khai báo gate dự kiến** bằng `autoDeployTrigger: checksPass` và
-commit đã được Render nhận, nhưng chưa có push tiếp theo để chứng minh CI fail bị
-chặn. Hai project Vercel vẫn chưa có bằng chứng Deployment Checks. Branch
-protection/required checks và provider-side gates đều phải được xác minh trên
-dashboard; không suy trạng thái production chỉ từ file trong repo.
+Repo Backend khai báo `autoDeployTrigger: checksPass`. Dashboard đã xác minh
+service production liên kết `main`, Auto-Deploy bật và release gần nhất thành
+công. Branch protection/required checks và provider-side gates vẫn phải được
+kiểm tra khi thay đổi quyền hoặc chính sách; không suy chúng chỉ từ file repo.
 
 ## 10. Vercel — Frontend
 
@@ -248,11 +247,10 @@ sync, Auto-Deploy hiển thị **After CI Checks Pass**, env có đủ và healt
 hoặc có check fail. Vì `startCommand` chứa `prisma migrate deploy`, migration
 production chỉ được chạy sau khi gate cho phép bắt đầu deployment.
 
-Trạng thái hiện tại: **CONFIGURED BUT NOT TESTED**. GitHub Deployments API ghi
-nhận hai production web deployment Render đều fail và một database deployment
-success cho chính commit đổi Blueprint. Không có log dashboard nên chưa xác định
-web deployment dừng trước hay sau `prisma migrate deploy`; tác động database là
-**NOT VERIFIED**. Không được thử lại bằng push `main` trước khi review dashboard.
+Trạng thái hiện tại: **PRODUCTION VERIFIED**. Service
+`thien-duc-website-backend` chạy Live tại Singapore, nhánh `main`, Auto-Deploy
+bật và commit release `fa59293` triển khai thành công. Backend dùng plan Free nên
+có thể cold-start; đây là giới hạn vận hành, không phải deployment failure.
 
 ## 13. Ma trận biến môi trường
 
@@ -395,20 +393,20 @@ Chỉ dùng thao tác ghi dữ liệu khi đã thống nhất và có thể dọ
 ## 18. Backup và restore
 
 - Repo có script backup/checksum/encryption/verify/prune và test an toàn.
-- Kho off-site, credential, lịch chạy, Render backup/PITR và restore drill vẫn
-  là thiết lập thủ công chưa có bằng chứng active.
-- Không tuyên bố “đã có backup” cho tới khi có timestamp, retention, vị trí lưu
-  và một lần restore thành công.
+- Render managed PITR đã được dashboard xác minh active với recovery window 3
+  ngày. Manual logical export khả dụng và được giữ ít nhất 7 ngày.
+- Restore drill chưa thực hiện; owner chấp nhận hoãn sang vận hành sau bàn giao.
+- Kho off-site, credential và lịch chạy là lớp bổ sung, chưa được xác minh active.
 - Runbook: [backup-and-restore.md](backup-and-restore.md).
 
 ## 19. Monitoring và log
 
 | Nguồn | Dùng để xem | Trạng thái bằng chứng |
 |---|---|---|
-| GitHub Actions | lint/test/build/E2E | Repo-configured |
-| Vercel Deployments/Functions logs | build và runtime FE/Admin | Dashboard cần quyền |
-| Render Events/Logs/Metrics | build/start/migration/API | Dashboard cần quyền |
-| Sentry 3 app | exception ứng dụng | Code ready; dashboard/DSN chưa được chứng minh |
+| GitHub Actions | lint/test/build/E2E | Release Frontend/Admin đã xác minh đạt |
+| Vercel Deployments/Functions logs | build và runtime FE/Admin | Production deployment đã xác minh; cần quyền để vận hành |
+| Render Events/Logs/Metrics | build/start/migration/API | Backend Live; cần quyền để vận hành |
+| Sentry | exception ứng dụng | Admin env hiện diện; event/alert thực tế chưa được xác minh |
 | Uptime monitor | availability FE/API | Chưa được chứng minh active |
 
 Không đưa request body, token hay dữ liệu lead vào ticket/log công khai.
@@ -433,11 +431,11 @@ Không đưa request body, token hay dữ liệu lead vào ticket/log công khai
 |---|---|---|
 | Developer | code, review migration, test/build, smoke, ghi release | Quy trình đã tài liệu hóa |
 | GitHub | source control + CI | Workflow đã cấu hình |
-| Vercel | deploy Frontend/Admin + domain | Manual dashboard verification |
-| Render | Backend + PostgreSQL + migration khi start | Blueprint có; dashboard verification |
-| Cloudinary | media | Code/config ready; credential dashboard |
-| Resend | email giao dịch/lead | Code ready; credential/domain dashboard |
-| Sentry | error tracking | Code ready; manual setup chưa chứng minh |
+| Vercel | deploy Frontend/Admin + domain | Production và env bắt buộc đã xác minh |
+| Render | Backend + PostgreSQL + migration khi start | Service/database/recovery đã xác minh |
+| Cloudinary | media | Nhóm env production đã xác minh hiện diện |
+| Resend | email giao dịch/lead | Nhóm env production đã xác minh hiện diện |
+| Sentry | error tracking | Admin env hiện diện; vận hành alert cần xác minh định kỳ |
 | Uptime provider | availability alert | Manual setup chưa chứng minh |
 | Người vận hành | backup/restore drill, quyền tài khoản, rollback | Chưa thể tự động xác nhận từ repo |
 
@@ -448,8 +446,9 @@ Không đưa request body, token hay dữ liệu lead vào ticket/log công khai
 - [ ] Chuyển quyền Cloudinary, Resend, Sentry và uptime provider nếu đang dùng.
 - [ ] Bàn giao secret qua password manager/kênh riêng; không qua Git/tài liệu.
 - [ ] Xác nhận required checks và auto-deploy policy.
-- [ ] Xác nhận toàn bộ production env theo mục 13.
-- [ ] Xác nhận plan, backup/PITR, lịch backup off-site và restore drill.
+- [x] Xác nhận toàn bộ production env bắt buộc theo mục 13.
+- [x] Xác nhận plan PostgreSQL và managed PITR; restore drill được owner chấp
+  nhận hoãn sau bàn giao.
 - [ ] Diễn tập một deploy không đổi schema và một rollback.
 - [ ] Ghi người chịu trách nhiệm sự cố và kênh cảnh báo.
 
@@ -468,21 +467,21 @@ Không đưa request body, token hay dữ liệu lead vào ticket/log công khai
 
 | Hạng mục | Trạng thái |
 |---|---|
-| Backend CI | **IMPLEMENTED AND VERIFIED LOCALLY**: lint, typecheck, 77 suite/1.329 unit test, build, Prisma validate |
-| Admin CI | **IMPLEMENTED AND VERIFIED LOCALLY**: lint, typecheck, 59 file/897 test + coverage, build |
-| Frontend CI | **REMOTE FAIL** tại `typecheck` do runner sạch chưa sinh `PageProps`; bản sửa local dùng `next typegen && tsc --noEmit`, đã pass Node 22 cùng lint, 37 suite/445 test và build |
-| Docs CI | **IMPLEMENTED AND VERIFIED LOCALLY**: `git diff --check`, 87 tệp Markdown hợp lệ |
+| Backend release | Commit `fa59293`; production Render Live |
+| Admin CI | Lint, typecheck, coverage, build và full-stack E2E 189/189 đạt |
+| Frontend CI | Commit `8f9d5bcb443274294bbe9d97280e0059d8581ae0`; Jest 459/459, lint, typecheck và build đạt |
+| Docs CI | Chạy lại sau cập nhật Phase 8 bằng `git diff --check` và checker link |
 | Cú pháp/workflow semantics | **VERIFIED LOCALLY**: `actionlint 1.7.12` đạt cả 5 workflow |
 | Backend E2E | **VERIFIED LOCALLY 2026-09-10**: PostgreSQL 17 tạm trên loopback, đúng DB `thien_duc_test`; 7/7 suite, 107/107 test; không dùng production DB |
 | Admin full-stack E2E | **VERIFIED LOCALLY 2026-09-11**: 189/189 pass, 0 fail, 0 skip trên PostgreSQL test cô lập |
-| Production smoke chỉ-đọc | **VERIFIED 2026-09-09**: Home/Admin/API/Projects/News 200; Swagger production 404; Users không token 401 |
-| CD Vercel/Render trong repo | **RENDER CONFIGURED BUT NOT TESTED; VERCEL MANUAL PROVIDER SETUP REQUIRED** |
+| Production smoke | Frontend `/` và `/en` đạt; không còn React #418/hydration mismatch; Backend hoạt động |
+| CD Vercel/Render | Production deployment và service identity đã xác minh bằng dashboard |
 | Check availability | **VERIFIED**: đủ 6 check name đã xuất hiện; branch protection/required selection vẫn **UNKNOWN** vì cần quyền dashboard/API |
 | Sentry/Uptime dashboard | **IMPLEMENTED BUT MANUAL PROVIDER SETUP REQUIRED** |
-| Render backup/PITR và restore drill | **DOCUMENTED ONLY / chưa có bằng chứng active** |
+| Render backup/PITR và restore drill | Managed PITR active, 3 ngày; restore drill waiver accepted |
 | Backup off-site scheduler/storage | **NOT IMPLEMENTED ở provider; repo tooling sẵn** |
 | Staging branch/environment | **NOT APPLICABLE theo ADR hiện tại** |
-| Push mã ứng dụng | **CODE PUSH READY** sau validation local; **PRODUCTION-GATED PUSH NOT READY** vì GitHub/Vercel/Render chưa được cấu hình và chứng minh trên provider |
+| Trạng thái release | Application release đã triển khai; sẵn sàng bàn giao tài liệu |
 
 `npm audit --omit=dev` tại ngày audit còn báo Backend 23 advisory (7 moderate,
 16 high), Admin 2 high, Frontend 20 (1 moderate, 19 high). Hai advisory RCE
