@@ -2,7 +2,7 @@
 
 > **Trạng thái:** Đang dùng
 > **Nhóm:** 03 — UI/UX
-> **Cập nhật:** 2026-07-16
+> **Cập nhật:** 2026-10-24
 > **Nguồn (di chuyển từ):** `UI-UX-HANDOFF-SPEC.md` (thư mục gốc)
 > **Tài liệu liên quan:** [design-system](design-system.md) · [implementation-plan](../04-implementation/implementation-plan.md)
 
@@ -10,6 +10,19 @@
 > Ràng buộc: **giữ nguyên bảng màu chủ đạo** — nâu đồng `#B06613`, nâu đậm `#7f4b0d`, vàng `#fdcd04`, đen `#191919`, xám chữ `#59646a`, nền kem `#fff8ea`. Được phép sắp xếp lại bố cục.
 
 ## 0. Tóm tắt điểm nghẽn → hạng mục sửa
+
+### Chuẩn bổ sung 2026-10-24 — Ảnh dự án và con trỏ tương tác
+
+- Footer dùng nền kem sáng chuyển nhẹ từ ivory sang gold-soft, chữ ink/brand-dark, biểu tượng nâu; bỏ nền ảnh tối và text-shadow để logo rõ. Logo fallback dùng bản header-transparent màu nâu. Khối thương hiệu xếp dọc trên mobile; tên công ty xuống dòng tự nhiên, không `whitespace-nowrap`, font 14px/line-height 28px. Link điều hướng có vùng bấm tối thiểu 44px; email cho phép ngắt chuỗi để không tràn màn hình. Chỉ đổi footer, không thay các token olive của khu vực khác.
+
+- Thanh cuộn website công khai dùng tay nắm nâu đồng, rãnh kem, bo tròn; Chromium/Safari rộng/cao 10px với viền trong 2px, không đổi kích thước khi hover. Firefox dùng `scrollbar-width: thin` và `scrollbar-color` tương ứng. Màu tham chiếu token thương hiệu trong `globals.css`; hover/active đậm hơn. Áp dụng cho trang, menu mobile, sidebar/nội dung dài, textarea và dải ảnh. Carousel chủ đích giấu thanh cuộn dùng class chung `no-scrollbar`; giữ nút điều hướng/swipe. Chế độ forced-colors dùng màu hệ thống.
+
+- Mô tả tổng quan dự án/hạng mục nhập từ CMS dùng `.project-description` và style trực tiếp `whiteSpace: "pre-line"` để giữ xuống dòng và dòng trống giữa các đoạn, kể cả khi stylesheet trên bản đang phục vụ thiếu rule mới. Không áp `white-space: normal` ghi đè lên nội dung này và không yêu cầu biên tập viên nhập HTML.
+
+- Chi tiết dự án và chi tiết hạng mục dùng khung ảnh cố định **4:3**, co giãn theo chiều rộng responsive. Không lấy kích thước ảnh gốc để thay đổi chiều cao khung khi tải/chuyển ảnh. Ảnh chụp dự án có logo góc trên trái dùng `object-cover object-left-top origin-top-left`: phủ kín khung và giữ góc chứa logo, cắt phần dư bên phải/dưới, không kéo méo. Áp dụng cho ảnh lớn, thumbnail, thẻ hạng mục, ảnh dự án ở trang chủ/carousel/sidebar/tìm kiếm và ảnh chụp cạnh bản đồ. Gốc phóng to cũng phải là góc trên trái. Nhãn trạng thái trên ảnh đặt góc trên phải để không đè logo. Sơ đồ vị trí giữ cách dựng riêng để bảo toàn tọa độ marker; banner có điểm căn riêng từ CMS không bị ghi đè.
+- Ảnh thu nhỏ, ảnh trên thẻ hạng mục, gallery theo nhóm và dải ảnh dự án dùng chung class `project-image-frame` trong `frontend/src/app/globals.css`. Ảnh xem trước dạng thẻ giữ `object-cover`; bản đồ, logo và banner giữ tỷ lệ riêng theo vai trò.
+- Website công khai dùng `cursor: pointer` cho liên kết có đích, nút, điều khiển có role button, summary, select và input chọn/tải tệp. Trạng thái disabled/aria-disabled dùng `not-allowed`; ô nhập chữ giữ con trỏ nhập liệu. Các utility con trỏ chuyên biệt như phóng to/kéo vẫn được ưu tiên.
+- Quy tắc áp dụng cả phần tử `role="link"` và nút ảnh `input[type="image"]`. Điều khiển con của nhóm `aria-disabled="true"` kế thừa con trỏ cấm; vùng `inert` dùng con trỏ thường. Không thêm pointer cho thẻ chỉ đọc dù có hiệu ứng hover/focus, hoặc cho mọi nhãn ô nhập.
 
 | # | Điểm nghẽn (file liên quan) | Mức độ | Hạng mục |
 |---|---                          |---     |---       |

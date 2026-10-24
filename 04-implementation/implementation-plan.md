@@ -1,7 +1,7 @@
 # Kế hoạch triển khai — Website Thiên Đức (PA2)
  
 > **Trạng thái:** Tài liệu sống — nguồn sự thật cho tiến độ coding.
-> **Nhóm:** 04 — Implementation · **Current as of: 2026-09-23**
+> **Nhóm:** 04 — Implementation · **Current as of: 2026-10-24**
 > **Tài liệu liên quan:** [open-questions](../01-requirements/open-questions.md) · [deployment-guide](../07-deployment/deployment-guide.md) · [security](../05-security/README.md) · [audit-baseline](../08-audits-and-reports/current/2026-07-16-audit-baseline.md)
 >
 > Cấu trúc: §0 hiện trạng · §1 tóm tắt đã xong · §2 code đang chờ làm · §3 manual/go-live · §4 deferred · §5 backlog nội dung · §6 backlog tùy chọn · §7 changelog/audit trail.
@@ -82,7 +82,7 @@
 
 > Phần **code/CMS đã sẵn sàng** — các mục dưới đánh `[x]` cho phạm vi kỹ thuật; việc còn lại là **công ty nhập liệu/duyệt nội dung**, **không chặn tiến độ code**. Đổ dữ liệu thật vào là trang tự hiện.
 
-- [x] **Câu 4 — tuyển dụng / `openPositions`** · *Nhóm 2* — `data/careers.ts` + trang `tuyen-dung` dựng khung đầy đủ; `openPositions` **cố ý rỗng**, trang hiện "chưa có vị trí" + `noindex`. Đổ vị trí thật vào mảng là hiện.
+- [x] **Câu 4 — tuyển dụng / vị trí đang tuyển** · *Nhóm 2* — Backend, Admin CMS và Frontend đã có CRUD/API; dữ liệu vị trí lấy từ CMS, không seed nội dung mẫu. Bảng vị trí hiện vẫn rỗng cho tới khi công ty nhập và đăng tin; trang tiếp tục `noindex` khi chưa có nội dung thật.
 - [x] **Câu 5 — chính sách NS / đào tạo / sơ đồ tổ chức** · *Nhóm 2* — 3 trang `dao-tao`, `chinh-sach-nhan-su`, `so-do-to-chuc-cong-ty` dựng khung + i18n (EN-SITE-WIDE F3), giữ `noindex`. Backlog nội dung tương lai.
 - [x] **3 dự án seed/dev chờ publish** — `chung-cu-la-bonita`, `du-an-vung-tau` (Silver Sea Tower), `du-an-bay-hien` (Bảy Hiền Tower): chỉ trong `prisma/seed-projects.js`, **không có trong CMS production** (chỉ `khu-do-thi-hung-phu`). Nếu publish lên CMS phải nhập bản dịch EN **trước khi publish** (editor đã kiểm chứng — [ADMIN-ITEM-CONTENT-P2 M1](../08-audits-and-reports/current/2026-07-19-admin-item-content-p2-batch-m1.md)).
 - [x] **Xác nhận hết placeholder** — các trang còn `noindex` (`tuyen-dung`, `dao-tao`, `chinh-sach-nhan-su`, `so-do-to-chuc-cong-ty`); gỡ slug khỏi `placeholderPaths` trong `seo.ts` khi có nội dung thật. Liên đới go-live: **§3**.
@@ -103,6 +103,249 @@
 
 ## Section 7 — Changelog / audit trail
 
+### Phiên 2026-10-24 — Làm sáng footer và giãn khối thương hiệu trên mobile
+
+- [x] **FE-FOOTER-LIGHT-READABILITY-M1** — Theo ảnh phản hồi logo chìm trên nền xanh tối và chữ tên công ty dồn cạnh logo: footer đổi sang gradient kem ivory/gold-soft, chữ nâu/ink, icon brand; bỏ ảnh nền tối, bóng đậm của logo và text-shadow. Fallback logo đổi từ bản champagne sang header-transparent màu nâu; vẫn tôn trọng logo do CMS cấu hình.
+- [x] Khối thương hiệu xếp logo trên, tên công ty/mô tả dưới ở mobile; bỏ helper tách dòng cứng và whitespace-nowrap, dùng tên đầy đủ VI/EN xuống dòng tự nhiên. Giảm độ đậm, tăng line-height tên công ty lên 28px ở font 14px; điều hướng có vùng bấm 44px, liên hệ tăng khoảng cách và email ngắt chuỗi khi cần. Cập nhật ui-ux-handoff và test SiteFooter theo nền/logo mới.
+- [x] Browser 320/375/768/1440px cho cả VI/EN: không tràn ngang hoặc phần tử vượt viewport, tên công ty giữ nguyên đầy đủ, logo tách khỏi tên trên mobile. Xem ảnh thực tế tại workspace `artifacts/footer-light-375.png` và `artifacts/footer-light-1440.png`; trang kiểm tra đã gỡ. Lint/TypeScript/build PASS; 7/7 test site-chrome PASS. Bộ test toàn FE còn lỗi banner trang chủ viền espresso cũ như các đợt trước. Build cục bộ cảnh báo backend không phản hồi nên bỏ prerender dữ liệu động. Chưa commit/push/deploy.
+
+### Phiên 2026-10-24 — Giữ logo góc trên trái khi ảnh dự án phủ kín khung
+
+- [x] **FE-PROJECT-LOGO-SAFE-CROP-M1** — Theo phản hồi ảnh có watermark Thiên Đức ở góc trên trái, đổi ảnh chụp dự án từ căn giữa sang `object-left-top`, thêm `origin-top-left` để hover/zoom không cắt góc logo. Phủ các gallery/thumbnail chi tiết, thẻ hạng mục, dải ảnh, carousel dự án, showcase trang chủ, sidebar, tìm kiếm và ảnh chụp cạnh bản đồ; ảnh nền dự án hợp tác dùng bg-left-top. Giữ cover và khung hiện có để không tạo lại dải trống; không đụng sơ đồ marker, ảnh trang trí hoặc điểm căn banner do CMS chỉ định. Nhãn trạng thái thẻ hạng mục chuyển từ góc trên trái sang trên phải.
+- [x] Browser với hai ảnh Cannes Hotel có logo lấy từ URL công khai thực tế: 1440px và 375px thấy đủ watermark ở ảnh lớn, thumbnail, thẻ hạng mục và trạng thái hover; computed object-position 0% 0%, transform-origin 0px 0px. Ảnh xem trước tại workspace `artifacts/logo-visible-1440.png` và `artifacts/logo-visible-375.png`; trang thử đã gỡ. 36 test liên quan PASS; toàn FE 501/502 test PASS, còn test banner viền espresso lỗi cũ. Lint/TypeScript PASS. Chưa commit/push/deploy.
+
+### Phiên 2026-10-24 — Đồng bộ thanh cuộn frontend theo thương hiệu
+
+- [x] **FE-BRANDED-SCROLLBARS-M1** — Rà các vùng overflow: trang, menu mobile, tổng quan chi tiết dự án, sidebar tin tức, dải thumbnail/gallery và textarea. Thêm token màu thanh cuộn từ brand-soft/brand/brand-dark và gold-soft/ivory; tay nắm bo tròn, dày 10px gồm viền trong 2px, hover/active đậm hơn; góc giao hai chiều và nút mũi tên native được đồng bộ. Chromium/Safari dùng pseudo-element, Firefox dùng thuộc tính chuẩn; forced-colors trả về màu hệ thống. Không thêm thư viện hoặc thay hành vi cuộn native.
+- [x] Gom kiểu ẩn thanh cuộn trong ProjectPhotoStrip và NewsDetailGallery về `no-scrollbar`; giữ carousel đã có nút điều hướng ở dạng ẩn thay vì lộ thanh mặc định không đồng nhất. Cập nhật ui-ux-handoff.
+- [x] Chromium 1440px/375px: kiểm tra computed style trên thanh trang/cuộn dọc/cuộn ngang đều 10px, thumb nâu đồng/rãnh kem, radius 999px; wheel cuộn khối nội dung được 300px, không tràn ngang toàn trang. `no-scrollbar` vẫn none/display none. Xem ảnh thật với flag hiển thị scrollbar, lưu bản xem trước tại workspace `artifacts/scrollbar-preview.png`; trang thử đã gỡ. Firefox chưa chạy thực tế vì môi trường không có browser binary, chỉ đã khai báo fallback chuẩn.
+- [x] Lint, TypeScript và build PASS; CSS build có token/quy tắc scrollbar mới. Build cục bộ cảnh báo backend không phản hồi nên bỏ prerender dữ liệu động. 501/502 test FE PASS, còn test banner trang chủ về viền espresso lỗi có sẵn. Chưa commit/push/deploy.
+
+### Phiên 2026-10-24 — Chẩn đoán production chưa hiển thị xuống dòng Cannes Hotel
+
+- [x] **FE-PROJECT-LINEBREAK-PRODUCTION-M2** — Đọc trực tiếp trang production `/du-an/khu-do-thi-hung-phu/khach-san-cannes-hotel`: HTML đã có class `project-description`, nội dung còn đủ 6 dấu xuống dòng; nhưng cả hai CSS production không chứa rule `project-description`/`pre-line`, computed style vẫn normal. Đây là thiếu quy tắc hiển thị trên bản đang phục vụ, không phải nội dung CMS mất Enter.
+- [x] Bổ sung `style={{ whiteSpace: "pre-line" }}` trực tiếp cho mô tả tổng quan của dự án (hai nhánh có/không gallery), mô tả vị trí và hạng mục để ưu tiên hơn CSS căn đều và không phụ thuộc rule trong stylesheet. Không thay dữ liệu production.
+- [x] Xem trước trên DOM trang thật: trước normal/280px, sau pre-line/420px; đúng bốn đoạn từ dữ liệu hiện tại. Ảnh xem trước lưu ở workspace `artifacts/cannes-linebreak-preview.png`, chỉ là mô phỏng trên trình duyệt kiểm tra, chưa phải deploy. Lint/TypeScript/build PASS; build cục bộ cảnh báo backend local không phản hồi nên bỏ prerender dữ liệu động. Cần triển khai frontend mới rồi kiểm tra lại computed style production; chưa commit/push/deploy.
+
+### Phiên 2026-10-24 — Giữ dấu xuống dòng CMS trong tổng quan dự án/hạng mục
+
+- [x] **FE-PROJECT-DESCRIPTION-LINEBREAKS-M1** — Nguyên nhân nội dung Cannes Hotel dính liền: `.text-justified` dùng `white-space: normal`. Thêm `.project-description` với `white-space: pre-line`, áp dụng cho mô tả tổng quan ở chi tiết hạng mục, cả hai nhánh có/không gallery của chi tiết dự án và mô tả vị trí đi kèm. Không thay toàn bộ kiểu văn bản website hay xử lý nội dung dưới dạng HTML; giữ dấu Enter từ dữ liệu CMS, một Enter xuống dòng và hai Enter cách đoạn.
+- [x] Kiểm tra đường đi dữ liệu: admin `toBilingualPayload` chỉ trim hai đầu, FE mapper đọc chuỗi gốc, không xóa xuống dòng bên trong. Browser dùng đúng nội dung người dùng gửi: đủ bốn đoạn, khoảng cách qua ba cặp dấu Enter đều 56px ở line-height 28px; 1280px/375px không tràn ngang. Trang thử đã gỡ. Lint/TypeScript PASS; lỗi test banner viền espresso cũ vẫn tồn tại, không liên quan thay đổi này.
+
+### Phiên 2026-10-24 — Bỏ dải trống quanh ảnh dự án/hạng mục
+
+- [x] **FE-PROJECT-IMAGE-COVER-M1** — Theo ảnh phản hồi, gallery dùng chung cho chi tiết dự án và chi tiết hạng mục đổi `object-contain` sang `object-cover object-center`; giữ khung 4:3 để không nhảy chiều cao. Rà ảnh trên danh sách dự án/thẻ hạng mục/dải ảnh/gallery nhóm: đã dùng cover. Đồng bộ ảnh chụp dự án cạnh bản đồ và sơ đồ vị trí sang cover để không lộ nền khi khung co giãn; không đổi tọa độ marker hay cách dựng sơ đồ. Ảnh khác tỷ lệ được cắt mép, không kéo méo. Cập nhật quy chuẩn ui-ux-handoff.
+- [x] Browser với ảnh khách sạn Hưng Phú thật: ảnh phủ kín khung 974×731px trên desktop, 325×244px trên mobile; chuyển ảnh giữ nguyên kích thước, không còn dải nền trên/dưới. Trang kiểm tra tạm đã gỡ. Lint/TypeScript PASS; cập nhật test gallery và ảnh cạnh bản đồ theo hành vi cover. Toàn bộ FE còn test viền espresso banner trang chủ lỗi có sẵn, không thuộc đầu việc này.
+
+### Phiên 2026-10-24 — Rà soát con trỏ toàn website công khai
+
+- [x] **FE-SITE-CURSOR-AUDIT-M1** — Quét AST toàn bộ TSX production: 45 vị trí khai báo button, 18 a, 53 Link, 1 summary, 6 input, 1 select, 1 textarea; 44 khai báo onClick đều ở button/Link, không có div/span gắn onClick cần sửa ngữ nghĩa. Giữ con trỏ thường cho thẻ đọc có hover/focus như Giá trị cốt lõi và wrapper phản hồi chạm.
+- [x] Bổ sung quy tắc con trỏ cho role link/input image; loại nhóm aria-disabled và vùng inert khỏi quy tắc pointer. Điều khiển con trong nhóm aria-disabled dùng not-allowed; vùng inert dùng default. Utility con trỏ chuyên biệt vẫn được ưu tiên; màn hình global-error có pointer nội tuyến do không phụ thuộc CSS layout.
+- [x] Browser trên trang dựng component thật (đã gỡ): 41 điều khiển desktop/31 điều khiển mobile, không trường hợp sai cursor; span/svg/img trong vùng bấm đều kế thừa pointer. 13 link menu mobile và các nút tìm kiếm đúng cursor; ô tìm kiếm/ô tên/điện thoại/email/textarea giữ text. Disabled và nhóm khóa kế thừa not-allowed, inert dùng default; thẻ đọc giữ auto, zoom-in vẫn giữ riêng. Không gửi form hoặc điều hướng thao tác ghi dữ liệu.
+- [x] Lint và TypeScript PASS. Bộ test FE vẫn còn test viền espresso banner trang chủ lỗi có sẵn; không sửa thiết kế banner trong đầu việc con trỏ.
+
+### Phiên 2026-10-24 — Chuẩn hóa ảnh dự án và con trỏ website công khai
+
+- [x] **FE-PROJECT-IMAGE-STANDARD-CURSOR-M1** — Gallery chi tiết dự án/hạng mục bỏ tỷ lệ động theo ảnh gốc, dùng khung 4:3 và `object-contain` cho ảnh lớn. Ảnh thu nhỏ, thẻ hạng mục, gallery theo nhóm và dải ảnh dự án dùng chung `project-image-frame`; không đổi ảnh gốc hoặc tỷ lệ banner/logo/bản đồ.
+- [x] Rà các thành phần có thao tác trong mã nguồn website công khai: header/tìm kiếm/chuyển ngôn ngữ, điều hướng trang, các carousel/gallery, bản đồ và form liên hệ/tuyển dụng. Thêm quy tắc con trỏ theo ngữ nghĩa ở CSS base cho nút/liên kết/điều khiển chọn; trạng thái bị khóa dùng not-allowed, ô chữ giữ text, utility riêng vẫn ưu tiên. Bổ sung quy chuẩn vào ui-ux-handoff.
+- [x] Browser với component thật và ảnh thử ngang/dọc/vuông: 1440px giữ khung 538×403.5px cho cả ba ảnh; 768px giữ 718×538.5px; 375px giữ 325×243.75px, không tràn ngang. Kiểm tra computed cursor: nút/link/select/checkbox/file = pointer, disabled/aria-disabled = not-allowed, input chữ = text, nội dung thường = auto, utility zoom-in giữ nguyên. Trang thử đã được gỡ.
+- [x] Test hồi quy gallery PASS; lint và TypeScript PASS. Toàn bộ FE: 50/51 suite, 501/502 test PASS; vẫn có một test banner trang chủ đòi viền espresso cũ đã lỗi từ trước, không thuộc thay đổi này.
+
+### Phiên 2026-10-24 — Nối vòng carousel liền mạch, không trượt ngược về đầu
+
+- [x] **FE-CAROUSEL-SEAMLESS-LOOP-M1** — Sửa carousel Lĩnh vực hoạt động theo phản hồi ảnh và carousel Hạng mục vừa chỉnh: thêm bản nối ở hai đầu, trượt cùng chiều qua biên rồi chuẩn hóa vị trí với transition tắt. Dùng chung `useLoopCarousel`; chặn lệnh chồng khi đang trượt, có thời gian dự phòng nếu transition bị ngắt và hỗ trợ giảm chuyển động. Bản nối ngoài vùng hiển thị dùng `inert`/`aria-hidden`.
+- [x] Hạng mục chia chu kỳ theo ước chung của tổng số thẻ và số thẻ mỗi lượt để thứ tự tiếp nối xuyên biên (4 mục/3 thẻ: 123 → 412 → 341 → 234 → 123), thay cho việc nhảy từ 412 về 123.
+- [x] Kiểm tra browser với component thật trên trang thử đã gỡ: tọa độ track ở điểm nối tiếp tục giảm qua các khung hình cho cả hai carousel; sau chuyển động chuẩn hóa với `transitionProperty: none`. 1440px/768px/375px giữ 3/2/1 thẻ, không tràn ngang. 23 test carousel PASS; lint và TypeScript PASS. Toàn bộ FE: 501/502 test, 50/51 suite PASS; test banner trang chủ về viền espresso cũ vẫn lỗi như trước, không sửa trong đầu việc này.
+
+### Phiên 2026-10-24 — Carousel hạng mục FE quay vòng đủ thẻ
+
+- [x] **FE-ITEMS-CAROUSEL-LOOP-M1** — Bỏ ô giữ chỗ trong nhóm cuối; nối tiếp các hạng mục đầu danh sách bằng chỉ số modulo. Trường hợp 4 hạng mục trên desktop: lượt đầu 1–2–3, lượt cuối 4–1–2 rồi quay lại đầu. Mỗi lượt không lặp cùng một hạng mục. Hiển thị 1/2/3 thẻ theo breakpoint 768px/1280px; ít hạng mục thì dùng đủ chiều ngang, đổi kích thước không trượt vào trang rỗng. Trang khuất có `inert` và `aria-hidden`.
+- [x] Kiểm tra trình duyệt với component thật và dữ liệu thử tạm thời: 1440px hiển thị lượt cuối 4–1–2 đầy khung; 768px có 2 thẻ, 375px có 1 thẻ; không tràn ngang. Đã gỡ trang thử sau kiểm tra.
+- [x] Lint và `tsc --noEmit` PASS; 15 test hồi quy carousel PASS. Toàn bộ FE: 49/50 suite, 493/494 test PASS; một test có sẵn trong `home-banner-slider.test.tsx` vẫn đòi các class viền espresso đã bỏ khỏi banner trang chủ, không thuộc thay đổi carousel lần này.
+
+### Phiên 2026-10-24 — Bỏ bộ chọn ảnh chính lặp trong chỉnh sửa hạng mục
+
+- [x] **ADMIN-ITEM-COVER-DEDUP-M1** — Khi sửa hạng mục trong modal chi tiết, chỉ giữ bộ chọn ảnh chính ở phần Hình ảnh hạng mục. Bỏ bộ chọn và state ảnh trùng trong form Nội dung hạng mục; lệnh lưu nội dung không gửi lại ảnh cũ, tránh ghi đè ảnh vừa cập nhật qua phần hình ảnh. Form tạo hạng mục vẫn cho chọn ảnh ban đầu.
+- [x] Test hồi quy dựng workspace và gallery thật: xác nhận chỉ một bộ đổi ảnh, đổi ảnh gửi đúng payload và lưu tên hạng mục không chứa field `image`. Admin lint sạch; build/TypeScript PASS; 65 file/933 test PASS. Build vẫn có cảnh báo bundle trên 500 kB.
+
+### Phiên 2026-10-24 — Căn hàng nhãn và ô nhập trong Admin
+
+- [x] **ADMIN-FORM-ALIGNMENT-M1** — Đưa nhãn và bộ chọn VI/EN lên cùng hàng trong `BilingualField`; áp dụng cho form dự án, hạng mục, nội dung dự án, tin tức/chuyên mục, banner, trang nội dung, hợp tác và tuyển dụng. Chuẩn hóa chiều cao hàng nhãn, khoảng cách ô nhập; `FormItem` bám đầu hàng để nội dung trợ giúp không kéo giãn các trường bên cạnh. Tiêu đề dialog căn trái, xuống dòng có chiều cao dòng phù hợp và chừa chỗ cho nút đóng.
+- [x] Giữ liên kết nhãn–ô nhập, mô tả ngôn ngữ và thông báo lỗi RHF khi chuyển VI/EN; bổ sung kiểm tra nhãn thuần, chuyển bộ test a11y sang cấu trúc nhãn mới.
+- [x] Kiểm tra trình duyệt bằng khung dựng các component thật (không nối API): 1206px/768px có ô song ngữ và slug cùng tọa độ Y ở cả kiểu nhãn thuần và RHF; 375px chuyển một cột, không tràn ngang. Chưa kiểm tra lại toàn bộ luồng CMS với backend.
+- [x] Kiểm tra Admin: lint sạch; TypeScript/build thành công; toàn bộ 64 file/931 test hiện có PASS và 15 test song ngữ/a11y PASS sau khi thêm trường hợp hồi quy. Vite còn cảnh báo bundle JS lớn hơn 500 kB.
+
+### Phiên 2026-10-23 — Chuẩn bị ảnh banner Hưng Phú Mall ưu tiên chân ảnh
+
+- [x] Tạo bản ảnh ngang 3:1 bằng công cụ imagegen từ ảnh người dùng cung cấp, giảm phần trời và giữ mặt tiền, chân công trình, xe và mặt đường; lưu tại frontend `public/images/banners/home/home-banner-hung-phu-mall-bottom-v1.png`. Đây là bản ảnh đã xử lý bằng AI, không phải phép crop pixel nguyên bản. Chưa thay ảnh hay vị trí crop của banner trong CMS.
+
+### Phiên 2026-10-23 — Làm chậm và hòa màu hiệu ứng slogan/timeline
+
+- [x] Tăng thời gian chuyển động từ 320ms lên 650ms; nền hover hòa dần qua lớp gradient riêng bằng opacity thay vì đổi gradient tức thì. Giữ độ nhấc 2px, phản hồi cảm ứng và chế độ giảm chuyển động.
+- **Kiểm định:** trình duyệt xác nhận opacity có giá trị trung gian và đạt 1 sau hiệu ứng; reduced motion tắt dịch chuyển/chuyển tiếp. Lint, TypeScript và production build đạt.
+
+### Phiên 2026-10-23 — Đồng bộ hiệu ứng slogan/timeline với thẻ ngành nghề
+
+- [x] Hai khối phương châm và timeline dùng cùng nền gradient, bóng đổ, độ nhấc 2px và thời lượng 320ms/easing như thẻ Ngành nghề kinh doanh đã đăng ký; hover/chạm chuyển sang nền đồng ấm. Vẫn bỏ viền ngoài và giữ xử lý reduced motion. Gom gradient/shadow thành token dùng chung để tránh lệch hiệu ứng giữa các khối.
+- **Kiểm định:** đối chiếu computed style của ba loại thẻ, gradient/shadow/transform khi hover trùng nhau; mobile giữ chạm cho phản hồi tương ứng, reduced motion không dịch chuyển. Lint, TypeScript, production build và diff whitespace đạt.
+
+### Phiên 2026-10-23 — Sắp xếp họa tiết lá dừa theo cấu trúc nội dung
+
+- [x] Dự án tiêu biểu: bố trí hai tán lá xuất phát từ hai góc trên, hướng vào trong để tạo khung cho tiêu đề và ảnh; bỏ lá lẻ giữa đáy section. Tăng padding đầu section desktop từ 56px lên 96px để lộ dáng lá; padding đáy 64px. Tăng nhẹ độ đậm lá, dùng mask nhạt dần trước vùng đọc.
+- [x] Sắp lại lá cũ tại khối số liệu, Tầm nhìn/Sứ mệnh/Giá trị cốt lõi, Nền tảng phát triển và Liên hệ theo cặp góc khung; bỏ hai lá rải giữa phần Liên hệ. Đồng nhất hướng lá, neo vào mép, giữ ảnh nguồn; các họa tiết tiếp tục `aria-hidden`, không nhận thao tác và ẩn bớt trên màn hình nhỏ.
+- **Kiểm định:** lint, TypeScript, production build và 23 test thuộc 4 suite liên quan đạt. Kiểm tra trang chủ/Giới thiệu tại 375/768/1280/1920px không tràn ngang; đã xem ảnh desktop để đối chiếu vị trí lá và khả năng đọc.
+
+### Phiên 2026-10-23 — Bỏ viền và thêm phản hồi chuyển động cho slogan/timeline
+
+- [x] Bỏ viền ngoài hai khung phương châm và chặng đường phát triển, ẩn thanh đồng bên trái slogan; giữ nền và đường nối mốc timeline. Rê chuột nhấc khối nhẹ 3px, nhấn/chạm hạ nhẹ và thu 0.5%, bóng đổ nhẹ; tắt chuyển động khi người dùng chọn reduced motion.
+- **Kiểm định:** lint, TypeScript và production build đạt. Kiểm tra trình duyệt: border 0px, hover/press hoạt động, reduced motion không dịch chuyển; mobile không tràn ngang. Bổ sung `TouchFeedback` dùng pointer capture; mô phỏng touchStart/touchEnd trên mobile xác nhận hai khối thu nhẹ khi giữ chạm và nhả trạng thái khi kết thúc/hủy thao tác.
+
+### Phiên 2026-10-23 — Cân đáy sidebar với khung Tổng quan
+
+- [x] Cho sidebar giãn bằng chiều cao khung Tổng quan trên desktop, giữ khoảng cách hai widget 16px; phần Dự án tiêu biểu và ảnh dự án giãn theo chiều cao còn lại để không dồn khoảng trống xuống đáy. Mobile giữ chiều cao tự nhiên.
+- **Kiểm định:** đo 1280/1440/1920px, chênh lệch đáy hai cột 0px, khoảng cách widget 16px; mobile 375px không tràn ngang. Lint, TypeScript và production build đạt; đã xem ảnh sidebar.
+
+### Phiên 2026-10-23 — Thu gọn khoảng cách giữa các widget sidebar
+
+- [x] Bỏ `justify-between` khỏi `ContentSidebar`, căn sidebar theo chiều cao nội dung bằng `self-start`; Tin mới nhất và Dự án tiêu biểu xếp liên tiếp với khoảng cách cố định 16px, không bị đẩy xa theo chiều cao cột chính.
+- **Kiểm định:** đo tại 375/1280/1920px, khoảng cách giữa hai widget đều 16px, không tràn ngang; lint, TypeScript và production build đạt.
+
+### Phiên 2026-10-23 — Căn giữa slogan banner trang chủ
+
+- [x] Căn giữa cụm slogan, dấu ngoặc kép và đoạn mô tả trong cột giữa banner; bỏ đệm lệch trái và thụt đầu dòng mô tả. Giữ nội dung, typography, cụm thương hiệu trái và logo phải.
+- **Kiểm định:** lint, TypeScript, production build và 3 test `home-intro-strip` đạt; kiểm tra 375/1920px, chữ căn giữa và không tràn khung.
+
+### Phiên 2026-10-23 — Tăng khoảng đệm khung Tầm nhìn/Sứ mệnh/Giá trị cốt lõi
+
+- [x] Tăng padding dọc desktop từ 32px lên 48px, giúp khung cao thêm 32px và ba thẻ nằm trọn, cân giữa với khoảng đệm trên/dưới bằng nhau; bỏ padding lệch trên của khối tiêu đề. Tăng nhẹ padding mobile/tablet, giữ chiều cao tự động theo nội dung.
+- **Kiểm định:** đo tại 375/1280/1920px, các thẻ nằm trong nền; desktop có khoảng đệm trên/dưới 48px. Lint, TypeScript, production build và 4 test `about-values-showcase` đạt; đã xem ảnh desktop.
+
+### Phiên 2026-10-23 — Thử tỷ lệ Tổng quan 55/45
+
+- [x] Đổi desktop thành 55% nội dung / 45% ảnh; dịch gradient theo ranh giới cột mới để bảo đảm chữ dễ đọc, giữ xử lý độ rõ ảnh hiện tại và bố cục mobile.
+- **Kiểm định:** đo trình duyệt xác nhận cột nội dung 55%, không tràn ngang; lint, TypeScript và production build đạt.
+
+### Phiên 2026-10-23 — Chia Tổng quan 50/50 và làm rõ ảnh Cannes
+
+- [x] Đổi grid desktop từ 60/40 sang 50% nội dung / 50% ảnh. Thu hẹp lớp gradient kem về phía nội dung, để vùng ảnh rõ từ 58% chiều ngang; tăng nhẹ contrast/saturation riêng lớp ảnh nền, giữ nguyên ảnh nguồn và nội dung.
+- **Kiểm định:** lint, TypeScript và production build đạt; đo trực tiếp 1440/1920px xác nhận cột nội dung đúng 50%, mobile 375px vẫn một cột, không tràn ngang. Đã xem ảnh chụp giao diện desktop.
+
+### Phiên 2026-10-23 — Chỉ đồng bộ typography phương châm theo phản hồi
+
+- [x] Khôi phục khung phương châm Giới thiệu với hai vế “Khách hàng hài lòng / Thiên Đức thành công”; gỡ chế độ nhúng banner trang chủ cùng các nội dung và logo vừa thêm. Chỉ đồng bộ font Cormorant Garamond, weight 600, line-height và size chữ theo trang chủ: 25.6px mobile, 38.08px tablet, 40.8px desktop. Thay thế hướng dùng nguyên banner ở phiên trước.
+- **Kiểm định:** đối chiếu computed style trang chủ/Giới thiệu tại 375/768/1440/1920px, cỡ chữ, weight và line-height khớp; không tràn ngang. Lint, TypeScript, production build và 16 test phương châm/home-intro đạt.
+
+### Phiên 2026-10-23 — Dùng slogan trang chủ trong phần Giới thiệu
+
+- [x] Thay khung phương châm riêng bằng component `HomeIntroStrip` dùng chung với trang chủ: giữ nền gradient, typography, dấu ngoặc kép, cụm thương hiệu và logo khi đủ rộng; không hiển thị đoạn mô tả dài bên dưới slogan. Bổ sung chế độ nhúng thích ứng với chiều rộng cột trái; trang chủ giữ cách hiển thị mặc định.
+- **Kiểm định:** lint, TypeScript, production build và 3 test `home-intro-strip` đạt; xem giao diện tại 375/1440/1920px, không tràn khung và không có đoạn mô tả dài.
+
+### Phiên 2026-10-23 — Giới hạn đoạn giới thiệu trong cột trái theo phản hồi
+
+- [x] Đưa phần mở đầu trở lại cùng cột nội dung trái; đoạn mô tả dùng toàn bộ chiều rộng khả dụng của cột, không giới hạn `62ch` và không trải sang vùng ảnh bên phải. Thay thế cách mở rộng toàn section ở phiên trước.
+- **Kiểm định:** lint, TypeScript và production build đạt; kiểm tra 375/1440/1920px xác nhận đoạn mô tả lấp chiều rộng khả dụng và nằm trọn trong cột trái.
+
+### Phiên 2026-10-23 — Mở rộng đoạn giới thiệu đầu section Tổng quan
+
+- [x] Đưa heading và đoạn giới thiệu đầu tiên ra hàng riêng trải hết chiều ngang khung Tổng quan; bỏ giới hạn `62ch` của đoạn mô tả. Các nhóm nội dung bên dưới tiếp tục nằm trong cột trái.
+- **Kiểm định:** lint, TypeScript và production build đạt; kiểm tra tại 375/768/1440px, phần giới thiệu chiếm đủ chiều ngang khung và không tràn nội dung.
+
+### Phiên 2026-10-23 — Cân bố cục phương châm trong phần Tổng quan
+
+- [x] Căn giữa nhãn và hai dòng phương châm trong khung, cân padding và khoảng cách dòng; cỡ chữ co theo chiều rộng khung để giữ hai dòng trên mobile. Giữ nội dung, nền kem và điểm nhấn đồng bên trái.
+- **Kiểm định:** lint, TypeScript và production build đạt; kiểm tra trực tiếp ở 375/768/1440px: căn giữa, mỗi vế một dòng, không tràn khung.
+
+### Phiên 2026-10-23 — Gom cột nội dung và đóng khung timeline Giới thiệu (ABOUT-OVERVIEW-TIMELINE-POLISH-M1)
+
+- [x] Giới hạn toàn bộ nội dung tổng quan, định hướng, phương châm và timeline trong cột trái 60% khi container đủ rộng; tablet/mobile dùng một cột. Giữ nguyên nguồn ảnh Cannes Hotel, căn ảnh để ưu tiên mặt tiền và dùng gradient ivory riêng tăng độ rõ chữ; section tự giãn theo nội dung.
+- [x] Timeline có nền ivory đục, viền đồng mảnh, bo góc 12px, padding 20–24px; mốc năm màu nâu đậm và đường nối có chấm đồng. Mặc định xếp dọc, chỉ xếp ngang khi container đủ rộng; bảo đảm các mốc hiện ngay khi bật giảm chuyển động. Giữ nguyên dữ liệu VI/EN và các section khác.
+- **Kiểm định:** lint (0 lỗi/warning), `tsc --noEmit` và production build đạt. Playwright kiểm tra section VI/EN tại 375/768/1024/1280/1440/1920px: nội dung không tràn ngang, timeline hiển thị với reduced motion; đã xem ảnh desktop/mobile. Jest: 48/49 suite, 478/479 test đạt; một test ngoài phạm vi tại `home-banner-slider.test.tsx:53` thất bại vì kỳ vọng class viền desktop không có trong component hiện tại, không sửa banner trang chủ trong phiên này.
+
+### Phiên 2026-10-23 — Thêm ảnh nền minh họa cho phần mở đầu trang Giới thiệu
+
+- [x] Thiết kế lại phần tổng quan trang Giới thiệu: bỏ ảnh chung cư theo yêu cầu; giữ số liệu thành lập/địa bàn trong nội dung; dùng ảnh Cannes Hotel làm nền toàn section không có nền vàng riêng sau chữ. Tinh chỉnh typography, timeline và spacing; giữ nguyên nội dung cùng các section bên dưới. Khối Tầm nhìn/Sứ mệnh/Giá trị cốt lõi dùng grid theo luồng nội dung để container tự ôm chiều cao card; mở rộng tỷ lệ ảnh/card phía phải và kéo nhóm card lấn trái hơn trên desktop để liên kết với nội dung. Thu gọn chiều cao section nền tảng bằng cách giảm padding dọc, rút ngắn ảnh theo tỷ lệ ngang rộng hơn và giảm khoảng đệm các số liệu; crop/hoà mờ phần cây ở rìa trái ảnh để tập trung vào công trình.
+
+### Phiên 2026-10-22 — Thu gọn khối đồng hành và hòa ảnh vào nội dung (CAREERS-CULTURE-FADE-M1)
+
+- [x] Giảm padding dọc, khoảng cách ảnh–nội dung và khoảng đệm các giá trị trong khối đồng hành; giảm chiều cao ảnh tối thiểu trên desktop từ 32rem xuống 26rem.
+- [x] Ảnh giữ rõ phía trái, chuyển mờ dần sang nền phía nội dung trên desktop; trên mobile chuyển mờ ở đáy ảnh về nội dung bên dưới, dùng token ivory hiện có.
+
+### Phiên 2026-10-22 — Căn giữa mũi tên quy trình ứng tuyển (CAREERS-PROCESS-ARROWS-M1)
+
+- [x] Căn mũi tên đúng tâm khoảng cách giữa các thẻ quy trình bằng biến khoảng cách dùng chung; áp dụng cho bố cục ngang desktop và bố cục dọc mobile.
+
+### Phiên 2026-10-22 — Thu gọn chi tiết tuyển dụng (CAREERS-COLLAPSE-DETAILS-M1)
+
+- [x] Frontend mặc định thu gọn mô tả công việc, yêu cầu ứng viên và quyền lợi trong phần chi tiết mở/đóng riêng từng vị trí; giữ thông tin tóm tắt và nút ứng tuyển luôn hiển thị.
+- [x] Dùng `details`/`summary` hỗ trợ bàn phím, nhãn mở/thu gọn song ngữ VI/EN và tên vị trí cho trình đọc màn hình; giữ nguyên token giao diện hiện có.
+
+### Phiên 2026-10-22 — Quản lý vị trí tuyển dụng xuyên suốt (RECRUITMENT-POSITIONS-CMS-M1)
+
+- [x] **RECRUITMENT-POSITIONS-CMS-M1** — bổ sung model `RecruitmentPosition`, migration và API công khai/Admin; Admin CMS có danh sách, lọc trạng thái, tạo/sửa/xóa, nhập nội dung VI/EN, hạn nộp và thứ tự; Frontend tải các vị trí đã đăng, chưa hết hạn qua API và hiển thị theo locale. Duy trì trạng thái rỗng hiện tại, không tạo/seed tin tuyển dụng thật.
+- **Quyền và trạng thái:** public API chỉ trả `PUBLISHED` còn hạn (hạn tính hết ngày theo giờ Việt Nam); EDITOR tạo nháp, sửa nháp và gửi duyệt `DRAFT → PENDING`; ADMIN/SUPER_ADMIN duyệt/đăng và xóa. Các field danh sách đa ngữ dùng `{ vi: string[], en?: string[] }`, hạn nộp dùng `YYYY-MM-DD`.
+- **Kiểm định:** Backend 17 test tuyển dụng, lint, typecheck, build và Prisma validate; Admin 914 test, lint và build; Frontend 19 test liên quan, lint, typecheck và build. Migration đã áp dụng và xác minh trên `thien_duc_test` local; chưa áp vào production.
+
+### Phiên 2026-10-22 — Đồng nhất bố cục trang tuyển dụng (CAREERS-UI-CLEANUP-M1)
+
+- [x] **CAREERS-UI-CLEANUP-M1** — thống nhất nhịp khoảng cách, nền và lề nội dung trang tuyển dụng theo header; làm rõ tương phản ảnh hero, gom thông tin vị trí thành khối dễ quét; gộp CTA ứng tuyển/liên hệ vào trạng thái vị trí trống để không lặp lại, bỏ khối kêu gọi ứng tuyển trùng. Giữ nguyên quy trình ứng tuyển.
+- [x] **SITE-HEADER-METALLIC-GOLD-M1** — đổi nền header sang dải vàng kim đậm hơn, chuyển sắc từ nâu vàng sang ánh sáng champagne, thêm vệt phản sáng kim loại; giữ chữ espresso và hai biến thể header.
+- [x] **SITE-HEADER-RESTORE-BACKGROUND-M1** — khôi phục nền header chuyển sắc be–kem trước đây cho cả hai biến thể; bỏ hiệu ứng vàng kim.
+- [x] **SITE-HEADER-WARMER-CONTRAST-M1** — tăng độ đậm nền header sang gradient vàng cát–be (`#c9a77f` → `#dfc3a1` → `#efe0cd`), giữ tông sáng về bên phải để logo và điều hướng vẫn rõ.
+- [x] **ABOUT-JOURNEY-PLACEMENT-M1** — bỏ ảnh khỏi phần chặng đường và chuyển timeline lên ngay dưới slogan ở phần tổng quan; bỏ căn `content-between` gây khoảng trống lớn phía trên.
+- [x] **ABOUT-OVERVIEW-IMAGE-FIT-M1** — dùng ảnh phối cảnh ven sông khung ngang 16:9 ở phần tổng quan; căn card theo chiều cao nội dung (`self-start`) để không kéo dài nền trống và ảnh không bị cắt.
+- [x] **ABOUT-HORIZONTAL-TIMELINE-HEADER-ALIGN-M1** — chuyển timeline thành bố cục ngang trên desktop, không dùng card riêng; đồng bộ lề phần mở đầu và toàn bộ các section dưới theo header (20/32/56/80px), gồm cả ảnh tràn lề mobile/tablet.
+- [x] **ABOUT-FOUNDATION-STATS-COMPACT-M1** — xếp ba chỉ số năng lực thành danh sách dọc ở mọi kích thước; mỗi hàng căn giá trị về mép trái và nhãn/mô tả về mép phải, không đổi nội dung.
+- [x] **ABOUT-OVERVIEW-TALL-IMAGE-M1** — cho ảnh tổng quan lấp chiều cao cột ở desktop để giảm khoảng trống bên dưới; giữ khung ảnh ngang trên mobile, ảnh không méo và có thể cắt nhẹ hai bên khi hiển thị dọc hơn.
+- [x] **ABOUT-VALUES-SECTION-SPACING-M1** — bỏ chiều cao tối thiểu 760px và cơ chế đẩy các ô xuống đáy ở khối Tầm nhìn/Sứ mệnh/Giá trị cốt lõi; giữ khoảng cách gọn giữa tiêu đề và nội dung.
+- [x] **ABOUT-VALUES-HEADER-WIDTH-ALIGNMENT-M1** — căn khung ảnh và nội dung khối Tầm nhìn/Sứ mệnh/Giá trị cốt lõi theo cùng lề ngang 20/32/56/80px với header, bỏ ảnh tràn lề trên mobile/tablet; giữ nguyên nội dung.
+- [x] **ABOUT-VALUES-REFERENCE-LAYOUT-M1** — bố cục lại khối theo mẫu mới: tiêu đề ở cột trái, ảnh phối cảnh bên phải và ba thẻ nội dung đặt trên ảnh ở desktop; chuyển thành bố cục dọc dễ đọc trên màn nhỏ, giữ nguyên toàn bộ nội dung.
+- [x] **ABOUT-VALUES-FULL-BLEED-REDUCE-HEIGHT-M1** — cho ảnh phủ toàn banner, chuyển nền kem-vàng nhạt dần vào ảnh; đặt ba thẻ trực tiếp trên banner và giảm chiều cao desktop còn khoảng 25–26rem.
+- [x] **ABOUT-VALUES-SPLIT-COPY-AND-CARDS-M1** — giữ tiêu đề và đoạn dẫn bên trái; ba thẻ nội dung xếp ngang thành một hàng ở bên phải, tăng khoảng cách giữa các thẻ trên desktop.
+- [x] **ABOUT-FOUNDATION-IMAGE-BACKGROUND-TRANSITION-M1** — giới hạn nền riêng màu kem sáng hơn vào panel nội dung (không phủ toàn chiều ngang trang), thêm chuyển sắc từ nền panel vào ảnh trên desktop/mobile; không thay đổi mục “Kiến tạo không gian sống giá trị”.
+- [x] **ABOUT-FOUNDATION-EQUAL-COLUMNS-ROUNDED-IMAGE-M1** — cân đều hai cột ảnh và nội dung, đồng bộ chiều cao trên desktop; giảm chiều cao bằng khung ảnh 4:3, thu gọn khoảng cách chỉ số và bo tròn góc ảnh.
+- [x] **ABOUT-VALUES-TITLE-BALANCED-WRAP-M1** — bỏ giới hạn chiều rộng gây ngắt dòng tiêu đề thiếu tự nhiên ở “Kiến tạo không gian sống giá trị”; căn lại cỡ chữ và cân dòng trong cột.
+- [x] **ABOUT-PAGE-SECTION-SPACING-AUDIT-M1** — rà soát spacing toàn trang ở desktop/mobile; đồng bộ khoảng cách nội dung giữa Tầm nhìn/Giá trị cốt lõi, Nền tảng phát triển và Lĩnh vực về khoảng 56px desktop, 40px mobile.
+- [x] **ABOUT-FOUNDATION-PALM-ORNAMENT-M1** — tái sử dụng họa tiết lá dừa ở hai góc panel “Nền tảng phát triển”, hướng vào trong, opacity nhẹ và không cản nội dung.
+- [x] **ABOUT-VALUES-PALM-AND-TITLE-M1** — thêm họa tiết lá dừa vào hai góc khối Tầm nhìn/Sứ mệnh/Giá trị cốt lõi; chỉnh độ rộng và cỡ chữ để tiêu đề một dòng trên desktop, tự cân dòng trên mobile.
+- [x] **HOME-FACTS-PALM-ORNAMENT-M1** — thêm họa tiết lá dừa nhẹ từ hai góc vào thanh số liệu trang chủ, giữ nguyên số liệu, nội dung và bố cục.
+- [x] **ABOUT-FOUNDATION-IMAGE-UPDATE-M1** — thay ảnh tại mục “Nền tảng phát triển” bằng ảnh Hưng Phú Mall do người dùng cung cấp; giữ nguyên bố cục và nội dung.
+- [x] **ABOUT-OVERVIEW-IMAGE-UPDATE-M1** — thay ảnh trong khung dọc phần giới thiệu bằng phối cảnh Fancy Tower ban ngày theo ảnh người dùng chọn; giữ nguyên bố cục và nội dung.
+- [x] **CAREERS-REFERENCE-LAYOUT-M1** — sắp xếp trang tuyển dụng theo mẫu tham chiếu: hero hai cột, danh sách vị trí và quy trình nằm ngang trên desktop; chuyển văn hóa/đào tạo xuống dưới và giữ nguyên nội dung cùng trạng thái chưa có vị trí.
+- [x] **CAREERS-HERO-CTA-AND-IMAGE-M1** — thêm nút xem vị trí tuyển dụng và nút đến trang Giới thiệu; giữ ảnh đội ngũ nhân sự ở cột phải, thêm nhãn song ngữ.
+- [x] **CAREERS-CULTURE-IMAGE-UPDATE-M1** — thay minh họa ở phần “Đồng hành cùng Thiên Đức” bằng ảnh đội ngũ làm việc do người dùng cung cấp; lưu trong kho resources và đồng bộ sang frontend, giữ nguyên nội dung và bố cục.
+- [x] **HOME-BANNER-MOBILE-BORDER-REMOVE-M1** — bỏ viền và nền nâu bao quanh banner trên mọi kích thước màn hình để banner liền mạch với nội dung trang.
+- [x] **HOME-BANNER-MOBILE-COMPACT-IMAGE-M1** — giảm vùng CTA phía dưới trên mobile, thu gọn lề ngang và cho ảnh dùng `object-cover` để phủ kín chiều ngang banner; giữ nguyên giao diện desktop.
+- [x] **HOME-BANNER-MOBILE-HIDE-CTA-M1** — ẩn hai nút CTA trên mobile/tablet, bỏ vùng đệm riêng dưới ảnh để ảnh phủ toàn bộ khung banner; giữ nguyên CTA trên desktop.
+- [x] **CAREERS-HERO-BACKGROUND-LAYOUT-M1** — chuyển ảnh hiện có thành nền toàn banner, đặt chữ và hai nút bên trái trên lớp phủ tương phản; không đổi ảnh hoặc nội dung.
+- [x] **CAREERS-PROCESS-STEPS-COMPLETE-M1** — hiển thị đầy đủ số thứ tự, icon, tiêu đề và mô tả cho từng bước ứng tuyển; giữ nguyên nội dung quy trình.
+- [x] **CAREERS-PROCESS-ROUNDED-CARDS-M1** — trình bày mỗi bước ứng tuyển trong một khung riêng có góc bo tròn và nền sáng, giữ nguyên số thứ tự, icon và nội dung.
+- [x] **CAREERS-PROCESS-GRADIENT-ARROWS-M1** — thay dấu gạch nối giữa các bước bằng mũi tên chuyển sắc nhạt đến đậm; mũi tên hướng xuống ở mobile và sang phải trên desktop.
+
+### Phiên 2026-10-02 — Khôi phục kích thước banner trang chủ (HOME-BANNER-ASPECT-RATIO-FIX-M1)
+
+- [x] **HOME-BANNER-ASPECT-RATIO-FIX-M1** — Banner trang chủ không còn dùng khung `100svh`; chuyển về khung ngang theo ảnh gốc 3:1 (`clamp(18rem, 33.333vw, 40rem)`), ảnh dùng `object-contain` và bỏ hiệu ứng zoom để không cắt chữ/không phóng vỡ ảnh. Căn lại vị trí khối chữ/CTA cho khung thấp hơn. Test `home-banner-slider` khóa hành vi mới; `npm run lint`, `npx tsc --noEmit`, và test banner đều xanh.
+
+### Phiên 2026-09-30 — Banner trang chủ full màn và header sau banner (HOME-HERO-HEADER-SWAP-M1)
+
+- [x] **HOME-HERO-HEADER-SWAP-M1** — trang chủ render banner full màn trước, thanh CTA "Liên hệ nhận ưu đãi", số hotline Zalo, tìm kiếm, ngôn ngữ và nút Menu nằm trong banner theo mẫu tham chiếu, có animation trượt từ ngoài phải vào trong 1 giây; header chính sau banner giữ giao diện mặc định cũ. Banner đầu trang giữ `100svh`; carousel không dừng khi rê chuột, chu kỳ tự chuyển tăng lên 7000ms và transition ảnh 1200ms để chạy chậm, mượt hơn; animation copy banner dùng hiệu ứng hiện từ trong ra ngoài bằng clip/blur/scale một lần, tôn trọng reduced motion sẵn có.
+- **Kiểm định:** Frontend `npm run lint`, targeted Jest `site-chrome` + `home-banner-slider` (29 test), `npm run typecheck`, `npm run build` đều xanh. Build local vẫn ghi log backend không phản hồi và bỏ prerender một số route theo cơ chế on-demand hiện có.
+
+### Phiên 2026-09-30 — Đồng nhất bố cục danh sách nội dung CMS (CMS-CONTENT-LIST-LAYOUT-M1)
+
+- [x] **CMS-CONTENT-LIST-LAYOUT-M1** — rà lại các bảng nội dung Admin và gom ô title/ảnh/metadata về `ContentListCell` dùng chung. Áp dụng cho Dự án, Tin tức, Trang nội dung, Banner trang chủ và Dự án hợp tác: cùng khung ảnh/icon 56px, title tối đa 2 dòng, metadata/detail một dòng, alt text có nghĩa cho ảnh nội dung, fallback rõ khi chưa có ảnh.
+- **Kiểm định:** Admin `npm run lint` xanh; `npm run build` xanh. Build còn cảnh báo chunk Vite >500 kB như trước, không chặn.
+
+### Phiên 2026-09-26 — Tải và chọn nhiều ảnh trong CMS (CMS-BATCH-IMAGE-UPLOAD-M1)
+
+- [x] **CMS-BATCH-IMAGE-UPLOAD-M1** — nâng `ImagePickerField` dùng chung để nhận một hoặc nhiều tệp qua hộp chọn và kéo-thả; upload tuần tự nhằm tránh vượt giới hạn Cloudinary, tự chọn ảnh đầu cho trường ảnh đơn và giữ các ảnh còn lại trong thư viện. Áp dụng cho Banner, Tin tức, Trang nội dung, Dự án, Dự án hợp tác, hạng mục và hồ sơ mà không đổi hợp đồng dữ liệu một-ảnh của các domain này.
+- [x] **Gallery dự án theo lô** — thêm `MultiImagePickerField`: tải nhiều ảnh, chọn nhiều ảnh có sẵn trong thư viện, xem trước/xóa từng lựa chọn và gắn toàn bộ vào gallery chỉ bằng một lần bấm; chú thích chung và hạng mục được áp dụng nhất quán cho cả lô, lỗi từng ảnh được giữ lại để thử lại.
+- **Kiểm định:** Admin lint sạch; 61 file / 898 test xanh; `npm run build` xanh. Cảnh báo `act(...)` có sẵn ở hai test create-flow và cảnh báo chunk Vite >500 kB vẫn không chặn build.
+
+### Phiên 2026-09-26 — Nhập ảnh tin Tinh hoa Ẩm thực Xứ Dừa 2026 (NEWS-ASSET-IMPORT-M1)
+
+- [x] **NEWS-ASSET-IMPORT-M1** — lấy đủ 9 ảnh nhúng theo đúng thứ tự xuất hiện từ Google Docs nguồn `TinTuc1_ThienDucTinhHoaAmThucXuDua`; lưu ảnh gốc PNG tại `thien-duc-website-resources/images/news/2026/` theo quy ước `tinh-hoa-am-thuc-xu-dua-2026-01.png` đến `-09.png`.
+- **Kiểm định:** API Docs ghi nhận đúng 9 inline object; 9/9 tệp có chữ ký PNG hợp lệ, không còn tệp tải tạm; kích thước ảnh từ 1171×662 đến 2048×1950 px, tổng dung lượng 34.801.230 byte. Không đồng bộ sang frontend trong phiên này vì yêu cầu chỉ lưu vào kho resources.
+
 ### Phien 2026-09-23 - Sua hydration/CSP warning va UX logo thuong hieu (BRANDING-HYDRATION-UX-M1)
 
 - [x] **BRANDING-HYDRATION-UX-M1** - sua loi production console React minified `#418` do text phu thuoc thoi gian trong footer: nam ban quyen nay tinh theo moc UTC+7 on dinh (`getVietnamCurrentYear`) thay vi `new Date().getFullYear()` theo timezone runtime, kem test giao thua VN.
@@ -111,10 +354,10 @@
 - [x] **HOME-CONTACT-CTA-FOOTER-SEPARATION-M1** - doi section lien he trang chu tu nen olive trung footer sang nen ivory sang dong bo header; them border phan tach, CTA earth/ivory va cac dong phone/email/dia chi dang panel sang co icon de de scan, khong lam doi footer toi.
 - **Kiem dinh**: frontend targeted Jest 24/24 xanh (`format`, `site-chrome`, `next.config`), frontend lint/typecheck xanh, frontend build xanh khi tro API kha dung; admin lint xanh, admin build xanh. Lan build frontend dau voi `.env` local that bai vi `NEXT_PUBLIC_API_URL=http://localhost:3001/api` nhung backend local khong chay; chay lai voi API Render hien co thi hoan tat 44/44 route.
 
-### Phi�n 2026-09-15 � Redesign giao di?n public theo brief Word
+### Phi�n 2026-09-15 � Redesign giao di?n public theo brief Word
 
-- [x] **PUBLIC-UI-REDESIGN-2026-M1** � �p d?ng hu?ng Contemporary Architectural Luxury cho frontend public: token m�u Warm Ivory/Charcoal/Warm Grey/Earth Brown/Deep Olive, typography Cormorant Garamond + Manrope, header 5 m?c ch�nh, hero ?nh th?t overlay ph?ng, facts x�c th?c, intro editorial, featured projects d�ng d? �n th?t t? API, footer/contact b? Zalo test v� d�ng Google Maps directions. Kh�ng d�ng s? mock 16+/20+/1000+/50+.
-- [x] **Docs ngu?n** � chu?n h�a file Word ngu?n v�o `03-ui-ux/references/y-tuong-thiet-ke-lai-website-thien-duc-2026-09-09.docx`; handoff m?i: `03-ui-ux/redesign-handoff-2026-09-15.md`.
+- [x] **PUBLIC-UI-REDESIGN-2026-M1** � �p d?ng hu?ng Contemporary Architectural Luxury cho frontend public: token m�u Warm Ivory/Charcoal/Warm Grey/Earth Brown/Deep Olive, typography Cormorant Garamond + Manrope, header 5 m?c ch�nh, hero ?nh th?t overlay ph?ng, facts x�c th?c, intro editorial, featured projects d�ng d? �n th?t t? API, footer/contact b? Zalo test v� d�ng Google Maps directions. Kh�ng d�ng s? mock 16+/20+/1000+/50+.
+- [x] **Docs ngu?n** � chu?n h�a file Word ngu?n v�o `03-ui-ux/references/y-tuong-thiet-ke-lai-website-thien-duc-2026-09-09.docx`; handoff m?i: `03-ui-ux/redesign-handoff-2026-09-15.md`.
 - Ki?m d?nh frontend: `npm run lint`, `npx tsc --noEmit`, `npm run test -- --runInBand` xanh tru?c khi build.
 
 ### Phiên 2026-09-16 — Hoàn thiện redesign và reduced motion
