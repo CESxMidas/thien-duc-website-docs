@@ -2,13 +2,12 @@
 
 > **Trạng thái:** Đang dùng
 > **Nhóm:** 07 — Deployment
-> **Cập nhật:** 2026-07-16
+> **Cập nhật:** 2026-10-19
 > **Tài liệu liên quan:** [deployment-guide.md](deployment-guide.md) · [rollback-plan.md](rollback-plan.md) · [environment-configuration.md](environment-configuration.md) · [audit-baseline](../08-audits-and-reports/current/2026-07-16-audit-baseline.md) mục 7
 
-Tài liệu này đóng khoảng trống "chưa có backup DB tự động" nêu trong Audit
-Baseline (task →2). Chiến lược: **backup được quản lý bởi Render** làm lớp chính,
-kèm **runbook `pg_dump`/`pg_restore` thủ công** cho tình huống khẩn cấp / xuất dữ
-liệu ra ngoài Render.
+Chiến lược hiện hành: **Render managed recovery/PITR** làm lớp chính, kèm
+**logical export** và runbook `pg_dump`/`pg_restore` cho tình huống khẩn cấp hoặc
+xuất dữ liệu ra ngoài Render.
 
 > Backup off-site tự động (script + lịch chạy + kho lưu trữ ngoài) **cố ý chưa
 > làm ở task này** — sẽ tách thành task riêng sau khi chốt nơi lưu, retention,
@@ -20,14 +19,13 @@ liệu ra ngoài Render.
 
 | Việc | Ở đâu | Được đảm bảo bởi |
 |---|---|---|
-| Khai báo Postgres hiện tại | `backend/render.yaml` (`plan: free`) | Repo; không chứng minh plan dashboard |
-| Nâng lên plan production | Render Dashboard/Blueprint | **Thủ công**; tên plan kiểm tra tại thời điểm nâng |
-| Bật/áp plan trả phí + thanh toán | Render Dashboard | **Thủ công** — `render.yaml` không tự thanh toán |
-| Backup tự động hằng ngày + PITR | Render Dashboard (Postgres trả phí) | **Thủ công xác nhận** — xem mục 1 |
-| Kiểm thử khôi phục | Thủ công theo runbook mục 3–5 | Con người |
+| Khai báo hạ tầng | `backend/render.yaml` | Repo; không thay thế trạng thái dashboard |
+| Plan PostgreSQL production | Render Dashboard | Đã xác minh plan trả phí `0.1c-256mb`, 6 USD/tháng, 1 GB, PostgreSQL 18 |
+| Managed recovery/PITR | Render Dashboard → Recovery | Đã xác minh active, recovery window 3 ngày |
+| Kiểm thử khôi phục | Thủ công theo runbook mục 3–5 | Owner chấp nhận hoãn sau bàn giao |
 | `pg_dump`/`pg_restore` khẩn cấp | Máy vận hành (dùng External URL) | Con người |
 
-> ⚠️ **`render.yaml` một mình KHÔNG đảm bảo** có backup: nó chỉ khai plan. Backup
+>  **`render.yaml` một mình KHÔNG đảm bảo** có backup: nó chỉ khai plan. Backup
 > daily/PITR có bật không, retention bao nhiêu ngày là **thuộc tính của plan
 > Postgres trả phí** và phải **kiểm tra tận nơi ở Render Dashboard**.
 
@@ -35,24 +33,22 @@ liệu ra ngoài Render.
 
 ## 1. Backup được quản lý bởi Render (lớp chính)
 
-Sau khi Postgres đã nâng lên plan trả phí (xem [deployment-guide.md](deployment-guide.md)
-mục "Nâng lên plan production"):
+Dashboard production đã xác minh:
 
-1. Render Dashboard → database `thien-duc-db` → tab **Backups** (hoặc **Recovery**).
-2. **Xác nhận tại thời điểm nâng plan** (không hardcode ở đây — Render thay đổi theo thời gian):
-   - Backup hằng ngày có tự chạy không?
-   - **Retention** (số ngày giữ backup) là bao nhiêu?
-   - Có **Point-in-Time Recovery (PITR)** không, cửa sổ PITR bao lâu?
-3. Ghi kết quả xác nhận (ngày, plan, retention, PITR) vào *Nhật ký xác nhận* cuối file.
+- Database `thien-duc-db`, PostgreSQL 18, region Singapore.
+- Managed Point-in-Time Recovery đang active.
+- Có thể chọn mốc phục hồi bất kỳ trong 3 ngày gần nhất.
+- Restore tạo từ backup/recovery point do Render quản lý.
+- Manual logical export khả dụng; tệp export được giữ ít nhất 7 ngày.
 
-> Nếu plan rẻ nhất **không** có PITR mà chỉ có daily backup, đó vẫn là mức tối
-> thiểu chấp nhận được cho go-live; cần RPO chặt hơn thì nâng plan cao hơn.
+Render không hiển thị một lịch sử scheduled backup riêng trong evidence đã cung
+cấp. Với plan hiện hành, PITR là cơ chế managed backup/recovery được xác minh.
 
 ---
 
 ## 2. Điều kiện tiên quyết cho runbook thủ công
 
-- Cài PostgreSQL client trùng **major version** với server (Postgres 17) — `pg_dump`
+- Cài PostgreSQL client trùng **major version** với server (PostgreSQL 18) — `pg_dump`
   bản cũ hơn server sẽ từ chối chạy.
 - Dùng **External Database URL** của Render (đuôi `.singapore-postgres.render.com`),
   **KHÔNG** dùng Internal URL (chỉ chạy trong mạng Render → lỗi `P1001`).
@@ -86,7 +82,7 @@ Lưu file `.dump` ra nơi an toàn ngoài máy dev (khuyến nghị mã hóa). *
 
 ## 4. Khôi phục (`pg_restore`) — quy trình khẩn cấp
 
-> ⚠️ Khôi phục là thao tác **phá hủy** trên DB đích. Luôn `pg_dump` DB đích
+>  Khôi phục là thao tác **phá hủy** trên DB đích. Luôn `pg_dump` DB đích
 > **trước** khi restore đè, và ưu tiên restore vào DB trống/mới rồi mới repoint.
 
 **Cách A — khôi phục vào database mới (an toàn hơn, khuyến nghị):**
@@ -113,15 +109,17 @@ pg_restore --clean --if-exists --no-owner --no-privileges \
   --dbname "$DATABASE_URL" thien-duc-YYYYMMDD-HHMM.dump
 ```
 
-**Khôi phục bằng PITR (nếu plan có):** không dùng `pg_restore` — thao tác ở
+**Khôi phục bằng PITR (đã active):** không dùng `pg_restore` — thao tác ở
 Render Dashboard → database → **Recovery** → chọn mốc thời gian; Render tạo
 instance khôi phục riêng. Sau đó repoint `DATABASE_URL` như Cách A.
 
 ---
 
-## 5. Kiểm thử khôi phục (bắt buộc trước go-live)
+## 5. Kiểm thử khôi phục
 
-Backup chưa test = chưa có backup. Ít nhất một lần trước production:
+Restore drill chưa hoàn thành. Owner đã chấp nhận hoãn sang giai đoạn vận hành
+sau bàn giao. Waiver chỉ áp dụng cho drill; managed PITR vẫn phải duy trì active.
+Khi thực hiện:
 
 - [ ] Tạo `pg_dump` từ DB thật (mục 3).
 - [ ] `pg_restore` vào một DB mới trống (Cách A).
@@ -137,12 +135,16 @@ Backup chưa test = chưa có backup. Ít nhất một lần trước production
 
 ## 6. Việc phải làm thủ công ở Render Dashboard (repo không tự động hóa được)
 
-- [ ] Nâng Postgres lên plan trả phí + gắn thanh toán.
-- [ ] Xác nhận backup daily + retention + PITR (mục 1).
+- [x] Xác nhận plan PostgreSQL production và managed PITR (mục 1).
+- [x] Xác nhận recovery window 3 ngày và logical export retention tối thiểu 7 ngày.
 - [ ] (Khi cần khôi phục) chạy runbook mục 3–4 hoặc PITR ở Dashboard.
-- [ ] Nếu free→paid không nâng tại chỗ được → theo "Đường di trú" dưới.
+- [ ] Thực hiện restore drill sau bàn giao và ghi RPO/RTO.
 
 ### Đường di trú free → paid Postgres (nếu Render không cho nâng tại chỗ)
+
+> **Đã hoàn tất về mặt trạng thái production:** PostgreSQL hiện dùng plan trả phí
+> `0.1c-256mb`. Phần dưới được giữ làm runbook lịch sử nếu cần di trú một database
+> Free khác; không còn là hành động đang chờ của production hiện tại.
 
 Render có thể **không** cho nâng trực tiếp database *free* thành *paid* (free là
 tier riêng — có thể phải tạo instance mới). Khi đó:
@@ -156,26 +158,22 @@ tier riêng — có thể phải tạo instance mới). Khi đó:
 6. Nếu blueprint (`render.yaml`) vẫn quản lý database, đối chiếu tên/kết nối cho
    khớp — tránh Render tạo lại DB free khi sync blueprint.
 
-> Làm việc này **trước mốc 30 ngày** hết hạn của Postgres free; xác nhận lại
-> chính sách hiện hành trong Render Dashboard.
+> Khi dùng lại runbook này, xác nhận chính sách hiện hành trong Render Dashboard.
 
 ---
 
-## Nhật ký xác nhận (điền khi nâng plan)
+## Nhật ký xác nhận
 
-> 🟠 **G7-M1 (2026-07-19):** kiểm mức cao xác nhận Postgres **còn Free** — backup
-> daily / retention / PITR **chưa xác nhận**, restore test **chưa làm**. Bảng dưới
-> **cố ý để trống** cho tới khi có plan trả phí thật. Xem
-> [G7-M1 verification note](../08-audits-and-reports/current/2026-07-19-g7-m1-manual-ops-verification.md).
-
-| Ngày | Plan Postgres | Backup daily? | Retention | PITR? | RTO test | Người xác nhận |
+| Ngày | Plan Postgres | Cơ chế managed recovery | Retention | PITR | Restore drill | Người xác nhận |
 |---|---|---|---|---|---|---|
-| _(chưa điền)_ | | | | | | |
+| 2026-10-19 | `0.1c-256mb`, 1 GB | Render managed recovery | 3 ngày; export ít nhất 7 ngày | Active | Waiver accepted; thực hiện sau bàn giao | Owner |
 
 ---
 
 ## Document history
 
+- **2026-10-19** — Xác minh plan production, PostgreSQL 18, managed PITR 3 ngày
+  và logical export; ghi nhận waiver restore drill sau bàn giao.
 - **2026-07-19** — G7-M1 (docs-only): ghi chú trạng thái trên "Nhật ký xác nhận" —
   Postgres còn Free, backup/PITR chưa xác nhận, restore test chưa làm; bảng để
   trống tới khi có plan trả phí. Liên kết audit note G7-M1.
@@ -270,7 +268,8 @@ production (chỉ nhận đích `localhost` + tên DB kết thúc `_test`/`_veri
 3. Đặt `BACKUP_ENCRYPT_KEY` — bản dump chứa dữ liệu cá nhân (email/điện thoại
    người liên hệ), **không được** rời máy khi chưa mã hóa.
 4. Bật một lịch chạy trong `scheduler-examples.md`.
-5. **Diễn tập khôi phục từ backup production thật** — bắt buộc trước go-live (§5).
+5. **Diễn tập khôi phục từ backup production thật** — owner đã chấp nhận hoãn;
+   thực hiện sau bàn giao và ghi RPO/RTO vào nhật ký (§5).
 6. Máy chạy backup phải có `pg_dump` cùng major hoặc mới hơn server production.
    Xác minh phiên bản server trên Render trước khi cài; repo chỉ chứng minh local
-   Docker 18 và CI 17, không chứng minh phiên bản production.
+   Docker 18 và CI 17; production đã được dashboard xác minh là PostgreSQL 18.

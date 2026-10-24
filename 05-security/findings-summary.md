@@ -4,13 +4,15 @@
 > **Nhóm:** 05 — Security
 > **Nguồn (di chuyển từ):** `security-audit/FINDINGS_SUMMARY.md`
 
+> **Lưu ý hiện hành (2026-10-19):** Đây là baseline lịch sử ngày 2026-07-14, không phải trạng thái phát hành hiện tại. Trạng thái phát hành và các việc bảo mật còn theo dõi được ghi tại [Báo cáo final release readiness](../08-audits-and-reports/current/2026-10-19-final-release-readiness.md). Kiểm tra sau bàn giao còn gồm rà soát quy tắc PostgreSQL inbound `0.0.0.0/0`; chưa có thay đổi hạ tầng trong giai đoạn tài liệu hóa.
+
 **Audit Date:** 2026-07-14  
-**Status:** ✋ AWAITING_SECURITY_PLAN_APPROVAL  
+**Status:** AWAITING_SECURITY_PLAN_APPROVAL
 **Total Findings:** 10 (2 HIGH, 5 MEDIUM, 3 LOW)
 
 ---
 
-## 🔴 Critical (HIGH) — Cần fix ngay
+##  Critical (HIGH) — Cần fix ngay
 
 | # | Finding | File | Risk | Action |
 |---|---------|------|------|--------|
@@ -20,7 +22,7 @@
 
 ---
 
-## 🟡 Medium — Cần fix trong vòng 1-2 tuần
+##  Medium — Cần fix trong vòng 1-2 tuần
 
 | # | Finding | File | Risk | Action |
 |---|---------|------|------|--------|
@@ -32,7 +34,7 @@
 
 ---
 
-## 🟢 Low — Có thể fix sau
+##  Low — Có thể fix sau
 
 | # | Finding | File | Risk | Action |
 |---|---------|------|------|--------|
@@ -44,13 +46,13 @@
 ## 📊 7 Security Groups Coverage
 
 ```
-1. Rate Limiting         [⚠️  PARTIALLY_IMPLEMENTED]  ← 3 findings
-2. CORS                  [🔴 MISCONFIGURED]         ← 1 HIGH finding
-3. SQL Injection         [⚠️  PARTIALLY_VERIFIED]    ← 1 HIGH finding
-4. CSRF                  [✅ NOT_APPLICABLE]         ← Bearer token auth
-5. XSS                   [✅ SAFE]                  ← No innerHTML found
-6. Firewall & WAF        [❓ NOT_VERIFIABLE]        ← Infrastructure only
-7. VPN / Admin Access    [❓ NOT_VERIFIABLE]        ← Infrastructure only
+1. Rate Limiting         [  PARTIALLY_IMPLEMENTED]  ← 3 findings
+2. CORS                  [ MISCONFIGURED]         ← 1 HIGH finding
+3. SQL Injection         [  PARTIALLY_VERIFIED]    ← 1 HIGH finding
+4. CSRF                  [ NOT_APPLICABLE]         ← Bearer token auth
+5. XSS                   [ SAFE]                  ← No innerHTML found
+6. Firewall & WAF        [ NOT_VERIFIABLE]        ← Infrastructure only
+7. VPN / Admin Access    [ NOT_VERIFIABLE]        ← Infrastructure only
 ```
 
 ---
@@ -66,7 +68,7 @@
 
 ---
 
-## ⚠️ Blockers — Cần thông tin từ công ty
+##  Blockers — Cần thông tin từ công ty
 
 - [ ] **Production origin domain** (CORS whitelist) — currently hardcoded Vercel URL
 - [ ] **Expected login/refresh traffic** — to calibrate rate limits (PROPOSED_DEFAULT = 5/min)

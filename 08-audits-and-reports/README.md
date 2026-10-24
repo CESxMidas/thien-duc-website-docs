@@ -1,7 +1,7 @@
 # 08 — Audits & Reports
 
 > **Trạng thái:** Đang dùng (index thư mục)
-> **Cập nhật:** 2026-08-02
+> **Cập nhật:** 2026-10-19
 
 Báo cáo & audit có ngày. `current/` = hiện hành; `archive/` = đã bị thay thế. Đặt tên `YYYY-MM-DD-*.md`.
 
@@ -9,6 +9,7 @@ Báo cáo & audit có ngày. `current/` = hiện hành; `archive/` = đã bị t
 
 | Tài liệu | Mô tả | Trạng thái |
 |---|---|---|
+| [current/2026-10-19-final-release-readiness.md](current/2026-10-19-final-release-readiness.md) | Báo cáo readiness cuối: phiên bản phát hành, validation, production, hạ tầng, vận hành và các việc theo dõi sau bàn giao | Hiện hành |
 | [current/2026-07-16-audit-baseline.md](current/2026-07-16-audit-baseline.md) | Audit baseline mới nhất (60/100) | Đang dùng |
 | [current/2026-07-16-tai-cau-truc-tai-lieu.md](current/2026-07-16-tai-cau-truc-tai-lieu.md) | Báo cáo tái cấu trúc kho tài liệu | Đang dùng |
 | [current/2026-07-18-en-full-group2-closure.md](current/2026-07-18-en-full-group2-closure.md) | EN-FULL Group 2 — đóng tiếng Anh cho 7 route audited | Đang dùng |

@@ -2,17 +2,14 @@
 
 > **Trạng thái:** Đang dùng
 > **Nhóm:** 07 — Deployment
-> **Cập nhật:** 2026-08-27 (Batch 15B — Admin phục vụ dưới `www.thienduccons.vn/admin`)
+> **Cập nhật:** 2026-10-19
 > **Tài liệu liên quan:** [environment-configuration.md](environment-configuration.md) · [database-migrations.md](database-migrations.md) · [rollback-plan.md](rollback-plan.md)
 
-> 🟠 **Site đã public nhưng operational handover vẫn INCOMPLETE.** Kiểm vận hành
-> thủ công mức cao cho thấy hạ tầng **còn Free tier / chưa xác nhận đầy đủ**:
-> backend Render còn Free (ngủ), Postgres còn Free, backup/PITR chưa xác nhận,
-> restore/rollback drill + Sentry + UptimeRobot chưa có bằng chứng hoàn tất.
-> Website đang hoạt động không thay thế các cổng vận hành này.
-> Hoãn có chủ đích (chủ dự án chưa nâng hạ tầng). Nâng plan trả phí (mục 1b) +
-> monitoring là **bắt buộc trước go-live cuối**. Chi tiết:
-> [G7-M1 verification note](../08-audits-and-reports/current/2026-07-19-g7-m1-manual-ops-verification.md).
+> **Trạng thái production đã xác minh:** Frontend/Admin trên Vercel, Backend
+> Render Live, PostgreSQL 18 trả phí và managed PITR hoạt động. Backend vẫn dùng
+> plan Free nên có cold start. Restore drill được owner chấp nhận hoãn sang vận
+> hành sau bàn giao. Chi tiết tại
+> [báo cáo readiness cuối](../08-audits-and-reports/current/2026-10-19-final-release-readiness.md).
 
 > Frontend (Next.js) → **Vercel** · Backend (NestJS + Prisma) + PostgreSQL → **Render**.
 > Code đã push đầy đủ lên GitHub (`CESxMidas/thien-duc-website-frontend`, `CESxMidas/thien-duc-website-backend`).
@@ -64,7 +61,7 @@ còn `CORS_ORIGIN`/`ADMIN_APP_URL` chỉ biết được **sau khi** đã có do
 | 7 | Cấu hình Cloudinary | Cloud name phải **khớp** allowlist `next.config.ts` |
 | 8 | Test upload một ảnh trong Admin | Thiếu Cloudinary → 503 |
 | 9 | (Tùy chọn) Cấu hình Resend | Bỏ qua được ở lần deploy đầu |
-| 10 | **Đánh thức `…/api`** rồi deploy Frontend lên Vercel | ⚠️ Bắt buộc nếu backend còn Free tier — tránh build đỏ ở `/sitemap.xml` |
+| 10 | **Đánh thức `…/api`** rồi deploy Frontend lên Vercel |  Bắt buộc nếu backend còn Free tier — tránh build đỏ ở `/sitemap.xml` |
 | 11 | Gắn custom domain cho Frontend | Chốt redirect `www` ↔ apex |
 | 12 | Deploy Admin lên Vercel | Preset Vite, output `dist` (**giữ mặc định** — build ra `dist/admin/`), `vercel.json` đã có sẵn |
 | 13 | ~~Gắn subdomain admin~~ → **Không cần** | Từ Batch 15B, Admin đi qua `/admin` của domain frontend. Xác minh trực tiếp `https://thien-duc-website-admin.vercel.app/admin/` trước khi bật rewrite |
@@ -90,62 +87,31 @@ Repo đã có sẵn `render.yaml` (Blueprint) — Render tự dựng cả web se
    `https://thien-duc-website-backend-w1du.onrender.com` (API base = origin + `/api`).
    - Kiểm tra: mở `…/api` → trả envelope `{"success":true,"data":"Hello World!"}`;
      thử thêm vài route công khai `…/api/banners`, `…/api/news` → 200.
-   - ⚠️ **KHÔNG kiểm tra bằng `…/api/docs`** — Swagger cố ý bị tắt ở production
+   -  **KHÔNG kiểm tra bằng `…/api/docs`** — Swagger cố ý bị tắt ở production
      (trả 404). Xem [Swagger chỉ có ngoài production](#swagger-chỉ-có-ngoài-production).
 
 **Biến môi trường**: `render.yaml` đã set sẵn phần lớn; các giá trị cần nhập tay
 (Cloudinary secret, Resend…) xem [environment-configuration.md](environment-configuration.md).
 
-### 1b. Nâng lên plan production (task →2 — bắt buộc trước go-live)
+### 1b. Trạng thái plan production hiện hành
 
-> 🟠 **Trạng thái hiện tại (2026-08-10): `render.yaml` đang khai `plan: free` cho
-> CẢ HAI thành phần** — cố ý, để deploy/kiểm thử ban đầu mà không cần gắn thẻ
-> thanh toán. **Đây KHÔNG phải hạ tầng production.** Phải nâng plan trước go-live.
+Dashboard là nguồn sự thật; không suy plan production từ `render.yaml`.
 
-**Giới hạn của Free tier (phải biết trước khi dùng):**
-
-| Thành phần | Giới hạn Free |
-|---|---|
-| Web service | **Ngủ sau ~15 phút** không có traffic · request đánh thức mất **~1 phút** · **750 giờ** instance/workspace/tháng · **không có disk bền** |
-| PostgreSQL | **1 GB** lưu trữ · **chỉ MỘT** Postgres Free mỗi workspace · **HẾT HẠN sau 30 ngày** (mất dữ liệu) · **KHÔNG có backup**, không PITR |
-
-Hệ quả thực tế khi còn ở Free:
-
-- Form liên hệ có thể **timeout** ở request đầu (frontend hủy ở 10s, cold start lâu hơn).
-- Cron đăng bài (`@Cron`) **không chạy đáng tin** vì service ngủ.
-- Backend ngủ đúng lúc Vercel build → frontend build **ĐỎ ở `/sitemap.xml`**
-  (xem đính chính cuối tài liệu). Đánh thức `…/api` ngay trước khi build frontend.
-- Postgres Free hết hạn 30 ngày → **dữ liệu production thật KHÔNG được để ở đây**.
-
-**Mục tiêu khi nâng plan (bắt buộc trước go-live):**
-
-| Thành phần | Plan đề xuất | Mục đích |
+| Thành phần | Trạng thái đã xác minh | Hệ quả vận hành |
 |---|---|---|
-| Web service | `starter` | Always-on: không ngủ, cron đăng bài (`@Cron`) chạy đáng tin, không cần UptimeRobot để "giữ thức" |
-| PostgreSQL | `basic-256mb` | Lưu trữ bền (không hết hạn), backup daily + PITR nếu plan hỗ trợ |
+| Backend | Render Free, Singapore, `main`, Auto-Deploy | Có thể sleep/cold-start; request đầu có thể chậm khoảng 50 giây hoặc hơn |
+| PostgreSQL | Plan trả phí `0.1c-256mb`, 6 USD/tháng theo dashboard; 0.1 CPU, 256 MB RAM, 1 GB storage, PostgreSQL 18 | Dữ liệu production bền; managed PITR hoạt động |
 
-> ⚠️ **Tên plan, giá, retention backup và PITR phải kiểm tra lại ở Render
-> Dashboard tại thời điểm nâng** — Render đổi tên/giá plan theo thời gian, tài
-> liệu này không hardcode giá làm sự thật vĩnh viễn.
+Recovery window của PostgreSQL là 3 ngày. Manual logical export khả dụng và
+được giữ ít nhất 7 ngày. Restore drill chưa hoàn thành; owner đã chấp nhận hoãn
+sang vận hành sau bàn giao. Không mô tả waiver này là restore đã thành công.
 
-**`render.yaml` một mình KHÔNG đủ** — các việc phải làm tay ở Dashboard:
+Các việc vận hành tiếp theo:
 
-- [ ] Render Dashboard → xác nhận/áp plan mới khi sync Blueprint + gắn thanh toán
-      (đổi YAML không tự trừ tiền).
-- [ ] **Postgres free → paid có thể không nâng tại chỗ được** (free là tier riêng).
-      Nếu Dashboard không cho đổi plan trực tiếp → theo **"Đường di trú free →
-      paid"** trong [backup-and-restore.md](backup-and-restore.md) mục 6 (tạo DB
-      trả phí mới → `pg_dump`/`pg_restore` → repoint `DATABASE_URL`). Làm **trước
-      mốc 30 ngày** hết hạn của Postgres Free (mốc 90 ngày ghi trước đây đã cũ —
-      xác nhận lại ở Render Dashboard vì Render đổi chính sách theo thời gian).
-- [ ] Sau khi nâng: xác nhận backup daily + retention + PITR, điền *Nhật ký xác
-      nhận* trong [backup-and-restore.md](backup-and-restore.md).
-- [ ] Kiểm thử khôi phục một lần ([backup-and-restore.md](backup-and-restore.md) mục 5).
-- [ ] Diễn tập rollback một lần ([rollback-plan.md](rollback-plan.md)).
-- [ ] (Khuyến nghị) Vẫn đặt UptimeRobot ping `…/api` — không còn để "giữ thức" mà
-      để **cảnh báo downtime** (đầy đủ hơn ở task →5 monitoring).
-- [ ] Sau khi luồng luôn-thức chạy ổn: bỏ ghi chú "ping giữ backend thức" khỏi
-      quy trình vận hành (mục 5 dưới đã cập nhật theo hướng này).
+- Theo dõi cold start và nâng plan Backend nếu SLA yêu cầu.
+- Kiểm tra recovery/PITR định kỳ và thực hiện restore drill ở môi trường cô lập.
+- Rà soát rule PostgreSQL `0.0.0.0/0`; không thay đổi khi chưa có phê duyệt.
+- Không thay đổi plan, DNS hoặc environment chỉ để xử lý một lần validation.
 
 ---
 
@@ -159,7 +125,7 @@ Chỉ cần thêm **Environment Variables** (xem [environment-configuration.md](
 2. **Deployments → Redeploy** (bản mới nhất) để env có hiệu lực.
 3. Kiểm tra: mở trang `/lien-he` → gửi thử form → phải trả về thành công thật.
 
-> ⚠️ Frontend là **Next.js** — biến client dùng tiền tố `NEXT_PUBLIC_` và được "nướng" vào lúc build; đặt xong **bắt buộc Redeploy** mới có hiệu lực.
+>  Frontend là **Next.js** — biến client dùng tiền tố `NEXT_PUBLIC_` và được "nướng" vào lúc build; đặt xong **bắt buộc Redeploy** mới có hiệu lực.
 
 ---
 
@@ -170,7 +136,7 @@ repo `thien-duc-website-admin`. **Không** nằm trong `render.yaml`, và CI
 (`.github/workflows/ci.yml`) chạy lint + typecheck + coverage + build; workflow
 riêng chạy Playwright full-stack. GitHub Actions **không tự deploy**.
 
-> ⚠️ Push `main` có thể làm GitHub CI và Vercel/Render auto-deploy bắt đầu độc
+>  Push `main` có thể làm GitHub CI và Vercel/Render auto-deploy bắt đầu độc
 > lập. Chỉ coi production đã được CI gate khi required checks/Deployment Checks
 > được xác minh trên GitHub và dashboard provider. Xem
 > [CI/CD — thứ tự CI và CD](ci-cd.md#1-tổng-quan).
@@ -181,7 +147,7 @@ riêng chạy Playwright full-stack. GitHub Actions **không tự deploy**.
 > phải kiểm tra Render logs trước mọi push tiếp theo. GitHub/Vercel gates vẫn cần
 > xác minh dashboard.
 
-> ✅ **Cập nhật 2026-08-10:** repo admin **đã có `vercel.json`** (khác với ghi chú cũ
+>  **Cập nhật 2026-08-10:** repo admin **đã có `vercel.json`** (khác với ghi chú cũ
 > "không có"). File này khai sẵn **SPA rewrite** `/(.*) → /index.html` (bắt buộc cho
 > React Router: thiếu nó thì F5 ở route con trả 404) và các security header
 > (`X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy`, HSTS, `Permissions-Policy`).
@@ -218,7 +184,7 @@ Cấu hình khi import vào Vercel:
 - **API base: không đổi.** Admin gọi backend bằng URL **tuyệt đối** từ
   `VITE_API_URL`, không có lời gọi tương đối nào — nên không có nguy cơ
   `/api/api` hay `www.thienduccons.vn/admin/api`.
-- ⚠️ **Người dùng CMS phải đăng nhập lại MỘT lần sau khi cắt.** Auth dùng Bearer
+-  **Người dùng CMS phải đăng nhập lại MỘT lần sau khi cắt.** Auth dùng Bearer
   token lưu trong `localStorage`/`sessionStorage`, mà storage gắn theo **origin**
   — token cũ ở `*.vercel.app` không đi theo sang `www.thienduccons.vn`.
 
@@ -277,7 +243,7 @@ Sau khi có domain Vercel chính thức:
 - **Gửi form báo thành công nhưng DB "trống"** — thường không phải lỗi, mà do:
   - Xem sai **tên bảng**: Prisma map model `ContactSubmission` → bảng SQL là `contact_submissions` (chữ thường, số nhiều). Query: `SELECT * FROM contact_submissions ORDER BY created_at DESC;`
   - Frontend chưa gọi đúng backend: kiểm tra `NEXT_PUBLIC_API_URL` đã đặt và **đã Redeploy** Vercel chưa (biến `NEXT_PUBLIC_*` nướng vào lúc build). Kiểm tra: F12 → Network → gửi form → phải thấy request POST tới `…/api/contact` trả `201`.
-  > ✅ **Đã xác nhận bằng mã nguồn (2026-07-19, không còn "mock mode"):** `src/lib/api/client.ts` đặt `API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? ""` và `apiFetch` luôn gọi `fetch` thật — **không có lớp mock/fallback trả dữ liệu giả**. Nếu thiếu `NEXT_PUBLIC_API_URL`, base URL rỗng làm mọi lời gọi API hỏng lúc chạy; cờ `isApiConfigured` chỉ để `generateStaticParams`/`sitemap` **bỏ prerender SSG** (trả rỗng) trong môi trường build không có API (vd. CI), **không** phải chế độ giả lập. Kết luận: `NEXT_PUBLIC_API_URL` là **bắt buộc** ở production — khớp với `AGENTS.md`. Mô tả "chế độ mock" cũ trong `DEPLOY.md`/`frontend/.env.example` đã lỗi thời (đề xuất sửa comment dòng 1 của `frontend/.env.example` — thuộc file code-adjacent, cần duyệt riêng).
+  >  **Đã xác nhận bằng mã nguồn (2026-07-19, không còn "mock mode"):** `src/lib/api/client.ts` đặt `API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? ""` và `apiFetch` luôn gọi `fetch` thật — **không có lớp mock/fallback trả dữ liệu giả**. Nếu thiếu `NEXT_PUBLIC_API_URL`, base URL rỗng làm mọi lời gọi API hỏng lúc chạy; cờ `isApiConfigured` chỉ để `generateStaticParams`/`sitemap` **bỏ prerender SSG** (trả rỗng) trong môi trường build không có API (vd. CI), **không** phải chế độ giả lập. Kết luận: `NEXT_PUBLIC_API_URL` là **bắt buộc** ở production — khớp với `AGENTS.md`. Mô tả "chế độ mock" cũ trong `DEPLOY.md`/`frontend/.env.example` đã lỗi thời (đề xuất sửa comment dòng 1 của `frontend/.env.example` — thuộc file code-adjacent, cần duyệt riêng).
 - **Kết nối DB từ máy local (pgAdmin / Prisma Studio)** — phải dùng **External Database URL** của Render (có đuôi `.singapore-postgres.render.com`), KHÔNG dùng Internal URL (host cụt, chỉ chạy trong mạng Render → lỗi `P1001`). pgAdmin: đặt **SSL mode = Require** ở tab Parameters. Xem thêm cảnh báo `sslmode` ở [environment-configuration.md](environment-configuration.md).
 - **Form thỉnh thoảng đỏ / "Failed to fetch" / timeout** — triệu chứng của backend **còn chạy free tier** (ngủ sau 15 phút; request đầu đợi ~30–50s trong khi FE hủy ở 10s). Cách xử lý đúng: nâng plan always-on theo mục **1b** (đây là task →2). Chữa tạm khi chưa nâng: mở `…/api` cho backend thức trước, hoặc ping định kỳ bằng UptimeRobot. Sau khi đã nâng plan mà vẫn gặp → không phải do ngủ, xem log Render.
 - **Giờ hiển thị lệch 7 tiếng** — DB lưu **UTC** (đúng chuẩn). Hiển thị giờ VN (UTC+7) bằng `formatDateTime` trong `src/lib/format.ts` (frontend), hoặc trong SQL: `created_at + interval '7 hour'`.
@@ -346,7 +312,7 @@ Bốn migration in đậm là phần mới so với lần cập nhật tài li�
 
 ### Trạng thái xác minh trên production
 
-> ⚠️ **Tài liệu này KHÔNG khẳng định bốn migration trên đã được áp trên DB
+>  **Tài liệu này KHÔNG khẳng định bốn migration trên đã được áp trên DB
 > production.** Việc áp thật phải được xác minh qua **log deploy trên Render** và
 > bảng **`_prisma_migrations`** trong DB production:
 >
@@ -449,10 +415,10 @@ danh sach slug that.
 |---|---|
 | Thieu `NEXT_PUBLIC_API_URL` (CI hien tai) | build **xanh**, khong prerender |
 | Co URL + backend song | build **xanh**, **co** prerender |
-| Co URL + backend ngu | 🔴 build **ĐỎ** tại `/sitemap.xml` — xem đính chính bên dưới |
+| Co URL + backend ngu |  build **ĐỎ** tại `/sitemap.xml` — xem đính chính bên dưới |
 | Co URL + backend ngu + `BUILD_REQUIRE_API=1` | build **do** co chu dich |
 
-> 🔴 **ĐÍNH CHÍNH (2026-08-10, đo thực tế — không suy đoán).** Dòng thứ ba trước đây
+>  **ĐÍNH CHÍNH (2026-08-10, đo thực tế — không suy đoán).** Dòng thứ ba trước đây
 > ghi "build **xanh** + cảnh báo `ECONNREFUSED`". Điều đó **chỉ đúng với cây trang
 > `/[locale]`**, KHÔNG đúng với sitemap. Đã tái hiện được trên máy: có
 > `NEXT_PUBLIC_API_URL` + backend tắt → `next build` **thất bại**:

@@ -2,7 +2,7 @@
 
 > **Trạng thái:** Đang dùng
 > **Nhóm:** 07 — Deployment
-> **Cập nhật:** 2026-07-16
+> **Cập nhật:** 2026-10-19
 > **Tài liệu liên quan:** [deployment-guide.md](deployment-guide.md) · [environment-configuration.md](environment-configuration.md) · [rollback-plan.md](rollback-plan.md) · [audit-baseline](../08-audits-and-reports/current/2026-07-16-audit-baseline.md)
 
 Task →5: error tracking bằng **Sentry** (3 app) + uptime monitoring bằng
@@ -14,7 +14,7 @@ xóa request data trước khi gửi (không lộ nội dung lead/token/cookie).
 
 | Việc | Ở đâu |
 |---|---|
-| Code init Sentry + error boundary (3 app) | ✅ Repo (đã làm — task →5) |
+| Code init Sentry + error boundary (3 app) |  Repo (đã làm — task →5) |
 | Tạo tài khoản Sentry + 3 project + lấy 3 DSN | **Thủ công** (Sentry dashboard) |
 | Dán DSN vào Render/Vercel env + redeploy | **Thủ công** (Render/Vercel dashboard) |
 | Tạo monitor UptimeRobot + kênh alert | **Thủ công** (UptimeRobot dashboard) |
@@ -22,11 +22,11 @@ xóa request data trước khi gửi (không lộ nội dung lead/token/cookie).
 Thiếu DSN → mọi SDK **tự tắt** (no-op), app chạy bình thường — cùng khuôn
 degrade với Cloudinary/SMTP.
 
-> 🟠 **Trạng thái vận hành (2026-07-19, G7-M1): CHƯA cấu hình/verify.** Code init
-> đã sẵn ở cả 3 app (repo), nhưng **chưa** tạo/verify 3 project Sentry, **chưa**
-> có test event / alert rule, và **chưa** dựng monitor UptimeRobot (BE-health /
-> FE-home) — các checklist thủ công dưới đây vẫn còn để trống. Xem
-> [G7-M1 verification note](../08-audits-and-reports/current/2026-07-19-g7-m1-manual-ops-verification.md).
+> **Trạng thái vận hành (2026-10-19):** Admin đã có nhóm biến Sentry trên Vercel
+> Production/Preview. Frontend và Backend không bật Sentry trong bộ biến
+> production đã cung cấp. Chưa có evidence test event, alert rule hoặc uptime
+> monitor; không mô tả các kênh này là đang hoạt động cho tới khi dashboard được
+> xác minh.
 
 ## 1. Sentry — kiến trúc capture
 
@@ -132,7 +132,7 @@ không cần build, không cần mạng, không cần token thật.
 4. Deploy một bản → Releases → xác nhận có artifact source map.
 5. Bắn một lỗi thử → xác nhận stack trace hiện đúng file/dòng TypeScript.
 
-### Admin (Vite) — BLOCKED BY DEPENDENCY
+### Admin (Vite) — repo đã chuẩn bị, chờ xác minh upload
 
 **Cập nhật 2026-08-02 — ĐÃ LÀM XONG PHẦN REPO.** `@sentry/vite-plugin@5.4.0` đã
 cài; `vite.config.ts` thêm plugin với **đúng cổng ba biến** như frontend, và:
