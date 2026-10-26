@@ -210,3 +210,9 @@ Sửa `src/data/navigation.ts` + `site-header.tsx`:
 - Chỉ Super Admin và thành viên có quyền xóa chung thấy nút. **Tài khoản → Quyền xóa** có một checkbox cho toàn CMS; chỉ Super Admin được cấp/thu hồi. Bảng tài khoản ghi rõ **Toàn quyền / Được cấp / Chưa cấp**.
 - **Thùng rác** có các loại nội dung, phân trang, khôi phục và xóa vĩnh viễn. Khôi phục bài/dự án/trang/tuyển dụng về nháp; ảnh thư viện/banner/chuyên mục/tài khoản cần được bật lại. Không tự chạy lại lịch đăng cũ; cần khôi phục cha trước con.
 - Khi đang xử lý, khóa xác nhận. Khi lưu lỗi hoặc quyền bị thu hồi, giữ hộp thoại và thông báo rõ. Xóa dự án nói rõ tác động tới hạng mục/ảnh; xóa tài khoản nói rõ phiên/lời mời/hồ sơ liên quan. Không cho tự xóa mình hoặc mất Super Admin cuối cùng.
+
+## 14. Đổi mật khẩu có mã email — 2026-10-27
+
+- Bước đầu nhập ba ô mật khẩu và bấm **Gửi mã xác nhận**. Gửi thành công mới chuyển sang ô **Mã xác nhận**; hiện email đã che, hướng dẫn kiểm tra thư rác, thời hạn 10 phút và thông báo cần đăng nhập lại sau khi đổi.
+- Mã nhập bằng một ô, hỗ trợ bàn phím số, dán và tự điền mã một lần. **Gửi lại mã** có bộ đếm 60 giây; **Sửa mật khẩu** quay về bước trước. Mã hết hạn khóa xác nhận nhưng vẫn cho hủy hoặc gửi lại. Mật khẩu không lưu ở storage hoặc URL.
+- Lỗi gửi email giữ bước mật khẩu; lỗi mã giữ hộp thoại và focus lại ô mã. Không đăng xuất chỉ vì nhập sai mật khẩu/mã. Chỉ khi đổi thành công mới dọn token và chuyển đúng trang đăng nhập Admin.

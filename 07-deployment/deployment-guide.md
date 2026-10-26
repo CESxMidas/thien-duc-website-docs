@@ -21,6 +21,19 @@ Tài liệu này mô tả **quy trình triển khai**. Chi tiết biến môi tr
 
 ## Kiến trúc & thứ tự triển khai
 
+### Bổ sung 2026-10-27 — Mã email đổi mật khẩu
+
+Áp dụng migration `20261027030000_password_change_code` trước backend mới, rồi
+cập nhật Admin. Bảng mã dùng riêng với token quên mật khẩu/lời mời; không cần
+secret public hoặc dịch vụ SMS. Cần `RESEND_API_KEY` và `MAIL_FROM` hợp lệ ở
+backend. Thiếu cấu hình/provider lỗi thì đổi mật khẩu dừng ở bước gửi mã (503),
+không bỏ qua xác nhận và không giả lập gửi thành công.
+
+`MAIL_FAKE_TRANSPORT=1` chỉ dùng cùng `NODE_ENV=test` trong môi trường kiểm thử
+cách ly; không bật ở production. Sau triển khai, tải lại Admin để dùng hợp đồng
+gửi mã mới. Backend cũ chưa yêu cầu OTP hoặc chưa kiểm tokenVersion không phải
+bản rollback phù hợp cho thay đổi bảo mật này.
+
 ### Bổ sung 2026-10-27 — Xóa CMS, thùng rác và quyền xóa
 
 Trước backend chứa chức năng này, chạy `npx prisma migrate deploy` để áp dụng
