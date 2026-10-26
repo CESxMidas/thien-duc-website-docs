@@ -1,7 +1,7 @@
 # Kế hoạch triển khai — Website Thiên Đức (PA2)
  
 > **Trạng thái:** Tài liệu sống — nguồn sự thật cho tiến độ coding.
-> **Nhóm:** 04 — Implementation · **Current as of: 2026-10-24**
+> **Nhóm:** 04 — Implementation · **Current as of: 2026-10-26**
 > **Tài liệu liên quan:** [open-questions](../01-requirements/open-questions.md) · [deployment-guide](../07-deployment/deployment-guide.md) · [security](../05-security/README.md) · [audit-baseline](../08-audits-and-reports/current/2026-07-16-audit-baseline.md)
 >
 > Cấu trúc: §0 hiện trạng · §1 tóm tắt đã xong · §2 code đang chờ làm · §3 manual/go-live · §4 deferred · §5 backlog nội dung · §6 backlog tùy chọn · §7 changelog/audit trail.
@@ -111,6 +111,11 @@
 ---
 
 ## Section 7 — Changelog / audit trail
+
+### Phiên 2026-10-26 — Bỏ nội dung hiển thị lặp trong chi tiết Admin
+
+- [x] **ADMIN-DETAIL-CONTENT-DEDUP-M1** — Rà soát mã nguồn modal chi tiết/chỉnh sửa dự án, hạng mục, trang nội dung, tin tức, hợp tác, banner, tuyển dụng, tài khoản và liên hệ. Tổng quan dự án bị render ở cả `InfoTab` và `ProjectReadOnlyOverview`; bỏ bản trong `InfoTab`, giữ một bản khi xem và một ô nhập khi sửa. Nội dung chi tiết hạng mục cũng chỉ hiện bản đọc khi không chỉnh sửa, tránh lặp dưới ô nhập. Chưa phát hiện thêm lỗi render hai khối nội dung tương tự ở các modal còn lại; không thay đổi dữ liệu CMS.
+- [x] Thêm 2 test hồi quy cho chuyển xem → sửa → đóng chỉnh sửa, giữ test chống lặp bộ chọn ảnh. Admin lint PASS (0 lỗi/0 warning), build/TypeScript PASS, toàn bộ 65 file/935 test PASS ở lượt chạy lại. Lượt đầu lint gặp file cấu hình tạm bị xóa khi chạy đồng thời với Vitest; một test đặt lịch gặp lỗi pointer-events, lượt chạy lại PASS mà không sửa test đó. Build còn cảnh báo kích thước bundle >500 kB; bộ test hợp tác còn cảnh báo `act(...)` ngoài phạm vi sửa. Chưa kiểm tra trực quan trên trình duyệt, chưa commit/push/deploy.
 
 ### Phiên 2026-10-24 — Làm sáng footer và giãn khối thương hiệu trên mobile
 
