@@ -178,9 +178,28 @@ Sửa `src/data/navigation.ts` + `site-header.tsx`:
 
 ## 9. Thứ tự triển khai đề xuất
 
+
 1. ~~**H3 Contact Form + API**~~ ✅ Xong 2026-07-08 — form gọi `POST /api/contact` (mailto đã bỏ), validate on-blur, đủ trạng thái submitting/success/error/429, honeypot; backend cho `email` optional (migration `contact_email_optional`).
    > ✅ Đã xác nhận (2026-07-21): frontend **không có mock mode** — `src/lib/api/client.ts` luôn `fetch` thật, biến bắt buộc là `NEXT_PUBLIC_API_URL` (frontend là Next.js, không phải Vite). Mô tả cũ "Mock mode khi chưa đặt `VITE_API_URL`" đã lỗi thời cả về hành vi lẫn tên biến — xem [deployment-guide.md](../07-deployment/deployment-guide.md) mục 5.
 2. ~~**H1+H2 Hero/trang chủ**~~ ✅ Xong 2026-07-08 — banner 75svh + CTA kép + h1, autoplay 7s pause hover/focus/tab ẩn/reduced-motion, swipe mobile, arrows mobile, dots 44px, a11y carousel đầy đủ; HomeHero → HomeIntroStrip (4 cột năng lực); FeaturedProjects dời lên ngay sau banner.
 3. ~~**H5 Breadcrumb**~~ ✅ Xong 2026-07-08 — `src/components/ui/breadcrumb.tsx` (JSON-LD BreadcrumbList, aria-current, thu gọn "…" mobile); đã áp cho `du-an/[slug]`, `tin-tuc/[slug]`, 3 trang con Nhân sự. Route `[hang-muc]` khi tạo chỉ cần thêm 1 cấp item.
 4. ~~**H4 Navigation**~~ ✅ Xong 2026-07-08 — dropdown chia nhóm heading (NavItem.group), nhãn "Tuyển dụng & Nhân sự", search "Tìm tin tức...", delay đóng 150ms + chevron + aria-haspopup/expanded + Escape, mobile toggle expand với link cha thành item đầu (overviewLabel).
 5. ~~**H6 Filter + mục 7, 8**~~ ✅ Phần lớn xong 2026-07-08 — filter `scroll={false}` + đếm số lượng + icon check; focus-visible toàn cục; skip-link; sửa 5 chỗ contrast. **Còn lại chờ nối API Sprint 1–2**: `loading.tsx` + `ProjectCardSkeleton`, `_count` từ API thay đếm client, rà touch target icon footer.
+
+## 10. Cập nhật giao diện liên hệ — 2026-10-26
+
+- `ContactSection` gom form, quy trình và văn phòng/bản đồ trong một grid 1.1/0.9 ở desktop (từ 1024px), hai cột cùng mép trên/dưới; mobile xếp dọc. Quy trình dùng danh sách 3 bước gọn, bản đồ giãn trong phần chiều cao còn lại của cột phải, không tạo hàng bản đồ riêng gây khoảng trống.
+- Form dùng ô nhập cao 52px, bo 12px, viền `divider`, biểu tượng mảnh tông `brand`, nền trắng trên panel nhẹ; họ tên/điện thoại và email/nhóm yêu cầu chia hai hàng đôi từ 640px. Bộ chọn có mũi tên riêng và giữ thao tác bàn phím native. Textarea co giãn dọc; ghi chú bảo mật và nút gửi cùng hàng trên desktop.
+- Nhãn luôn hiển thị; focus có ring, lỗi có chữ và biểu tượng, đưa focus tới ô lỗi đầu tiên. Đang gửi khóa các ô nhập/nút gửi; giữ thông báo thành công, lỗi mạng/rate-limit và honeypot. Nội dung VI/EN và thông tin liên hệ lấy từ nguồn hiện có.
+
+## 11. Sắp xếp nội dung và tạo đường dẫn — 2026-10-26
+
+- Dự án, Tin tức, Tuyển dụng và Hạng mục có nút **Sắp xếp hiển thị** cho quản trị viên: mở danh sách đầy đủ, dùng bốn nút đưa lên đầu/lên/xuống/xuống cuối, sau đó **Lưu thứ tự**. Banner và Hợp tác tiếp tục có nút lên/xuống theo hàng. Mục ở trên hiển thị trước trên website; nội dung chưa đăng vẫn không công khai.
+- Khi thêm mới, đường dẫn tự điền từ tên tiếng Việt. Có thể tự chỉnh đường dẫn nếu cần; sau khi chỉnh riêng, tên thay đổi không ghi đè đường dẫn. Chế độ sửa giữ nguyên đường dẫn cũ. Đường dẫn tạo từ tên dài được giới hạn 160 ký tự.
+- Hộp sắp xếp dùng `SplitModal`, kiểm tra danh sách đã thay đổi trước khi lưu; trạng thái đang lưu khóa thao tác. Trên mobile, tên nội dung ở hàng trên, bốn nút 44px ở hàng dưới để tránh ép chữ thành cột hẹp. Thứ tự lưu xuống backend, không chỉ thay đổi bảng đang mở.
+
+## 12. Trạng thái khi tới giờ đăng — 2026-10-26
+
+- Nội dung đã tới giờ công khai hiển thị **Đã đăng theo lịch** với huy hiệu xanh, không yêu cầu duyệt hoặc đăng lại dù trạng thái lưu còn `PENDING` trước lượt đồng bộ backend. Tin tức và Dự án xếp nội dung đó vào nhóm **Đã đăng**; **Đã lên lịch** chỉ gồm lịch tương lai.
+- Các nút, nhãn và số liệu chờ duyệt dùng cùng trạng thái suy ra. Hàng chờ ở Tổng quan chỉ có nội dung PENDING thực sự chưa được lên lịch; không trộn bài đã lên lịch hoặc đã tới hạn vào đây.
+- Màn hình tự cập nhật khi đi qua deadline hoặc khi người dùng quay lại tab. Không cần reload hay gửi lại lệnh đăng. Thời điểm ghi kèm huy hiệu là giờ Việt Nam; giao diện không hiển thị chi tiết kỹ thuật về reconciler/đồng bộ.

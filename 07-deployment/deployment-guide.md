@@ -354,6 +354,13 @@ Swagger, đúng quy ước fail-closed đã ghi ở `backend/.env.example`.
 
 ## Ghi chú
 
+- **Thứ tự nội dung (2026-10-26):** backend mới đọc `news_posts.order`; phải áp
+  migration `20261026100000_news_display_order` bằng quy trình
+  [database-migrations](database-migrations.md) trước khi backend mới phục vụ
+  request. Migration chỉ thêm cột default 0 và index, không xóa nội dung. Đã kiểm
+  đủ 23 migration trên DB tạm từ rỗng và đối chiếu schema không khác; **chưa áp
+  trên production**. Không reset DB khi `migrate dev` báo checksum migration cũ
+  đã thay đổi. Thứ tự public cập nhật theo cache/ISR hiện có, thường 60 giây.
 - GitHub Actions đã có ở Backend, Admin, Frontend và Docs; chi tiết check và
   giới hạn CD xem [ci-cd.md](ci-cd.md).
 - Rate-limit form liên hệ: 5 request/IP/giờ (đã cấu hình ở backend).
