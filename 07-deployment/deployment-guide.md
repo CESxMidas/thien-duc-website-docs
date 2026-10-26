@@ -21,6 +21,21 @@ Tài liệu này mô tả **quy trình triển khai**. Chi tiết biến môi tr
 
 ## Kiến trúc & thứ tự triển khai
 
+### Bổ sung 2026-10-27 — Xóa CMS, thùng rác và quyền xóa
+
+Trước backend chứa chức năng này, chạy `npx prisma migrate deploy` để áp dụng
+`20261026143000_cms_trash_delete_permissions` và `npm run prisma:generate` trong
+quy trình build. Migration bổ sung quyền `users.can_delete_cms` mặc định `false`,
+cùng `deleted_at/deleted_by` ở các bảng CMS; không xóa dữ liệu hiện có. Sau backend
+mới mới cập nhật Admin. Super Admin cấp quyền chung tại **Tài khoản → Quyền xóa**.
+Không dùng bản backend cũ sau khi đã có dữ liệu thùng rác: các truy vấn cũ chưa lọc
+`deleted_at` có thể hiện lại nội dung đã xóa; muốn rollback cần bản vẫn giữ bộ lọc.
+
+Ở workspace local, `migrate dev` đang báo checksum lịch sử `20261022101120_y`
+khác bản đã áp dụng. Không reset DB để vượt lỗi; kiểm tra lịch sử trước khi tiếp
+tục migration trên DB đó. Migration mới đã được kiểm tra trên PostgreSQL cách ly
+bằng toàn bộ chuỗi migration và schema diff.
+
 ```
                     www.thienduccons.vn
                             │

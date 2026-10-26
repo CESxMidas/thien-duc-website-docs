@@ -203,3 +203,10 @@ Sửa `src/data/navigation.ts` + `site-header.tsx`:
 - Nội dung đã tới giờ công khai hiển thị **Đã đăng theo lịch** với huy hiệu xanh, không yêu cầu duyệt hoặc đăng lại dù trạng thái lưu còn `PENDING` trước lượt đồng bộ backend. Tin tức và Dự án xếp nội dung đó vào nhóm **Đã đăng**; **Đã lên lịch** chỉ gồm lịch tương lai.
 - Các nút, nhãn và số liệu chờ duyệt dùng cùng trạng thái suy ra. Hàng chờ ở Tổng quan chỉ có nội dung PENDING thực sự chưa được lên lịch; không trộn bài đã lên lịch hoặc đã tới hạn vào đây.
 - Màn hình tự cập nhật khi đi qua deadline hoặc khi người dùng quay lại tab. Không cần reload hay gửi lại lệnh đăng. Thời điểm ghi kèm huy hiệu là giờ Việt Nam; giao diện không hiển thị chi tiết kỹ thuật về reconciler/đồng bộ.
+
+## 13. Xóa nội dung và phân quyền — 2026-10-27
+
+- Nút **Xóa** mở hộp thoại cho chọn **Đưa vào thùng rác** hoặc **Xóa vĩnh viễn**. Mặc định thùng rác; xóa vĩnh viễn phải tích thêm xác nhận hiểu thao tác không thể hoàn tác. Thao tác ẩn/tắt nội dung là chức năng hiển thị riêng.
+- Chỉ Super Admin và thành viên có quyền xóa chung thấy nút. **Tài khoản → Quyền xóa** có một checkbox cho toàn CMS; chỉ Super Admin được cấp/thu hồi. Bảng tài khoản ghi rõ **Toàn quyền / Được cấp / Chưa cấp**.
+- **Thùng rác** có các loại nội dung, phân trang, khôi phục và xóa vĩnh viễn. Khôi phục bài/dự án/trang/tuyển dụng về nháp; ảnh thư viện/banner/chuyên mục/tài khoản cần được bật lại. Không tự chạy lại lịch đăng cũ; cần khôi phục cha trước con.
+- Khi đang xử lý, khóa xác nhận. Khi lưu lỗi hoặc quyền bị thu hồi, giữ hộp thoại và thông báo rõ. Xóa dự án nói rõ tác động tới hạng mục/ảnh; xóa tài khoản nói rõ phiên/lời mời/hồ sơ liên quan. Không cho tự xóa mình hoặc mất Super Admin cuối cùng.
