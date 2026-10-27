@@ -112,6 +112,11 @@
 
 ## Section 7 — Changelog / audit trail
 
+### Phiên 2026-10-27 — Làm rõ hai góc lá dừa phía dưới
+
+- **HOME-FEATURED-FOLIAGE-M2:** Theo phản hồi hai góc dưới chưa thấy, đưa tán lá từ `bottom: -4rem` vào sát đáy khung (`bottom: 0`), tăng độ mờ hiển thị từ 20% lên 30% trên desktop. Bỏ điều kiện ẩn theo breakpoint; điện thoại có đủ hai góc, thu nhỏ còn 15rem và độ mờ 22%. Giữ lớp sau nội dung, không chặn bấm hoặc làm tràn ngang.
+- Lint/TypeScript đạt; 15 test component đạt. Chromium trên harness component/CSS thật kiểm tra 1920 và 375 px: cả hai góc display block, neo bottom 0, không nhận pointer; đã xem ảnh `frontend/artifacts/featured-bottom-corners-1920.png` và `featured-bottom-corners-375.png`. Chưa commit/push/deploy.
+
 ### Phiên 2026-10-27 — Bổ sung lá dừa ở chân cụm dự án tiêu biểu
 
 - **HOME-FEATURED-FOLIAGE-M1:** Thêm hai tán lá dừa ở góc dưới khối Các dự án tiêu biểu, dùng lại ảnh trang trí hiện có. Lá hướng lên từ hai bên, độ mờ 20%, có mặt nạ chuyển nhẹ và nằm dưới thẻ/nút; không chặn tương tác, ẩn khỏi trình đọc màn hình. Ẩn họa tiết phụ trên điện thoại, giữ giới hạn khung không tràn ngang; không thêm khoảng trắng hay sửa logic carousel.
