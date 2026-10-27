@@ -112,6 +112,11 @@
 
 ## Section 7 — Changelog / audit trail
 
+### Phiên 2026-10-27 — Thu gọn cột thao tác theo nội dung
+
+- **ADMIN-ACTIONS-COMPACT-M1:** Bỏ bề rộng cố định 512/384 px ở sáu bảng CMS vừa chuẩn hóa; dùng bố cục bảng tự cân đối và cột thao tác co theo nhóm nút. Cột tên dự án nhận phần chiều rộng còn lại, tránh để thừa khoảng trắng trong cột thao tác. Giữ nút không xuống hàng và cuộn ngang trong khung khi cần.
+- Kiểm tra Chromium tại 1920/1440/1024/375 px với hàng nháp/lên lịch; thêm trường hợp nháp/đã đăng giống ảnh phản hồi: cột thao tác 410 px, nhóm nút khoảng 378 px, phần còn lại chỉ là padding hai bên. Không tràn ngang toàn trang. Chạy lint/build và bộ 980 test Admin; không thay đổi API, dữ liệu hay phân quyền. Chưa deploy.
+
 ### Phiên 2026-10-27 — Căn hàng thao tác và hộp thoại xóa CMS
 
 - **ADMIN-ACTIONS-INLINE-M1 — Hoàn tất:** Giữ nút thao tác trên một hàng cho Dự án, Tin tức, Trang nội dung, Dự án hợp tác, Tuyển dụng và Tài khoản. Cột thao tác có bề rộng riêng; bảng nhiều cột cuộn ngang bên trong khung ở màn hình hẹp, không kéo tràn toàn trang.
