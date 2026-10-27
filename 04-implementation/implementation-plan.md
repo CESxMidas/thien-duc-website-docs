@@ -112,6 +112,14 @@
 
 ## Section 7 — Changelog / audit trail
 
+### Phiên 2026-10-27 — Trang đăng nhập tại /admin
+
+- [x] **ADMIN-LOGIN-ROOT-M1** — `/admin` là điểm vào chung: chưa có phiên hiển thị LoginPage, có phiên hiển thị AdminLayout/Tổng quan, đang khôi phục phiên chưa dựng form hoặc nội dung quản trị. Giữ các trang nghiệp vụ sau ProtectedRoute; không đưa form vào bên trong bố cục Admin.
+- [x] `LOGIN_PATH` chuyển thành `/`; mọi điều hướng cứng gắn base và chuẩn hóa thành `/admin` không dấu `/` cuối. Đường dẫn cũ `/admin/dang-nhap` có redirect tạm ở Vercel và alias React Router để tương thích link cũ. Không đổi basename `/admin`, đường dẫn assets hoặc rewrite hiện có của frontend.
+- [x] Đăng xuất, phiên hết hạn, đổi/đặt lại mật khẩu, hoàn tất lời mời và các link quay lại đăng nhập dùng điểm vào mới. Vì Tổng quan và form cùng URL, handler 401 tải lại context/cache nếu request có phiên trước đó; không lặp tải lại khi đã ở form không có token. Truy cập route riêng tư vẫn nhớ pathname/query/hash để trở lại sau đăng nhập; chặn đích điều hướng dạng URL ngoài hoặc alias đăng nhập cũ.
+- [x] Lint/build/TypeScript sạch, full Admin **74 file / 980 test** đạt; thêm hồi quy root guest/auth/loading, alias, return path và 401 tại Tổng quan gốc. Chromium trên bản production build phục vụ cục bộ, API chặn/giả lập trong context riêng: đúng URL `/admin`, đăng nhập, đăng xuất, deep link có query/hash, hết phiên ở root, quay lại từ quên mật khẩu, 1440/375px không tràn ngang. Ảnh workspace `artifacts/admin-login-root-1440.png`, `admin-login-root-375.png`; log `admin-login-root-tests.log`.
+- [x] Cập nhật điều hướng mong đợi của Playwright và luồng test đổi mật khẩu có mã email; `--list` xác nhận thu thập được 18 ca Login/Change Password. Không chạy toàn bộ E2E với DB gốc. Chỉ sửa Admin và tài liệu, không cần migration mới. Chưa commit/push/deploy; cần deploy Admin để địa chỉ production có hành vi mới.
+
 ### Phiên 2026-10-27 — Mã email trước khi đổi mật khẩu
 
 - [x] **AUTH-PASSWORD-CHANGE-EMAIL-CODE-M1** — Hộp Đổi mật khẩu có hai bước: nhập mật khẩu hiện tại/mới/xác nhận → **Gửi mã xác nhận** → nhập mã email 6 số → **Xác nhận đổi mật khẩu**. Email lấy từ tài khoản trong DB, chỉ hiển thị địa chỉ đã che; không cho client chọn người nhận. Có gửi lại sau 60 giây, sửa mật khẩu, trạng thái đang gửi/xác nhận, lỗi tại hộp thoại, tự focus ô mã và dọn dữ liệu khi đóng/mở lại.

@@ -21,6 +21,15 @@ Tài liệu này mô tả **quy trình triển khai**. Chi tiết biến môi tr
 
 ## Kiến trúc & thứ tự triển khai
 
+### Bổ sung 2026-10-27 — Đăng nhập tại /admin
+
+Sau khi deploy Admin phiên này, URL đăng nhập chuẩn là
+`https://www.thienduccons.vn/admin`. Khách chưa có phiên thấy form đăng nhập;
+người đã đăng nhập thấy Tổng quan tại cùng URL. `/admin/dang-nhap` chuyển về
+`/admin` bằng redirect tạm và alias router để các link cũ vẫn hoạt động.
+Không cần migration hoặc đổi rewrite frontend cho riêng việc đổi đường dẫn.
+Các thay đổi CMS/mã email ở các phiên trước vẫn cần migration tương ứng.
+
 ### Bổ sung 2026-10-27 — Mã email đổi mật khẩu
 
 Áp dụng migration `20261027030000_password_change_code` trước backend mới, rồi
