@@ -112,6 +112,17 @@
 
 ## Section 7 — Changelog / audit trail
 
+### Phiên 2026-10-27 — Bổ sung lá dừa ở chân cụm dự án tiêu biểu
+
+- **HOME-FEATURED-FOLIAGE-M1:** Thêm hai tán lá dừa ở góc dưới khối Các dự án tiêu biểu, dùng lại ảnh trang trí hiện có. Lá hướng lên từ hai bên, độ mờ 20%, có mặt nạ chuyển nhẹ và nằm dưới thẻ/nút; không chặn tương tác, ẩn khỏi trình đọc màn hình. Ẩn họa tiết phụ trên điện thoại, giữ giới hạn khung không tràn ngang; không thêm khoảng trắng hay sửa logic carousel.
+- **Kiểm chứng:** frontend lint + TypeScript đạt; 56 bộ / 536 test đạt. Xem trực quan component/CSS thật trong harness cách ly có thay adapter Next bằng shim hiển thị và dữ liệu ảnh kiểm tra, tại 1920/768/375 px: không tràn ngang, họa tiết không nhận pointer, đúng thuộc tính trang trí. Ảnh `frontend/artifacts/featured-foliage-desktop.png` và `featured-foliage-mobile.png`. Chưa commit/push/deploy.
+
+### Phiên 2026-10-27 — Sửa tự tạo đường dẫn khi gõ tiếng Việt
+
+- **ADMIN-AUTO-SLUG-IME-M1:** Tái hiện lỗi đường dẫn kẹt ở `d` tại cả ba form Dự án, Tin tức, Trang nội dung khi bộ gõ thay `d` bằng `đ` qua giá trị tên rỗng. React Hook Form tính lại dirtyFields theo toàn bộ giá trị khác mặc định, khiến slug tự sinh bị hiểu nhầm là đã chỉnh tay; điều kiện isDirty ngắt đồng bộ tên/đường dẫn.
+- Thay điều kiện dirtyFields bằng cờ chỉ bật trong onChange của chính ô đường dẫn, reset khi mở form. Tiếp tục tự tạo qua thao tác gõ dấu, xóa tên rồi nhập lại; giữ đường dẫn chỉnh tay và không tự đổi slug của nội dung đang sửa. Đã rà chuyên mục/hạng mục (có cờ chỉnh tay riêng) và tuyển dụng (suy từ tên), không có điều kiện gây lỗi này.
+- **Kiểm chứng:** 3 ca hồi quy mô phỏng thay chữ qua giá trị rỗng thất bại trước sửa, đạt sau sửa. Bổ sung kiểm tra gõ từng ký tự, clear/retype và mở lại form; full Admin 74 file / 989 test đạt, lint/build đạt. Chromium kiểm tra đủ ba form với API chặn bằng dữ liệu kiểm thử, không tạo nội dung thật; ảnh trong `admin/artifacts/auto-slug-du-an.png`, `auto-slug-tin-tuc.png`, `auto-slug-trang.png`. Chưa commit/push/deploy.
+
 ### Phiên 2026-10-27 — Chuẩn hóa ký tự trong chữ giao diện CMS
 
 - **ADMIN-PLAIN-COPY-M1:** Rà các chuỗi hiển thị trong toàn bộ mã nguồn Admin bằng AST, bỏ ngoặc cong, thay gạch dài, dấu ba chấm Unicode, mũi tên và dấu chấm giữa bằng cách viết thông thường. Hộp thoại xóa dùng tiêu đề `Xóa <tên>?`, các lựa chọn giải thích trong ngoặc đơn. Đồng bộ nhãn form, múi giờ/ngày giờ, hướng dẫn, thông báo tải/lưu, phân cách danh sách và lỗi validation. Giữ ký hiệu che mật khẩu, dữ liệu người dùng, slug và nội dung bài viết; không áp dụng bộ lọc vào dữ liệu API.
