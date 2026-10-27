@@ -112,6 +112,13 @@
 
 ## Section 7 — Changelog / audit trail
 
+### Phiên 2026-10-27 — Chuẩn hóa ký tự trong chữ giao diện CMS
+
+- **ADMIN-PLAIN-COPY-M1:** Rà các chuỗi hiển thị trong toàn bộ mã nguồn Admin bằng AST, bỏ ngoặc cong, thay gạch dài, dấu ba chấm Unicode, mũi tên và dấu chấm giữa bằng cách viết thông thường. Hộp thoại xóa dùng tiêu đề `Xóa <tên>?`, các lựa chọn giải thích trong ngoặc đơn. Đồng bộ nhãn form, múi giờ/ngày giờ, hướng dẫn, thông báo tải/lưu, phân cách danh sách và lỗi validation. Giữ ký hiệu che mật khẩu, dữ liệu người dùng, slug và nội dung bài viết; không áp dụng bộ lọc vào dữ liệu API.
+- Đồng bộ thông báo lỗi cửa sổ hiển thị banner từ backend và câu hướng dẫn trong email đặt lại mật khẩu; không thay đổi logic gửi mail, phân quyền hoặc xác thực. Không gửi email thật trong quá trình kiểm tra.
+- **Kiểm chứng Admin:** lint/build đạt, 74 file / 980 test đạt; cập nhật kỳ vọng kiểm thử theo nhãn mới. Quét lại chuỗi production không còn nhóm ký tự nêu trên; Chromium kiểm tra hộp thoại xóa desktop/mobile, các nút thao tác vẫn cùng hàng và không tràn trang. Ảnh kiểm tra trong `admin/artifacts/delete-dialog-1440.png` và `delete-dialog-375.png`. Chưa commit/push/deploy.
+- **Kiểm chứng backend:** lint và TypeScript đạt; 89 bộ / 1455 unit test đạt, gồm thông báo banner và mail dùng transport kiểm thử.
+
 ### Phiên 2026-10-27 — Thu gọn cột thao tác theo nội dung
 
 - **ADMIN-ACTIONS-COMPACT-M1:** Bỏ bề rộng cố định 512/384 px ở sáu bảng CMS vừa chuẩn hóa; dùng bố cục bảng tự cân đối và cột thao tác co theo nhóm nút. Cột tên dự án nhận phần chiều rộng còn lại, tránh để thừa khoảng trắng trong cột thao tác. Giữ nút không xuống hàng và cuộn ngang trong khung khi cần.
