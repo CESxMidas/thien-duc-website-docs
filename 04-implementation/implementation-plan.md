@@ -112,6 +112,11 @@
 
 ## Section 7 — Changelog / audit trail
 
+### Phiên 2026-10-27 — Cân bằng bốn khối footer
+
+- **FOOTER-EQUAL-COLUMNS-M1:** Thay tỉ lệ cũ gồm cột thương hiệu/liên hệ rộng và hai cột max-content bằng bốn cột `minmax(0, 1fr)` từ 1024 px. Bốn khối là con trực tiếp của grid; căn cùng mép trên, viền phân cách giãn cùng chiều cao. Từ 640 px hiển thị hai cột, nhỏ hơn hiển thị một cột; bỏ ép nhãn liên kết không xuống hàng để nội dung dài co giãn an toàn. Giữ nguyên nội dung và nguồn dữ liệu liên hệ CMS.
+- **Kiểm chứng:** frontend lint + TypeScript đạt, 25 test site-chrome và zalo-integration đạt. Chromium trên harness component/CSS thật với hai bộ từ điển VI/EN tại 1920/1440/1024/768/375 px: đủ bốn khối, chiều rộng bằng nhau, số cột 4/4/4/2/1, không tràn ngang. Đã xem ảnh `frontend/artifacts/footer-balanced-1920.png`; ảnh mobile `footer-balanced-375.png`. Chưa commit/push/deploy.
+
 ### Phiên 2026-10-27 — Làm rõ hai góc lá dừa phía dưới
 
 - **HOME-FEATURED-FOLIAGE-M2:** Theo phản hồi hai góc dưới chưa thấy, đưa tán lá từ `bottom: -4rem` vào sát đáy khung (`bottom: 0`), tăng độ mờ hiển thị từ 20% lên 30% trên desktop. Bỏ điều kiện ẩn theo breakpoint; điện thoại có đủ hai góc, thu nhỏ còn 15rem và độ mờ 22%. Giữ lớp sau nội dung, không chặn bấm hoặc làm tràn ngang.
