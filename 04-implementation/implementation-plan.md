@@ -112,6 +112,14 @@
 
 ## Section 7 — Changelog / audit trail
 
+### Phiên 2026-10-27 — Đồng bộ animation form, modal và lớp nổi
+
+- **MODAL-MOTION-M1:** Rà toàn bộ điểm mở form/modal của Admin và frontend. Admin dùng chung DialogContent/SplitModal cho form tạo/sửa, xem chi tiết, xác nhận, đặt lịch, chọn ảnh và các hộp thoại tài khoản; bổ sung motion dùng token 280 ms khi mở, 180 ms khi đóng. Nền mờ cùng nhịp, khung dịch 14 px và scale nhẹ; select/menu tài khoản có nhịp riêng 200/150 ms. Sidebar mobile đồng bộ 280/180 ms. Không thêm thư viện hoặc đổi nghiệp vụ.
+- Giữ component/dữ liệu trong nhịp đóng ở hộp thoại xóa, sắp xếp, cấp quyền xóa và chi tiết liên hệ/tài khoản/dự án; không chuyển sang nội dung trống giữa animation. Hộp thoại đang thoát trở thành inert, không nhận bấm/focus. Hủy xác nhận xóa rồi mở lại nhanh đặt lại lựa chọn và checkbox. Menu tài khoản đóng bằng Escape và trả focus đúng nút.
+- Frontend: native modal ứng tuyển có animation khung/backdrop và giữ top layer tới hết nhịp thoát; hủy timeout khi điều hướng và không trì hoãn đóng khi reduced motion. Tìm kiếm header có cả vào/ra, giữ từ khóa, inert/aria-hidden khi đóng và không bị gỡ nhầm lúc mở lại nhanh. Menu thu gọn có transition thay cho bật/tắt display; menu đóng inert, Escape trả focus. Nội dung chi tiết vị trí tuyển dụng mở nhẹ. Toàn bộ nhóm mới tôn trọng prefers-reduced-motion.
+- **Kiểm chứng:** Admin lint/build đạt, 76 file/993 test đạt; frontend lint/TypeScript/build đạt, 58 bộ/546 test đạt. Thêm hồi quy giữ bản ghi, mở lại nhanh, thời điểm đóng, callback trùng, dọn timeout khi unmount và reduced motion. Chromium kiểm trên production build Admin với API giả lập: modal 280/180 ms, nested picker giữ dữ liệu form, select/menu, xác nhận xóa, 375 px không tràn và reduced motion. Harness frontend chạy component/CSS thật kiểm modal ứng tuyển, tìm kiếm, menu, Escape/focus, chuyển động/giảm chuyển động và kích thước 1440/375 px. Không ghi API/DB hoặc gửi mail.
+- Ảnh: `admin/artifacts/modal-motion-admin-open.png`, `modal-motion-admin-375.png`; `frontend/artifacts/modal-motion-public-open.png`, `modal-motion-mobile-menu.png`. Chưa commit/push/deploy; không cần migration hoặc cấu hình mới.
+
 ### Phiên 2026-10-27 — Ứng tuyển theo vị trí, file và link CV
 
 - **CAREERS-APPLICATION-M1 — Hoàn tất mã nguồn:** Nút ứng tuyển tại từng vị trí mở form ngay trên website thay vì cùng mở email có tiêu đề giữ chỗ. Form VI/EN ghi rõ vị trí, họ tên/điện thoại/email bắt buộc, giới thiệu tùy chọn; người dùng chọn file CV, link CV hoặc cả hai. File nhận PDF tối đa 5 MB; link phải HTTPS không kèm credentials. Chặn gửi lặp, có trạng thái gửi/thành công/lỗi, giữ dữ liệu khi lỗi và thông báo vị trí đã đóng; có Escape, trả focus về nút mở, khóa cuộn nền và lỗi theo trường. Không đưa ký tự trang trí trở lại phần chữ giao diện.

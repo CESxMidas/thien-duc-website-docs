@@ -216,3 +216,10 @@ Sửa `src/data/navigation.ts` + `site-header.tsx`:
 - Bước đầu nhập ba ô mật khẩu và bấm **Gửi mã xác nhận**. Gửi thành công mới chuyển sang ô **Mã xác nhận**; hiện email đã che, hướng dẫn kiểm tra thư rác, thời hạn 10 phút và thông báo cần đăng nhập lại sau khi đổi.
 - Mã nhập bằng một ô, hỗ trợ bàn phím số, dán và tự điền mã một lần. **Gửi lại mã** có bộ đếm 60 giây; **Sửa mật khẩu** quay về bước trước. Mã hết hạn khóa xác nhận nhưng vẫn cho hủy hoặc gửi lại. Mật khẩu không lưu ở storage hoặc URL.
 - Lỗi gửi email giữ bước mật khẩu; lỗi mã giữ hộp thoại và focus lại ô mã. Không đăng xuất chỉ vì nhập sai mật khẩu/mã. Chỉ khi đổi thành công mới dọn token và chuyển đúng trang đăng nhập Admin.
+
+## 15. Chuyển động form/modal — 2026-10-27
+
+- Modal Admin và website: mở 280 ms với opacity, dịch lên từ 14 px và scale 0.97 về 1; đóng 180 ms với opacity, dịch xuống 8 px và scale 0.985. Nền tối cùng nhịp; không animate từng trường nhập, không dùng hiệu ứng bật nảy.
+- Menu/select nhỏ dùng 200/150 ms ở Admin; popover tìm kiếm 220/180 ms ở frontend. Drawer/menu mobile dùng nhịp mở 280 ms; không chuyển display đột ngột khi người dùng đóng.
+- Giữ phần tử và dữ liệu tới hết nhịp thoát. Phần đang đóng phải không tương tác; khi đóng xong trả focus về nút mở. Mở lại nhanh phải hủy lịch gỡ cũ, không mất form hoặc từ khóa. Animation không trì hoãn yêu cầu lưu/gửi.
+- Khi prefers-reduced-motion bật: bỏ chuyển động/thu phóng, không chờ timer đóng modal ứng tuyển, giữ nguyên trạng thái cuối và thao tác bàn phím.
