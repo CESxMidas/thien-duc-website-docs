@@ -112,6 +112,12 @@
 
 ## Section 7 — Changelog / audit trail
 
+### Phiên 2026-10-27 — Căn hàng thao tác và hộp thoại xóa CMS
+
+- **ADMIN-ACTIONS-INLINE-M1 — Hoàn tất:** Giữ nút thao tác trên một hàng cho Dự án, Tin tức, Trang nội dung, Dự án hợp tác, Tuyển dụng và Tài khoản. Cột thao tác có bề rộng riêng; bảng nhiều cột cuộn ngang bên trong khung ở màn hình hẹp, không kéo tràn toàn trang.
+- Hộp thoại xóa dùng cỡ rộng trên máy tính, rút gọn cảnh báo thành “Xóa vĩnh viễn khỏi CMS. Không thể khôi phục.”; giữ nguyên lựa chọn thùng rác/xóa vĩnh viễn, checkbox xác nhận và phân quyền. Radio/checkbox không bị co nhỏ khi nhãn dài.
+- **Kiểm chứng:** Admin lint + build đạt; 74 file / 980 test đạt. Playwright kiểm tra trang Dự án có bản nháp và bản lên lịch tại 1920/1440/1024/375 px: các nút cùng hàng, không tràn ngang toàn trang; modal xóa vừa desktop/mobile. API được chặn bằng dữ liệu kiểm tra trong trình duyệt, không thay đổi dữ liệu thật. Ảnh kiểm tra tại `admin/artifacts/actions-inline-1920.png`, `delete-dialog-1440.png`, `delete-dialog-375.png`. Chưa commit/push/deploy.
+
 ### Phiên 2026-10-27 — Trang đăng nhập tại /admin
 
 - [x] **ADMIN-LOGIN-ROOT-M1** — `/admin` là điểm vào chung: chưa có phiên hiển thị LoginPage, có phiên hiển thị AdminLayout/Tổng quan, đang khôi phục phiên chưa dựng form hoặc nội dung quản trị. Giữ các trang nghiệp vụ sau ProtectedRoute; không đưa form vào bên trong bố cục Admin.
