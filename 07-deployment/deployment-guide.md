@@ -21,6 +21,26 @@ Tài liệu này mô tả **quy trình triển khai**. Chi tiết biến môi tr
 
 ## Kiến trúc & thứ tự triển khai
 
+### Bổ sung 2026-10-27 — Hồ sơ ứng tuyển và CV riêng tư
+
+Áp dụng migration `20261027090000_job_applications` bằng `prisma migrate deploy`
+trước backend mới, sau đó cập nhật frontend và Admin. Migration bổ sung thông tin
+ứng tuyển vào `contact_submissions` và bảng `application_cvs`. Không cần dịch vụ
+upload công khai hay biến môi trường mới. CV PDF tối đa 5 MB được lưu trong DB;
+backup/restore DB vì thế bao gồm cả CV. Thông báo email sử dụng cấu hình hiện có
+`RESEND_API_KEY`, `MAIL_FROM`, `CONTACT_NOTIFY_TO`; lỗi email không làm mất hồ sơ
+đã lưu.
+
+Sau triển khai, kiểm tra một hồ sơ thử trên vị trí đang tuyển: gửi file PDF hoặc
+link HTTPS, mở **Liên hệ > Hồ sơ ứng tuyển** trong Admin, tải CV và cập nhật
+trạng thái. Endpoint tải `/api/contact/:id/cv` chỉ dành cho ADMIN/SUPER_ADMIN,
+không cache công khai và không trả binary trong danh sách. Hồ sơ trong thùng rác
+không tải được file; xóa vĩnh viễn hồ sơ xóa cả file CV theo cascade.
+
+Phiên này mới xác minh migration trong DB PostgreSQL cách ly và chưa triển khai
+production. Không reset DB hoặc sửa lịch sử migration cũ để vượt checksum drift
+đã ghi nhận ở môi trường local; xử lý theo hướng dẫn migration của dự án.
+
 ### Bổ sung 2026-10-27 — Đăng nhập tại /admin
 
 Sau khi deploy Admin phiên này, URL đăng nhập chuẩn là
