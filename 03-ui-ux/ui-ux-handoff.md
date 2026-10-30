@@ -271,3 +271,8 @@ Sửa `src/data/navigation.ts` + `site-header.tsx`:
 - Checkbox từng mục và chọn tất cả đang hiển thị có vùng bấm tối thiểu 44px, hỗ trợ bàn phím và trạng thái chọn một phần. Thanh công cụ hiển thị số lượng đã chọn, **Bỏ chọn**, **Xóa đã chọn**; chỉ xuất hiện với người có quyền xóa. Đổi trang/bộ lọc hoặc dữ liệu không còn hiển thị thì bỏ các lựa chọn tương ứng.
 - Hộp xác nhận hiển thị số lượng và danh sách tên chốt tại lúc mở. Mặc định thùng rác; xóa vĩnh viễn cần xác nhận riêng. Khi xử lý khóa nút/checkbox; nếu chỉ thành công một phần, giữ mục lỗi/chưa xử lý trong hộp, báo rõ từng lỗi và yêu cầu xác nhận lại trước khi thử lại. Thùng rác chỉ có lựa chọn xóa vĩnh viễn.
 - Checkbox không kích hoạt mở chi tiết. Các hàng hạng mục và ảnh dự án trên mobile dành hàng riêng cho nút thao tác; giữ nguyên animation và quy tắc reduced motion của modal hiện có.
+
+## 17. Nền đầu trang danh sách Dự án — 2026-10-30
+
+- Khối tiêu đề và bộ lọc dùng chung `.projects-page-intro`, ảnh `projects-architecture.webp` trang trí phía phải, rộng 70%, độ đậm 0,68; mặt nạ ngang/dọc làm mềm mép, hòa màu bằng multiply. Lớp ảnh không nhận pointer hoặc chiếm chỗ trong luồng bố cục. Giữ kiểu chữ/mép trái hiện có, không thêm nội dung vào vùng trống.
+- Dưới 768px, nền phủ rộng 100% và giảm độ đậm còn 0,24. Padding dưới heading 24px mobile/32px tablet và PC, giảm khoảng cách trước bộ lọc. Dùng chung cho VI/EN và mọi trạng thái lọc; không áp vào trang chi tiết dự án.

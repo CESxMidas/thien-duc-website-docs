@@ -112,6 +112,11 @@
 
 ## Section 7 — Changelog / audit trail
 
+### Phiên 2026-10-30 — Nền kiến trúc đầu trang Dự án
+
+- [x] **PROJECTS-INTRO-ARCHITECTURE-BACKGROUND-M1:** Dùng đúng ảnh người dùng cung cấp trong resources `1793072285720_2525879793962605693_g1373224726629609342_4704f07777ad64fb8e5b7cc0ad025c38.jpg`. Giữ nguyên nguồn, chuyển WebP 1920×1080/104.086 byte vào resources và frontend `images/backgrounds/projects-architecture.webp`. Lớp nền trang danh sách Dự án phủ phía phải khối tiêu đề/bộ lọc, hòa vào màu trang bằng multiply và mặt nạ hai chiều; không nhận pointer, không thêm chiều cao. Giảm padding dưới heading còn 32px trên PC/tablet và 24px trên mobile. Mobile giảm độ đậm nền để giữ chữ rõ; không thay dữ liệu, thứ tự, bộ lọc, carousel hoặc trang chi tiết.
+- **Kiểm chứng:** frontend lint 0 lỗi/0 warning, `tsc --noEmit`, 29 test carousel/chuyển hướng tìm kiếm đạt. Script `frontend/artifacts/verify-projects-background.cjs` render trang/component/CSS thật với shell/API giả lập, kiểm tra VI/EN tại 375/768/1024/1440/1920px: nền tải được, không nhận pointer, không tràn ngang, giữ title và bốn bộ lọc. Đã xem ảnh PC/mobile `projects-background-1920.png`, `projects-background-375.png`; ảnh 1440px cũng lưu cùng thư mục artifacts. Harness không nạp font Next hoặc gọi API production. Chưa commit/push/deploy.
+
 ### Phiên 2026-10-30 — Chọn và xóa nhiều phần tử CMS
 
 - [x] **CMS-BULK-DELETE-M1:** Thêm checkbox từng mục, chọn tất cả đang hiển thị, số lượng đã chọn và bỏ chọn cho 13 loại nội dung: dự án, hạng mục, ảnh dự án, tin tức, chuyên mục, trang nội dung, banner, hợp tác, tuyển dụng, liên hệ/ứng tuyển, thư viện ảnh, tài khoản và yêu cầu cập nhật hồ sơ. Thùng rác hỗ trợ chọn nhiều để xóa vĩnh viễn. Lựa chọn không giữ các mục đã rời trang/bộ lọc; checkbox không mở nhầm chi tiết.
