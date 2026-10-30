@@ -1,5 +1,11 @@
 # Hướng dẫn Deploy Production — Website Thiên Đức
 
+## Cập nhật 2026-10-30: xóa nhiều mục CMS
+
+- Deploy backend trước Admin: bản Admin mới sử dụng `POST /api/cms-trash/:kind/bulk-delete`. Không có migration hoặc biến môi trường mới; API xóa từng mục cũ vẫn hoạt động.
+- Sau deploy, kiểm tra tài khoản có/không có quyền xóa; chọn một/nhiều mục, chọn tất cả đang hiển thị, đổi trang/bộ lọc, hủy xác nhận, đưa vào thùng rác và xóa vĩnh viễn có checkbox xác nhận. Kiểm tra kết quả thành công một phần chỉ cho thử lại các mục chưa thành công và không tiếp tục khi bị thu hồi quyền.
+- Bản này đã qua kiểm thử cục bộ Admin/backend, giao diện PC/mobile với API giả lập và DB PostgreSQL thử nghiệm riêng; chưa deploy hoặc thao tác xóa dữ liệu production.
+
 > **Trạng thái:** Đang dùng
 > **Nhóm:** 07 — Deployment
 > **Cập nhật:** 2026-10-19
@@ -20,6 +26,23 @@ Tài liệu này mô tả **quy trình triển khai**. Chi tiết biến môi tr
 [rollback-plan.md](rollback-plan.md).
 
 ## Kiến trúc & thứ tự triển khai
+
+### Bổ sung 2026-10-28 — Tin tức không còn trường tóm tắt
+
+Trước backend mới, áp dụng `20261028090000_remove_news_summary` bằng
+`prisma migrate deploy`. Migration chuyển tóm tắt của bài chưa có nội dung thành
+một đoạn văn VI/EN, bỏ cột `news_posts.summary` và dựng lại hàm/index tìm kiếm.
+Đã kiểm trên PostgreSQL cách ly; chưa áp vào DB dự án hoặc production.
+
+Triển khai Backend và Admin mới trong cùng cửa sổ cập nhật, sau đó frontend;
+yêu cầu biên tập viên tải lại Admin. Admin cũ còn gửi `summary` sẽ bị API mới
+từ chối 400; Admin mới không tạo bài được với backend cũ vẫn bắt buộc summary.
+Backend cũ cũng không dùng được sau khi bỏ cột. Giữ bản sao lưu trước migration
+và không rollback riêng mã backend cũ khi schema đã thay đổi. Không dùng reset
+hoặc sửa migration lịch sử để vượt checksum drift đã ghi nhận ở local.
+
+Sau triển khai kiểm tra tạo/sửa bài không có ô tóm tắt, đăng bài, tìm kiếm
+tiếng Việt, trang chi tiết và mô tả SEO tự lấy từ nội dung.
 
 ### Bổ sung 2026-10-27 — Hồ sơ ứng tuyển và CV riêng tư
 

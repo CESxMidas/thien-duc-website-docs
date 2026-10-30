@@ -1,7 +1,7 @@
 # Kế hoạch triển khai — Website Thiên Đức (PA2)
  
 > **Trạng thái:** Tài liệu sống — nguồn sự thật cho tiến độ coding.
-> **Nhóm:** 04 — Implementation · **Current as of: 2026-10-26**
+> **Nhóm:** 04 — Implementation · **Current as of: 2026-10-30**
 > **Tài liệu liên quan:** [open-questions](../01-requirements/open-questions.md) · [deployment-guide](../07-deployment/deployment-guide.md) · [security](../05-security/README.md) · [audit-baseline](../08-audits-and-reports/current/2026-07-16-audit-baseline.md)
 >
 > Cấu trúc: §0 hiện trạng · §1 tóm tắt đã xong · §2 code đang chờ làm · §3 manual/go-live · §4 deferred · §5 backlog nội dung · §6 backlog tùy chọn · §7 changelog/audit trail.
@@ -111,6 +111,68 @@
 ---
 
 ## Section 7 — Changelog / audit trail
+
+### Phiên 2026-10-30 — Chọn và xóa nhiều phần tử CMS
+
+- [x] **CMS-BULK-DELETE-M1:** Thêm checkbox từng mục, chọn tất cả đang hiển thị, số lượng đã chọn và bỏ chọn cho 13 loại nội dung: dự án, hạng mục, ảnh dự án, tin tức, chuyên mục, trang nội dung, banner, hợp tác, tuyển dụng, liên hệ/ứng tuyển, thư viện ảnh, tài khoản và yêu cầu cập nhật hồ sơ. Thùng rác hỗ trợ chọn nhiều để xóa vĩnh viễn. Lựa chọn không giữ các mục đã rời trang/bộ lọc; checkbox không mở nhầm chi tiết.
+- Hộp xác nhận chốt danh sách tên/số lượng tại lúc mở, mặc định đưa vào thùng rác; xóa vĩnh viễn cần tích xác nhận riêng. Kết quả từng mục được phản hồi: mục thành công bỏ chọn, mục lỗi/chưa xử lý giữ lại để thử lại. Không gửi lại các mục đã báo thành công. Hàng hạng mục/ảnh có vùng thao tác riêng trên mobile để giữ tên và trạng thái dễ đọc.
+- Backend thêm `POST /api/cms-trash/:kind/bulk-delete`, kiểm tra DTO UUID duy nhất, tối đa 100 ID/lần; Admin tự chia lô tuần tự. Dùng lại luồng xóa hiện có và kiểm tra quyền từ DB trước từng mục; dừng khi mất quyền, giới hạn tần suất hoặc lỗi hệ thống. Giữ quyền Super Admin/quyền xóa chung được cấp, bảo vệ tự xóa và Super Admin cuối cùng, xử lý quan hệ cha/con hiện có. Không đổi schema/env hoặc frontend public.
+- **Kiểm chứng:** Admin lint/build đạt, 78 bộ/1.003 test đạt; sau tinh chỉnh responsive/thông báo chạy lại 34 test liên quan đạt. Backend lint/typecheck/build và 90 bộ/1.483 test đạt. Script `backend/artifacts/verify-cms-bulk-delete.cjs` kiểm tra Prisma/PostgreSQL thật trên DB cục bộ tạo riêng rồi dọn sạch. Script `admin/artifacts/verify-cms-bulk-ui.cjs` chạy bản build thật với API giả lập tại 1440/375px: chọn/hủy, xác nhận vĩnh viễn, hạng mục/ảnh/thư viện, xóa vào thùng rác và xóa vĩnh viễn; không tràn trang, không lỗi JavaScript. Ảnh tại `admin/artifacts/cms-bulk-*.png`. Chưa commit/push/deploy, không xóa dữ liệu production.
+
+### Phiên 2026-10-29 — Nền ảnh Hưng Phú cho footer
+
+- [x] **FOOTER-HUNG-PHU-BACKGROUND-M1:** Tiếp tục yêu cầu ngày 28/10: dùng imagegen chỉnh bản tham chiếu nhẹ cùng cảnh với ảnh gốc người dùng, tạo nền ngang có chung cư và tòa kính; chọn bản trời ban ngày, nét mềm và phủ ivory. Tối ưu WebP 2172×724px/109.504 byte, lưu resources và frontend `public/images/footer/footer-hung-phu-panorama-soft.webp`, giữ nguyên ảnh nguồn. Prompt và xuất xứ ở resources `images/footer/footer-hung-phu-panorama-soft.prompt.md`.
+- Footer có lớp ảnh riêng không nhận pointer, lớp phủ màu tham chiếu token và nội dung phía trên. PC khớp chiều cao ảnh theo footer, giữ đủ hai công trình, không kéo méo; mobile/tablet đặt toàn cảnh ở đáy, giữ phần trên thoáng cho thông tin. Mặt nạ mềm ở mép trái trên PC/mép trên ở mobile, không còn vệt ghép rõ. Không tăng chiều cao footer hoặc thay tỉ lệ bốn cột và dữ liệu công ty.
+- **Kiểm chứng:** lint 0 lỗi/0 warning, TypeScript và 25 test site-chrome/Zalo đạt. Chromium harness component/CSS footer thật với VI/EN và dữ liệu liên hệ kiểm thử tại 375/768/1024/1440/1920px: cột 1/2/4 tương ứng, các cột bằng nhau, không tràn ngang, ảnh không nhận pointer, nội dung nằm phía trên; đã xem ảnh PC/mobile `frontend/artifacts/footer-panorama-1920.png`, `footer-panorama-1440.png`, `footer-panorama-375.png`. Script QA CommonJS tại `artifacts/verify-footer-panorama.cjs` chỉ dùng cục bộ; adapter Next và dữ liệu fixture tách khỏi app. Không gọi/ghi API thật; chưa commit/push/deploy.
+
+### Phiên 2026-10-28 — Đưa ảnh trước nội dung chi tiết Tin tức
+
+- [x] **NEWS-DETAIL-IMAGE-FIRST-M1:** Theo phản hồi sau khi chốt bố cục cân bằng, đổi thứ tự thành thông tin ngắn → title → link tham khảo → ảnh → nội dung. Giữ nguyên chiều rộng/mép các khối, khoảng cách, xử lý thiếu ảnh/nội dung và sidebar; không sửa keyword hoặc dữ liệu CMS.
+- **Kiểm chứng:** frontend lint 0 lỗi/0 warning, TypeScript và 4 test NewsDetailGallery đạt; diff không lỗi whitespace. Chưa commit/push/deploy.
+
+### Phiên 2026-10-28 — Keyword bài Cannes Hotel đạt tiêu chuẩn 3 sao
+
+- [x] **CONTENT-EMPHASIS-CANNES-THREE-STAR-M1:** Bổ sung nhóm `Khách sạn 3 sao`/`Cột mốc 3 sao` và nhóm khẩu hiệu `Đồng hành kiến tạo giá trị, bền vững cùng thời gian`/`Đồng hành kiến tạo giá trị`. Tiếp tục dùng nhóm tên công ty có dấu gạch nối, Cannes Hotel và Bến Tre đã có. Không nhấn toàn bộ tiêu đề/câu văn; giữ quy tắc bốn cụm/đoạn, một lần/nhóm và ưu tiên khẩu hiệu đầy đủ.
+- **Kiểm chứng:** thêm ba ca theo nội dung người dùng: đoạn chứng nhận, đoạn cột mốc, đoạn chúc mừng có khẩu hiệu; giữ nguyên chữ và emoji, không lồng strong. Frontend lint 0 lỗi/0 warning, TypeScript và 58 bộ/557 test đạt. Không sửa nội dung CMS/API; chưa commit/push/deploy.
+
+### Phiên 2026-10-28 — Bổ sung keyword bài Tinh hoa Ẩm thực Xứ Dừa
+
+- [x] **CONTENT-EMPHASIS-COCONUT-EVENT-M1:** Dựa đúng nội dung người dùng cung cấp, thêm nhóm keyword độc lập `Kỷ lục Việt Nam`, `Gỏi củ hủ dừa tôm thịt`, `Bến Tre`, `Xứ Dừa`; giữ các tên công ty/chương trình/nhà tài trợ/Cannes Hotel/Hưng Phú đã có. Thêm biến thể tên công ty `Công ty TNHH Đầu tư Xây dựng - Thương mại Thiên Đức`, tên chương trình không có năm và tên có ngoặc kép cong/thẳng trước năm 2026. Không tự tạo bản dịch hoặc nhấn toàn bộ các câu khẩu hiệu/nguyên liệu/số liệu.
+- Sửa thêm trường hợp keyword ngắn xuất hiện lần đầu bên trong cụm dài: thu các vị trí khớp rồi chọn lần độc lập đầu tiên chưa chồng lấn, thay vì dừng tìm ngay ở lần xuất hiện lồng trong tên chương trình. Giữ nguyên văn bản, giới hạn tối đa bốn cụm/đoạn và một lần/nhóm, không lồng strong hoặc diễn giải HTML CMS.
+- **Kiểm chứng:** thêm hồi quy bốn thực thể chính ở đoạn xác lập kỷ lục, ba biến thể tên chương trình và biến thể tên công ty. Frontend lint 0 lỗi/0 warning, TypeScript và toàn bộ 58 bộ/554 test đạt. Không thay dữ liệu CMS/API; chưa commit/push/deploy.
+
+### Phiên 2026-10-28 — Keyword chương trình và nhà tài trợ không được tô đậm
+
+- [x] **CONTENT-EMPHASIS-KEYWORD-GROUPS-M1:** Nguyên nhân hai keyword người dùng thêm nằm chung nhóm alias với tên công ty. Sau khi tô đậm tên Thiên Đức, thuật toán đánh dấu cả nhóm đã dùng nên bỏ qua tên chương trình và danh xưng tài trợ, chỉ còn năm 2026 ở nhóm khác được nhấn. Tách `Tinh hoa Ẩm thực Xứ Dừa 2026` và `Nhà tài trợ Kim Cương` thành hai nhóm riêng; thêm hướng dẫn tiếng Việt ngay trên cấu hình: keyword độc lập phải là mảng con riêng, alias cùng đối tượng mới chung nhóm. Giữ nội dung người dùng, chống khớp trong từ/mã, ưu tiên cụm đầy đủ và không lồng strong.
+- **Kiểm chứng:** tái hiện bằng chính cấu trúc đoạn phản hồi, test thất bại trước sửa (chỉ công ty và 2026 đậm), đạt sau sửa (công ty, cả tên chương trình và cả danh xưng tài trợ). Frontend lint 0 lỗi/0 warning, TypeScript, 58 bộ/549 test đạt. Không đổi dữ liệu CMS/API; chưa commit/push/deploy.
+
+### Phiên 2026-10-28 — Liền mạch bố cục chi tiết Tin tức
+
+- [x] **NEWS-DETAIL-BALANCED-LAYOUT-M1:** Bỏ giới hạn `72ch` riêng của nội dung; title, nội dung và gallery cùng chiều rộng/mép trong cột bài viết. Thứ tự hiển thị: thông tin ngắn, title, link tham khảo, nội dung, ảnh. Link tham khảo là dòng gọn ngay dưới title, có vùng bấm 44px, focus và ngắt URL dài, không còn section cách xa ở cuối bài. Thu khoảng cách khung/đoạn và bỏ đường viền ngăn nội dung không cần thiết. Giữ title/subtitle thẳng lề và thụt đầu dòng đoạn văn.
+- Cột thông tin bài viết bỏ min-height 24rem và căn nút về đáy; dùng chiều cao theo dữ liệu, khoảng cách gọn, giữ sticky trên PC. Bài không có nội dung/ảnh/link không dựng wrapper giữ chỗ. Không đổi API, dữ liệu hoặc keyword đang được người dùng chỉnh.
+- **Kiểm chứng:** frontend lint 0 lỗi/0 warning, TypeScript và 24 test Gallery/news-related/SEO đạt. Chromium trên harness dùng component trang/Gallery/CSS thật, adapter Next và nguồn API giả lập: VI/EN tại 375/768/1440/1920px, title/content/image cùng mép và chiều rộng (sai số dưới 2px), reference nằm trước nội dung, không tràn ngang; bài thiếu dữ liệu không tạo khối trống. Đã xem ảnh `frontend/artifacts/news-detail-balanced-1440.png`, `news-detail-balanced-375.png`. Harness đã dọn, không gọi/ghi API thật. Chưa commit/push/deploy.
+
+### Phiên 2026-10-28 — Tăng điểm nhấn breadcrumb
+
+- [x] **FRONTEND-BREADCRUMB-EMPHASIS-M1:** Breadcrumb dùng chung tăng từ 14px/500 lên 15px mobile, 16px tablet, 17px desktop và độ đậm 600. Trang hiện tại đậm 700, màu token `brand-dark`; line-height 28px để tên dài xuống dòng dễ đọc. Giữ liên kết, focus, dấu phân cách, thu gọn mục giữa trên mobile, aria-current và JSON-LD.
+- **Kiểm chứng:** frontend lint 0 lỗi/0 warning, TypeScript và 4 test Breadcrumb đạt; diff không lỗi whitespace. Chưa xác minh lại trình duyệt hoặc deploy; chưa commit/push.
+
+### Phiên 2026-10-28 — Căn lề title và subtitle, chỉ thụt đầu dòng nội dung
+
+- [x] **FRONTEND-TITLE-SUBTITLE-ALIGN-M1:** Tách `.section-subtitle` khỏi `.content-paragraph`: giữ cỡ chữ/line-height nhưng không thụt dòng ở cả mobile và desktop. Áp dụng cho `PageHeading`, subtitle banner trang chủ, hero Tuyển dụng, phần dẫn Hợp tác, Giá trị cốt lõi, Lĩnh vực ở trang Giới thiệu, Nhân sự và các CTA Liên hệ/Kết nối. Title/subtitle cùng lề trong nhóm tiêu đề; giữ thụt đầu dòng cho nội dung bài, tổng quan dự án và đoạn mô tả dài. Không đổi dữ liệu CMS hoặc API.
+- **Kiểm chứng:** frontend lint 0 lỗi/0 warning, TypeScript đạt; 58 bộ/548 test đạt, gồm test PageHeading cập nhật đúng yêu cầu subtitle không thụt dòng. Chưa xác minh lại bằng trình duyệt hoặc triển khai production trong phiên này; chưa commit/push/deploy.
+
+### Phiên 2026-10-28 — Bỏ trường tóm tắt Tin tức ở Backend, Frontend và Admin
+
+- [x] **NEWS-REMOVE-SUMMARY-M1:** Gỡ `NewsPost.summary` khỏi Prisma, DTO tạo/sửa, service ghi, kiểu API và form/schema Admin. Form tạo/sửa chỉ còn nội dung bài, không yêu cầu hoặc gửi tóm tắt. API dùng whitelist tiếp tục từ chối field đã bỏ bằng 400. Không thay tóm tắt Dự án/Tuyển dụng.
+- Frontend bỏ đoạn tóm tắt dưới tiêu đề trang chi tiết và trong thẻ kết quả tìm kiếm tin tức. Nội dung chỉ đọc từ `content`; metadata/NewsArticle tự lấy đoạn đầu có nội dung, gom khoảng trắng, giới hạn 160 ký tự, dùng tiêu đề khi chưa có đoạn văn. Slider/thẻ tin hiện có vốn không render tóm tắt, giữ bố cục và thao tác.
+- Migration `20261028090000_remove_news_summary` chuyển tóm tắt VI/EN của bài chưa có nội dung (NULL/JSON null/mảng rỗng) thành một đoạn văn trước khi bỏ cột; không chèn thêm vào bài đã có nội dung. Đổi hàm/index tìm kiếm tin tức sang title/content/author. Cập nhật seed, SQL import VI/EN và fixture E2E theo hợp đồng mới; không sửa migration lịch sử.
+- **Kiểm chứng:** lint và TypeScript cả ba app đạt; build Backend/Admin đạt. Backend 90 bộ/1464 test, frontend 58 bộ/548 test, Admin 76 file/993 test đạt; bổ sung chốt DTO cấm summary, SEO tự suy mô tả và form không có/gửi tóm tắt. PostgreSQL cách ly: chạy toàn bộ migration, kiểm bài cũ/không lặp, NewsService + Prisma thật tạo/sửa/đăng/đọc/tìm kiếm không trả summary, nháp vẫn ẩn, seed và SQL import VI/EN chạy được, schema diff rỗng. DB cách ly đã dọn, không ghi DB dự án/production. Chưa chạy E2E toàn hệ thống hoặc xác minh lại trình duyệt trong phiên này. Admin build còn cảnh báo bundle lớn có sẵn. Chưa commit/push/deploy; khi triển khai cần migration và Backend/Admin mới đồng bộ, xem deployment-guide.
+
+### Phiên 2026-10-28 — Nền kiến trúc cho Tin tức trang chủ
+
+- [~] **HOME-NEWS-ARCHITECTURE-BACKGROUND-M1:** Chuẩn bị lớp nền trang trí riêng cho `HomeLatestNews`, neo phải dưới, hòa nền bằng multiply và giảm độ hiển thị trên mobile. Nội dung nằm phía trên; lớp nền không nhận pointer, không đổi kích thước section hoặc logic slider. Chưa gắn ảnh: ảnh đính kèm trong chat chưa có tệp tương ứng trong workspace; đang chờ người dùng cung cấp đường dẫn ảnh gốc. Biến `--news-architecture-background` mặc định `none` để không yêu cầu URL ảnh chưa tồn tại.
+- Kiểm tra phần chuẩn bị: frontend lint (0 lỗi/0 warning), TypeScript và 46 test của hai bộ NewsSlider đạt. Chưa kiểm chứng giao diện có ảnh; chưa commit/push/deploy. Hạng mục chưa hoàn tất.
 
 ### Phiên 2026-10-27 — Đồng bộ animation form, modal và lớp nổi
 

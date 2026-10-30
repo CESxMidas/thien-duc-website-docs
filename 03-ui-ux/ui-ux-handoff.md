@@ -11,6 +11,48 @@
 
 ## 0. Tóm tắt điểm nghẽn → hạng mục sửa
 
+### Chuẩn bổ sung 2026-10-29 — Footer có nền ảnh Hưng Phú mờ
+
+- Dùng panorama WebP riêng tại `/images/footer/footer-hung-phu-panorama-soft.webp`
+  (2172×724px), ảnh đã làm mềm/phủ ivory. Giữ chữ nâu và nền token kem; không
+  dùng ảnh đậm hoặc để ảnh làm mờ cả chữ/logo.
+- Ảnh là lớp trang trí không nhận pointer, lớp phủ màu riêng, nội dung ở trên.
+  PC khớp ảnh theo chiều cao footer và neo phải, giữ đủ hai tòa nhà; chuyển mềm
+  mép trái. Mobile/tablet hiển thị toàn cảnh ở đáy, chuyển mềm mép trên. Không
+  tăng chiều cao footer hoặc đổi bố cục 4/2/1 cột chỉ để đặt ảnh.
+
+### Chuẩn bổ sung 2026-10-28 — Chi tiết Tin tức cân cùng chiều rộng
+
+- Cột bài viết có title, nội dung và ảnh cùng mép/cùng chiều rộng, không giới
+  hạn riêng phần chữ ở 72ch. Thứ tự: thông tin ngắn, title, link tham khảo,
+  ảnh, nội dung (chốt theo phản hồi tiếp theo ngày 28/10). Link tham khảo đặt
+  gọn ngay dưới title, không
+  tách thành section cuối bài. Nội dung/ảnh/link vắng thì bỏ hẳn wrapper.
+- Sidebar thông tin có chiều cao theo dữ liệu, không ép chiều cao tối thiểu
+  hoặc đẩy nút xem tất cả xuống đáy; vẫn sticky trên PC và xếp sau bài trên
+  điện thoại. Khoảng cách phần nội dung 20-24px, gallery cách nội dung 24px.
+
+### Chuẩn bổ sung 2026-10-28 — Breadcrumb rõ và có điểm nhấn
+
+- Breadcrumb chung có cỡ chữ 15/16/17px theo mobile/tablet/desktop, độ đậm
+  600; tên trang hiện tại đậm 700, màu `brand-dark`. Dùng line-height 28px,
+  cho phép tên dài xuống dòng và giữ thu gọn cấp giữa trên mobile.
+
+### Chuẩn bổ sung 2026-10-28 — Title và subtitle cùng lề
+
+- Subtitle thuộc nhóm tiêu đề dùng `.section-subtitle`, không thụt đầu dòng ở
+  mọi breakpoint; giữ cùng lề với title. Không dùng `.content-paragraph` cho
+  subtitle của PageHeading, banner/hero hoặc dòng dẫn đầu section. Nội dung
+  đoạn văn bên trong bài, tổng quan và mô tả dài tiếp tục dùng
+  `.content-paragraph`/`.prose-content` với quy tắc thụt dòng hiện có.
+
+### Chuẩn bổ sung 2026-10-28 — Tin tức không nhập tóm tắt riêng
+
+- Form Tin tức Admin chỉ nhập tiêu đề và nội dung, không có trường tóm tắt.
+  Trang chi tiết không hiển thị đoạn dẫn riêng giữa tiêu đề và ảnh. Thẻ tìm
+  kiếm tin tức giữ chuyên mục/ngày, tiêu đề và liên kết, không để ô trống giữ
+  chỗ tóm tắt. Mô tả SEO suy từ nội dung bài; không thêm ô nhập thay thế.
+
 ### Chuẩn bổ sung 2026-10-24 — Ảnh dự án và con trỏ tương tác
 
 - Footer dùng nền kem sáng chuyển nhẹ từ ivory sang gold-soft, chữ ink/brand-dark, biểu tượng nâu; bỏ nền ảnh tối và text-shadow để logo rõ. Logo fallback dùng bản header-transparent màu nâu. Khối thương hiệu xếp dọc trên mobile; tên công ty xuống dòng tự nhiên, không `whitespace-nowrap`, font 14px/line-height 28px. Link điều hướng có vùng bấm tối thiểu 44px; email cho phép ngắt chuỗi để không tràn màn hình. Chỉ đổi footer, không thay các token olive của khu vực khác.
@@ -223,3 +265,9 @@ Sửa `src/data/navigation.ts` + `site-header.tsx`:
 - Menu/select nhỏ dùng 200/150 ms ở Admin; popover tìm kiếm 220/180 ms ở frontend. Drawer/menu mobile dùng nhịp mở 280 ms; không chuyển display đột ngột khi người dùng đóng.
 - Giữ phần tử và dữ liệu tới hết nhịp thoát. Phần đang đóng phải không tương tác; khi đóng xong trả focus về nút mở. Mở lại nhanh phải hủy lịch gỡ cũ, không mất form hoặc từ khóa. Animation không trì hoãn yêu cầu lưu/gửi.
 - Khi prefers-reduced-motion bật: bỏ chuyển động/thu phóng, không chờ timer đóng modal ứng tuyển, giữ nguyên trạng thái cuối và thao tác bàn phím.
+
+## 16. Chọn và xóa nhiều mục CMS — 2026-10-30
+
+- Checkbox từng mục và chọn tất cả đang hiển thị có vùng bấm tối thiểu 44px, hỗ trợ bàn phím và trạng thái chọn một phần. Thanh công cụ hiển thị số lượng đã chọn, **Bỏ chọn**, **Xóa đã chọn**; chỉ xuất hiện với người có quyền xóa. Đổi trang/bộ lọc hoặc dữ liệu không còn hiển thị thì bỏ các lựa chọn tương ứng.
+- Hộp xác nhận hiển thị số lượng và danh sách tên chốt tại lúc mở. Mặc định thùng rác; xóa vĩnh viễn cần xác nhận riêng. Khi xử lý khóa nút/checkbox; nếu chỉ thành công một phần, giữ mục lỗi/chưa xử lý trong hộp, báo rõ từng lỗi và yêu cầu xác nhận lại trước khi thử lại. Thùng rác chỉ có lựa chọn xóa vĩnh viễn.
+- Checkbox không kích hoạt mở chi tiết. Các hàng hạng mục và ảnh dự án trên mobile dành hàng riêng cho nút thao tác; giữ nguyên animation và quy tắc reduced motion của modal hiện có.
