@@ -112,6 +112,12 @@
 
 ## Section 7 — Changelog / audit trail
 
+### Phiên 2026-10-30 — Địa chỉ trụ sở theo Google Maps
+
+- [x] **COMPANY-OFFICE-ADDRESS-M1:** Đối chiếu địa điểm công ty từ [liên kết Maps người dùng cung cấp](https://maps.app.goo.gl/sdo5ZavAxA2qgYGL6), cập nhật địa chỉ mặc định thành `1D Trần Não, Khu Phố 5, An Khánh, Hồ Chí Minh 71322, Việt Nam` cùng bản EN. Footer, Liên hệ, chỉ đường và dữ liệu Organization tiếp tục đọc nguồn settings chung; không sửa riêng từng component hoặc nội dung bài viết lịch sử.
+- Migration dữ liệu `20261030120000_update_company_office_address` chỉ cập nhật settings có địa chỉ VI trùng chính xác địa chỉ mặc định cũ; giữ điện thoại/email/MST, field khác và địa chỉ tùy chỉnh. Không có settings thì dùng mặc định mới. Chưa áp migration production; cần deploy backend theo quy trình `prisma migrate deploy`. API production đã đọc trước thay đổi vẫn trả địa chỉ cũ; không có phiên CMS xác thực để lưu trực tiếp trong phiên này.
+- **Kiểm chứng:** Backend/Frontend lint và TypeScript đạt, 6 test settings và 23 test footer/SEO đạt. Script `backend/artifacts/verify-company-address-migration.cjs` kiểm tra SQL thật với năm trường hợp, chạy lại hai lần, chỉ dùng bảng tạm rồi rollback trên PostgreSQL cục bộ. Chưa commit/push/deploy, không ghi DB production.
+
 ### Phiên 2026-10-30 — Nền kiến trúc đầu trang Dự án
 
 - [x] **PROJECTS-INTRO-ARCHITECTURE-BACKGROUND-M1:** Dùng đúng ảnh người dùng cung cấp trong resources `1793072285720_2525879793962605693_g1373224726629609342_4704f07777ad64fb8e5b7cc0ad025c38.jpg`. Giữ nguyên nguồn, chuyển WebP 1920×1080/104.086 byte vào resources và frontend `images/backgrounds/projects-architecture.webp`. Lớp nền trang danh sách Dự án phủ phía phải khối tiêu đề/bộ lọc, hòa vào màu trang bằng multiply và mặt nạ hai chiều; không nhận pointer, không thêm chiều cao. Giảm padding dưới heading còn 32px trên PC/tablet và 24px trên mobile. Mobile giảm độ đậm nền để giữ chữ rõ; không thay dữ liệu, thứ tự, bộ lọc, carousel hoặc trang chi tiết.
